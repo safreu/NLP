@@ -1,0 +1,42 @@
+[project]
+name = "nlp"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "datasets>=4.8.4",
+    "numpy>=2.4.4",
+    "pandas>=3.0.2",
+    "transformers>=5.6.1",
+]
+[dependency-groups]
+dev = [
+    "mypy>=1.20.2",
+    "ruff>=0.15.11",
+    "pytest>=9.0.3",
+    "jupyter>=1.1.1",
+    "nox>=2026.4.10",
+    "pytest-cov>=7.1.0",
+]
+
+[project.scripts]
+nlp = "nlp.main:main"
+
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+
+[tool.uv]
+package = true
