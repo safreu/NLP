@@ -1,6 +1,6 @@
 \documentclass[11pt,a4paper]{article}
 
-% --- Packages -----------------------------------------------------------
+% Packages
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
@@ -10,6 +10,7 @@
 \usepackage{enumitem}
 \usepackage{titlesec}
 \usepackage{parskip}
+\usepackage{graphicx}
 
 \usepackage[backend=biber,style=numeric,doi=true,url=true]{biblatex}
 \addbibresource{references.bib}
@@ -72,7 +73,7 @@
 
 
 
-% --- Layout tweaks ------------------------------------------------------
+% Layout tweaks
 \titlespacing*{\section}{0pt}{0.45em}{0.1em}
 \titleformat{\section}{\normalfont\normalsize\bfseries}{}{0pt}{}
 \setlist{nosep,leftmargin=1.2em,topsep=1pt,parsep=0pt,itemsep=1pt}
@@ -81,45 +82,82 @@
 
 \begin{document}
 
-% --- Title block --------------------------------------------------------
-\begin{center}
-{\Large\bfseries The Simplification Trade-off}\\[0.15em]
-{\normalsize Comparing ML, DL, SLM and LLM Approaches to Text Simplification}\\[0.4em]
-{\small Alhasan Ramadan \quad\textbar\quad Samuel Freundel \quad\textbar\quad Kanwal Khan \quad\textbar\quad Simon Volbon}\\[0.15em]
-{\footnotesize Universit\"at Ulm \textbar{} Natural Language Processing and Neural Language Models \textbar{} Prof.\ Dr.\ Yousef Younes \textbar{} \today}
-\end{center}
-\vspace{-0.1em}
-\hrule
-\vspace{0.3em}
+% ================== Titlepage ==================
+\begin{titlepage}
+	\centering
 
-\section*{Motivation}
-\section*{Research Questions}
-Research on text simplification (TS) has become a significant topic in the field of Natural Language Processing (NLP) due to its use in education, medicine, legal administration, among others. The goal of text simplification is to break down complex texts into a simpler, more readable form while trying to preserve the necessary information that the original complex text conveys. However, it is often difficult to preserve the same informational value and/or the original meaning in the simplified version, leading to a trade-off between the simplicity of the text and the meaning and information that the text once contained. Over years of research, there have been various approaches to text simplification. Early methods were often based on Rules to simplify language, such as replacing difficult words with simpler synonyms or splitting long sentences into multiple shorter ones. Later deep learning approaches were used because they were better at learning the often complex patterns used in our languages. With the recent improvements in small language models (SLMs) and large language models (LLMs), there have been advancements in the topic of simplification as well. The aim  of the paper is to research how text simplification affects the trade-off between readability and information preservation across Machine Learning, Deep Learning, Small Language Models, and Large Language Models approaches.
+	% University Logo
+	%\vspace*{1cm}
+	\includegraphics[width=0.4\textwidth]{docs/images/Universität_Ulm_logo.png}
+	\vspace{1.5cm}
 
-\section{Theoretical Framework \& Literature}
+	% Title
+	{\huge\bfseries The Simplification Trade-off\par}
+	\vspace{0.6cm}
+
+	% Sub Title
+	{\Large\itshape How does text simplification affect the trade-off between readability and information preservation across ML, Deep Learning, Small Language Models, and Large Language Models?\par}
+	\vspace{1.8cm}
+
+	% Project
+	{\large \textbf{One-Page Summary for the Course}\par}
+	{\Large Natural Language Processing and Neural Language Models\par}
+	\vspace{1.5cm}
+
+    % Group Number
+	{\large \textbf{Group 2}\par}
+	\vspace{0.3cm}
+
+	% Authors
+	{\large \textbf{Authors}\par}
+	\vspace{0.3cm}
+	{\Large Alhasan Ramadan\par}
+	{\Large Samuel Freundel\par}
+	{\Large Kanwal Khan\par}
+	{\Large Simon Volbon\par}
+	\vspace{1.5cm}
+
+	% Lecturer
+	{\large \textbf{Lecturer}\par}
+	{\Large Dr.\ Yousef Younes\par}
+	\vspace{2cm}
+
+	% University
+	{\large Department of Computer Science\par}
+	{\large Ulm University\par}
+	\vspace{1cm}
+
+	% Date
+	{\large \today\par}
+
+	\vfill
+\end{titlepage}
+
+\section*{Motivation \& Research Questions}
+Text simplification (TS) is a field of Research in Natural Language Processing (NLP) with various applications in education, medicine, legal administration, among others. The goal of TS is to break down complex texts into a simpler, more readable form while trying to preserve the necessary information that the original complex text conveys\cite{Shardlow2014}. However, it is often difficult to preserve the same informational value and/or the original meaning in the simplified version, leading to a trade-off between the simplicity of the text and the meaning and information that the text once contained. Over years of research, there have been various approaches to TS. The aim  of the report is to research how text simplification affects the trade-off between readability and information preservation across Machine Learning, Deep Learning, Small Language Models, and Large Language Models approaches.
+
+\section{Baselines, Models, Metrics}
 Previous work on text simplification commonly treats the task as a monolingual text-to-text rewriting problem,
-where a complex input sentence is transformed into a simpler output sentence~\cite{Saggion2017,XuEtAl2016}.
-Earlier approaches include rule-based syntactic simplification, lexical simplification through simpler word substitutions,
-statistical machine translation methods, and neural sequence-to-sequence models~\cite{Shardlow2014,Saggion2017,XuEtAl2016,ZhangLapata2017}.
-DRESS is a relevant example of a neural approach, using an encoder-decoder architecture combined with reinforcement learning
-to optimize simplification-specific objectives such as simplicity, fluency, and meaning preservation~\cite{ZhangLapata2017}.
+where a complex input sentence is transformed into a simpler output sentence~\cite{XuEtAl2016}. DRESS is a relevant example of a neural approach, using an encoder-decoder architecture combined with reinforcement learning
+to optimize simplification-specific objectives such as simplicity, fluency, and meaning preservation~\cite{zhang-lapata-2017-sentence}.
 More recent evaluation resources such as ASSET emphasize that simplification can involve multiple rewrite operations,
 including sentence splitting, paraphrasing, reordering, deletion, and compression~\cite{AlvaManchegoEtAl2020}.
 Therefore, our methodological basis should not only compare surface-level readability, but also consider whether the simplified output preserves
-the factual and semantic content of the original text~\cite{XuEtAl2016,ZhangLapata2017,AlvaManchegoEtAl2020}.
-
-Relevant metrics include SARI for simplification edits~\cite{XuEtAl2016},
+the factual and semantic content of the original text~\cite{XuEtAl2016,zhang-lapata-2017-sentence,AlvaManchegoEtAl2020}. Relevant metrics include SARI for simplification edits~\cite{XuEtAl2016},
 BLEU and ROUGE for reference overlap~\cite{PapineniEtAl2002,Lin2004},
 Flesch-Kincaid for readability,
-semantic similarity for meaning preservation~\cite{ZhangLapata2017},
+semantic similarity for meaning preservation~\cite{zhang-lapata-2017-sentence},
 and a project-specific analysis of entity and number preservation for factual consistency.
 
 \section*{Methodology}
-Building on these foundations, our methodology adopts a comparative experimental design across four model families representing distinct paradigms: a classical statistical machine-learning baseline, a deep-learning sequence-to-sequence model based on the DRESS architecture, a fine-tuned small language model and a large language model evaluated in a zero-shot prompting setting. The smaller models are trained or fine-tuned on the wikilarge-clean corpus, which contains about 124k entries of original english and simple english Wikipedia sentence pairs, while all four systems are tested against the ASSET benchmark to ensure comparability with prior work. We measure readability using Flesch-Kincaid and SARI and quantify semantic preservation through BERTScore similarity and a downstream question-answering probe on SQuAD passages. Regarding the question-answering probe, the accuracy delta between answers derived from original and simplified texts serves as a proxy for information loss. To identify which information types are most affected by simplification, an additional error analysis aligns named entities, numerical facts and discourse relations across source and output pairs. The combined results are aggregated into per-model readability-preservation trade-off curves, enabling a structured comparison across paradigms.
-\section*{}
+Building on these foundations, our methodology adopts a comparative experimental design across four model families representing distinct paradigms: a classical statistical machine-learning baseline, a deep-learning sequence-to-sequence model based on the DRESS architecture, a fine-tuned small language model and a large language model evaluated in a zero-shot prompting setting. The smaller models are trained or fine-tuned on the WikiLarge-clean corpus \cite{simplifythis2025}, a cleaned release of aligned English and Simple English Wikipedia sentence pairs, while all four systems are tested against the ASSET benchmark to ensure comparability with prior work. We measure readability using Flesch-Kincaid and SARI and quantify semantic preservation through BERTScore similarity and a downstream question-answering probe on SQuAD passages \cite{Zhang*2020BERTScore:, rajpurkar-etal-2016-squad}. Regarding the question-answering probe, the accuracy delta between answers derived from original and simplified texts serves as a proxy for information loss \cite{deutsch-etal-2021-towards}. To identify which information types are most affected by simplification, an additional error analysis aligns named entities, numerical facts and discourse relations across source and output pairs. The combined results are aggregated into per-model readability-preservation trade-off curves, enabling a structured comparison across paradigms.
 
+\section*{Preprocessing}
+Since the dataset is already cleaned and deduplicated subset of WikiLarge, we remove empty, malformed, duplicate, and extremely imbalanced sentence pairs, normalize whitespace, quotation marks, punctuation, and encoding artifacts, in case it is still needed.
+Since the task requires preserving meaning and factual content, preproceesing will be applied depending on the model type. The preprocessing will contain lemmatization, tokenization and part-of-speech tagging for the classic machine learning approaches, while the language models will be using their specific tokenizers. 
 
-\section*{Work Plan \& Expected Outcomes}
+\section*{Dataset}
+We use a cleaned version of the WikiLarge dataset , which contains sentence pairs comprising extracted Wikipedia articles  and their corresponding simplified versions from Simple English Wikipedia. The dataset is divided into three splits: the training set contains 124,000 sentences, while the validation set and test set contain  417 and 121 sentences, respectively. The training split is used to train the selected models, the validation split is used to fine-tune the parameters of the previously trained models, and the test split is used for their final evaluation. The dataset provides a direct comparison between the complex inputs and the simplified outputs. All models will be trained on the same data; thus, the dataset enables a consistent and fair basis for comparison.
 
 \newpage
 \nocite{*}
