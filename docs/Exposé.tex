@@ -36,7 +36,7 @@
 \section*{Research Questions}
 
 \section*{Methodology}
-
+Building on these foundations, our methodology adopts a comparative experimental design across four model families representing distinct paradigms: a classical statistical machine-learning baseline, a deep-learning sequence-to-sequence model based on the DRESS architecture, a fine-tuned small language model and a large language model evaluated in a zero-shot prompting setting. The smaller models are trained or fine-tuned on the WikiLarge corpus of aligned English and Simple English Wikipedia sentence pairs, while all four systems are tested against the ASSET benchmark to ensure comparability with prior work. To address the three sub-questions, we measure readability using Flesch-Kincaid and SARI and quantify semantic preservation through BERTScore similarity and a downstream question-answering probe on SQuAD passages. Regarding the question-answering probe, the accuracy delta between answers derived from original and simplified texts serves as a proxy for information loss. To identify which information types are most affected by simplification, an additional error analysis aligns named entities, numerical facts and discourse relations across source and output pairs. The combined results are aggregated into per-model readability-preservation trade-off curves, enabling a structured comparison across paradigms.
 \section*{Evaluation}
 
 
