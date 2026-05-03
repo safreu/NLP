@@ -12,6 +12,9 @@ uv run nox
 # Project Structure
 ## WIP
 
+- docs -> Documentation regarding this project
+- src -> Source directory containing the code
+- tests -> Directory containing the tests
 ---
 
 # Development Setup
