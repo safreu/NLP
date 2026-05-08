@@ -111,19 +111,19 @@ Define the script in `pyproject.toml`:
 
 ```toml
 [project.scripts]
-nlp = "nlp.main:main"
+src = "main:main"
 ```
 
 Explanation:
 
-- `nlp` := command name  
-- `nlp.main` := refers to `src/nlp/main.py`  
+- `src` := command name  
+- `main` := refers to `src/main.py`  
 - `main` := function that will be executed  
 
 Run the entry point:
 
 ```bash
-uv run nlp
+uv run scr
 ```
 
 ---
