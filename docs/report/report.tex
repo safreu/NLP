@@ -141,65 +141,6 @@
 
 
 
-\usepackage[backend=biber,style=numeric,doi=true,url=true]{biblatex}
-\addbibresource{references.bib}
-
-
-% Titel immer fett
-\DeclareFieldFormat{title}{\textbf{#1}}
-
-% URL Format
-\DeclareFieldFormat{url}{\newline Available: \url{#1}}
-
-% DOI in neuer Zeile
-\DeclareFieldFormat{doi}{\newline doi:\space #1}
-\DeclareFieldFormat{title}{\textbf{#1}}
-\DeclareFieldFormat[article,inproceedings,misc]{title}{\textbf{#1}}
-\DeclareFieldFormat{maintitle}{\textbf{#1}}
-\DeclareFieldFormat{booktitle}{\textbf{#1}}
-% Autoren in neuer Zeile
-\renewcommand*{\labelnamepunct}{\newline}
-
-% JEDER Eintragstyp bekommt eigenes Layout
-\DeclareBibliographyDriver{article}{%
-  \printfield{title}
-  \printfield{url}
-  \newline
-  \printnames{author}
-  \newline
-  \printfield{journal}%
-  \setunit*{\addcomma\space}%
-  \printfield{year}
-  \printfield{doi}
-  \finentry
-}
-
-\DeclareBibliographyDriver{inproceedings}{%
-  \printfield{title}
-  \printfield{url}
-  \newline
-  \printnames{author}
-  \newline
-  \printfield{booktitle}%
-  \setunit*{\addcomma\space}%
-  \printfield{year}
-  \printfield{doi}
-  \finentry
-}
-
-\DeclareBibliographyDriver{misc}{%
-  \printfield{title}
-  \printfield{url}
-  \newline
-  \printnames{author}
-  \newline
-  \printfield{howpublished}%
-  \setunit*{\addcomma\space}%
-  \printfield{year}
-  \printfield{note}
-  \finentry
-}
-
 
 
 
@@ -699,13 +640,58 @@ Follow the description of the experimental apparaturs given the structure below.
 \label{sec:datasets}
 
 The Simple-PPDB dataset, created by Ellie Pavlick and Chris Callison-Burch\cite{pavlick2016simple}, contains approximately 4.5 million rows of lexical simplifications derived from the PPDB dataset. Each entry consists of an input phrase and a corresponding simplified output phrase. Additionally, each entry includes metadata annotations describing the quality and the syntactic category of each phrase pair. Each row contains a Paraphrase score ranging from 1 to 5, rating the overall quality of the output phrase as a paraphrase of the input phrase. Furthermore, a Simplification score between 0.5 and 1.0 describes the models confidence that the output phrase is a simplification of the input phrase. The dataset also provides a syntactic category based on the Combinatory Categorial Grammar(CCG) formalism. We intend to use this dataset as a basis for training and evaluating a classical machine learning model for text simplification.
+\newline WikiLarge is a dataset for text simplification, which was introduced by Zhang and Lapata in 2017. It was constructed by automatically aligning sentences from English Wikipedia with their simplified counterparts from Simple English Wikipedia, resulting in approximately 150,000 training pairs, 494 validation entries and 191 test splits. Since the dataset released, it became one of the most widely used datasets in the text simplification community, with numerous works adopting it.
+\begin{table}[h]
+\centering
+\begin{tabular}{lr}
+\hline
+\textbf{Split} & \textbf{Size} \\
+\hline
+Train      & 148,843 \\
+Validation & 494     \\
+Test       & 191     \\
+\hline
+\end{tabular}
+\caption{WikiLarge dataset splits.}
+\label{tab:wikilarge}
+\end{table}
+\newline ASSET is an English evaluation dataset for text simplification. It contains 2,359 original sentences, each paired with 10 human-written simplifications. Since ASSET only provides validation and test splits and does not include a training split, it is not primarily intended for model training, but for evaluating and comparing text simplification systems. It is relevant for this project because its simplifications cover multiple rewriting operations, including paraphrasing, sentence splitting, deletion, reordering, and lexical simplification. This makes ASSET suitable for analyzing the trade-off between improved readability and the preservation of meaning and factual information.
 
-WikiLarge is a dataset for text simplification, which was introduced by Zhang and Lapata in 2017 \cite{pavlick2016simple}. It was constructed by automatically aligning sentences from English Wikipedia with their simplified counterparts from Simple English Wikipedia, resulting in approximately 150,000 training pairs, 494 validation entries and 191 test splits. Since the dataset released, it became one of the most widely used datasets in the text simplification community, with numerous works adopting it.
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\hline
+\textbf{Split} & \textbf{Original Sentences} & \textbf{Simplification References} \\
+\hline
+Train      & --    & --     \\
+Validation & 2,000 & 20,000 \\
+Test       & 359   & 3,590  \\
+\hline
+Total      & 2,359 & 23,590 \\
+\hline
+\end{tabular}
+\caption{ASSET dataset splits and number of simplification references.}
+\label{tab:asset}
+\end{table}
 
-ASSET is an English evaluation dataset for text simplification. It contains 2,359 original sentences, each paired with 10 human-written simplifications. Since ASSET only provides validation and test splits and does not include a training split, it is not primarily intended for model training, but for evaluating and comparing text simplification systems. It is relevant for this project because its simplifications cover multiple rewriting operations, including paraphrasing, sentence splitting, deletion, reordering, and lexical simplification. This makes ASSET suitable for analyzing the trade-off between improved readability and the preservation of meaning and factual information.
 
 WikiSmall is a dataset for text simplification that was introduced and used in the work of Xingxing Zhang and Mirella Lapata in 2017 . The dataset was constructed by aligning sentences from English Wikipedia with simplified versions from Simple English Wikipedia, creating parallel sentence pairs for simplification research. WikiSmall contains approximately 89,000 training sentence pairs and is commonly used for training and evaluating sentence simplification systems. 
 
+\begin{table}[h]
+\centering
+\begin{tabular}{lr}
+\hline
+\textbf{Split} & Size\\
+\hline
+Train      & 88837\\
+Validation & 205\\
+Test       & 100\\
+\hline
+Total      & 89142\\
+\hline
+\end{tabular}
+\caption{WikiSmall dataset splits}
+\end{table}
 
 
 
