@@ -1,0 +1,957 @@
+%%
+%% This is file `dsbda-paper.tex',
+%%
+%% IMPORTANT NOTICE:
+%% 
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from sample-authordraft.tex.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file samples.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
+%%
+%% Commands for TeXCount
+%TC:macro \cite [option:text,text]
+%TC:macro \citep [option:text,text]
+%TC:macro \citet [option:text,text]
+%TC:envir table 0 1
+%TC:envir table* 0 1
+%TC:envir tabular [ignore] word
+%TC:envir displaymath 0 word
+%TC:envir math 0 word
+%TC:envir comment 0 0
+%%
+%%
+%% The first command in your LaTeX source must be the \documentclass command.
+%\documentclass[sigconf,authordraft]{acmart}
+
+% DSBDA Setting
+\documentclass[sigconf, review, nonacm]{acmart} 
+% Use \documentclass[sigconf, nonacm, anonymous]{acmart} % to compile an anonymized version
+
+\geometry{a4paper}
+\settopmatter{printacmref=false,printfolios=true} % will remove the copyright box, and show the page numbers
+
+\usepackage{dsbda-style}
+%\debugmode
+%\usepackage{todonotes}
+%\newcommand{\todoyellow}[1]{\todo[color=yellow,inline]{#1}}
+
+%% NOTE that a single column version may required for 
+%% submission and peer review. This can be done by changing
+%% the \doucmentclass[...]{acmart} in this template to 
+%% \documentclass[manuscript,screen]{acmart}
+%% 
+%% To ensure 100% compatibility, please check the white list of
+%% approved LaTeX packages to be used with the Master Article Template at
+%% https://www.acm.org/publications/taps/whitelist-of-latex-packages 
+%% before creating your document. The white list page provides 
+%% information on how to submit additional LaTeX packages for 
+%% review and adoption.
+%% Fonts used in the template cannot be substituted; margin 
+%% adjustments are not allowed.
+
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    \normalfont B\kern-0.5em{\scshape i\kern-0.25em b}\kern-0.8em\TeX}}}
+
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+\setcopyright{acmcopyright}
+\copyrightyear{2018}
+\acmYear{2018}
+\acmDOI{XXXXXXX.XXXXXXX}
+
+%% These commands are for a PROCEEDINGS abstract or paper.
+\acmConference[Conference acronym 'XX]{Make sure to enter the correct
+  conference title from your rights confirmation emai}{June 03--05,
+  2018}{Woodstock, NY}
+%
+%  Uncomment \acmBooktitle if th title of the proceedings is different
+%  from ``Proceedings of ...''!
+%
+%\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
+%  June 03--05, 2018, Woodstock, NY} 
+\acmPrice{15.00}
+\acmISBN{978-1-4503-XXXX-X/18/06}
+
+
+%%
+%% Submission ID.
+%% Use this when submitting an article to a sponsored event. You'll
+%% receive a unique submission ID from the organizers
+%% of the event, and this ID should be used as the parameter to this command.
+%%\acmSubmissionID{123-A56-BU3}
+
+%%
+%% For managing citations, it is recommended to use bibliography
+%% files in BibTeX format.
+%%
+%% You can then either use BibTeX with the ACM-Reference-Format style,
+%% or BibLaTeX with the acmnumeric or acmauthoryear sytles, that include
+%% support for advanced citation of software artefact from the
+%% biblatex-software package, also separately available on CTAN.
+%%
+%% Look at the sample-*-biblatex.tex files for templates showcasing
+%% the biblatex styles.
+%%
+
+%%
+%% For managing citations, it is recommended to use bibliography
+%% files in BibTeX format.
+%%
+%% You can then either use BibTeX with the ACM-Reference-Format style,
+%% or BibLaTeX with the acmnumeric or acmauthoryear sytles, that include
+%% support for advanced citation of software artefact from the
+%% biblatex-software package, also separately available on CTAN.
+%%
+%% Look at the sample-*-biblatex.tex files for templates showcasing
+%% the biblatex styles.
+%%
+
+%%
+%% The majority of ACM publications use numbered citations and
+%% references.  The command \citestyle{authoryear} switches to the
+%% "author year" style.
+%%
+%% If you are preparing content for an event
+%% sponsored by ACM SIGGRAPH, you must use the "author year" style of
+%% citations and references.
+%% Uncommenting
+%% the next command will enable that style.
+%%\citestyle{acmauthoryear}
+
+% Add this line for proofreading the paper (DSBDA feature)
+%\debugmode
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%%
+%% end of the preamble, start of the body of the document source.
+\begin{document}
+
+%%
+%% The "title" command has an optional parameter,
+%% allowing the author to define a "short title" to be used in page headers.
+\title[Short Version of the Title Goes Here (Optional)]{The Simplification Trade-off\\}
+
+%%
+%% The "author" command and its associated commands are used to define
+%% the authors and their affiliations.
+%% Of note is the shared affiliation of the first two authors, and the
+%% "authornote" and "authornotemark" commands
+%% used to denote shared contribution to the research.
+
+\author{Alhasan Ramadan}
+\email{alhasan.ramadan@uni-ulm.de}
+\affiliation{%
+  \institution{Ulm University}
+  \city{Ulm}
+  \country{Germany}
+}
+
+\author{Samuel Feundel}
+\email{samuel.freundel@uni-ulm.de}
+\affiliation{%
+  \institution{Ulm University}
+  \city{Ulm}
+  \country{Germany}
+}
+
+\author{Kanwal Khan}
+\email{kanwal.kahn@uni-ulm.de}
+\affiliation{%
+  \institution{Ulm University}
+  \city{Ulm}
+  \country{Germany}
+}
+
+\author{Simon Volbon}
+\email{simon.volbon@uni-ulm.de}
+\affiliation{%
+  \institution{Ulm University}
+  \city{Ulm}
+  \country{Germany}
+}
+
+
+%%
+%% By default, the full list of authors will be used in the page
+%% headers. Often, this list is too long, and will overlap
+%% other information printed in the page headers. This command allows
+%% the author to define a more concise list
+%% of authors' names for this purpose.
+\renewcommand{\shortauthors}{Trovato and Tobin, et al.}
+
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+\begin{abstract}
+
+\begin{tcolorbox}[title=A handbook is born!,colback=red!20]
+
+The writing template now comes with a first draft of a writing template. 
+See \texttt{dsbda-handbook.tex} for this.
+The handbook has the goal to explain the template, and provide further context and guidance in writing, while not being redundant with classical scientific writing literature.
+It also has an extensive list of resources to books, surveys, etc.
+
+\textbf{Use the handbook as reference when writing your paper.}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Abstract: How to write it]
+An abstract conveys in a summary of 150 words your research idea, experimental results, and their impact. It is an opportunity to directly communicate the key message of your proposal, which otherwise has to be collected from different places in the paper. With order words: \textit{Not including an abstract in a proposal is a missed opportunity!}
+\end{tcolorbox}
+
+This template is for papers, research-based group work reports, BSc and MSc theses, seminar works, etc. 
+It is based on a common ACM style, which is both popular in the computer science research community as well as well maintained.
+%
+For the author's information, create an ORCID and add it to your record, see the example of the first author.
+You can obtain an ORCID here: \url{https://orcid.org/}
+
+
+For comments and feature requests, please email Ansgar at
+\href{mailto:ansgar.scherp@uni-ulm.de?subject=DSBDA-TemplateForPaper-Annotated}{ansgar.scherp@uni-ulm.de}.
+
+\todo{For the abstract, please follow the Jennifer Widom structure.}
+
+Submission: \textit{We pledge to make the source code and additional resources publicly available upon acceptance of the paper.
+An (anonymous) preview for the reviewers can be found at:
+\url{http://anonoymo.us/me}.}
+
+Submission (if already available on arXiv): \textit{An earlier version of this paper has been published on arXiv~(add cite). % \cite{add-url}.
+We release the source code upon acceptance of the paper.}
+
+Final: \textit{The source code and additional resources are available at: \url{http://anonoymo.us/me}}
+
+\begin{tcolorbox}[title=Note on the Use of Generative AI Tools]
+
+
+We are following the procedure of the German Research Foundation regarding the use of generative AI tools.
+%
+\begin{itemize}
+\item Please carefully read the DFG's ``Guidelines for Dealing with Generative Models for Text and Image Creation'', which are available here: 
+%url{https://www.dfg.de/en/service/press/press-releases/2023/press-release-no-39} with the direct link here: 
+\url{www.dfg.de/download/pdf/dfg_im_profil/geschaeftsstelle/publikationen/stellungnahmen_papiere/2023/230921_statement_executive_committee_ki_ai.pdf}
+
+\item A very good ``Artificial intelligence guidance'' of what one can do and what not is also found here:
+\url{https://www.essex.ac.uk/student/exams-and-coursework/artificial-intelligence}
+
+\item This coincides with recent regulations at international conferences such as the International Conference on Machine Learning (ICML), which states: `` The Large Language Model (LLM) policy for ICML 2023 prohibits text produced entirely by LLMs (i.e., “generated”).  This does not prohibit authors from using LLMs for editing or polishing author-written text.''. Source: \url{https://icml.cc/Conferences/2023/llm-policy}.
+\end{itemize}
+
+\end{tcolorbox}
+
+
+\end{abstract}
+
+%%
+%% The code below is generated by the tool at http://dl.acm.org/ccs.cfm.
+%% Please copy and paste the code instead of the example below.
+%%
+\begin{CCSXML}
+<ccs2012>
+ <concept>
+  <concept_id>10010520.10010553.10010562</concept_id>
+  <concept_desc>Computer systems organization~Embedded systems</concept_desc>
+  <concept_significance>500</concept_significance>
+ </concept>
+ <concept>
+  <concept_id>10010520.10010575.10010755</concept_id>
+  <concept_desc>Computer systems organization~Redundancy</concept_desc>
+  <concept_significance>300</concept_significance>
+ </concept>
+ <concept>
+  <concept_id>10010520.10010553.10010554</concept_id>
+  <concept_desc>Computer systems organization~Robotics</concept_desc>
+  <concept_significance>100</concept_significance>
+ </concept>
+ <concept>
+  <concept_id>10003033.10003083.10003095</concept_id>
+  <concept_desc>Networks~Network reliability</concept_desc>
+  <concept_significance>100</concept_significance>
+ </concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computer systems organization~Embedded systems}
+\ccsdesc[300]{Computer systems organization~Redundancy}
+\ccsdesc{Computer systems organization~Robotics}
+\ccsdesc[100]{Networks~Network reliability}
+
+%%
+%% Keywords. The author(s) should pick words that accurately describe
+%% the work being presented. Separate the keywords with commas.
+\keywords{datasets, neural networks, gaze detection, text tagging}
+
+\received{20 February 2007}
+\received[revised]{12 March 2009}
+\received[accepted]{5 June 2009}
+
+%%
+%% This command processes the author and affiliation and title
+%% information and builds the first part of the formatted document.
+\maketitle
+
+\section{Introduction}
+
+
+
+
+\begin{tcolorbox}[title=What is Strong and Ego-less Research?,colback=red!20]
+Define good research questions and run experiments that generate scientific insights, \ie new knowledge.
+Do not aim to develop a new method and compare it to weak baselines, cherry-picked datasets, and experimental conditions that favor your model.
+
+Think about:
+
+\begin{itemize}
+\item \textbf{Baselines}: Are they strong, are they state-of-the-art?
+
+\item \textbf{Datasets}: Are they representative / used in the community, are they recent, are they challenging?
+
+\item \textbf{Related Work}:  Conduct a thorough research for specific papers on the specific problem addressed by the paper. It is easy to overlook papers and with that baselines, datasets, etc.\footnote{A reviewer statement on ``Missing important related works'' basically means that ``the comparison with related work could be more in-depth'' and that ``the paper overlooks some key related works in this area''. 
+
+So the related work needs to be both, covering relevant fields but also be specific to the problem. A reviewer statement like this reflects it ``The related work contains broad descriptions of prior methods on [..]. It could be more focused on prior work relevant to the paper, like work involving the [...].''.
+
+In case of doubt, write a more detailed related work and locate it in the appendix or supplementary material, respectively. A quite positive comment received from a reviewer was ``The supplementary material is extensive and includes: Detailed proofs [...], Implementation details [...], Additional experiments [...],  A comprehensive literature review and extended discussions on related works in [...]''. 
+
+This makes a strong case, but only if the paper is already self-contained and the appendix is used to support the paper's claims and results. 
+Note, a reviewer is not required to consider the appendix.}
+
+
+\item \textbf{Tasks}: Do not consider one task only, but multiple tasks. 
+For example, in NLP not only classification but also entity recognition; in Graph Representation Learning, not only vertex classification, but also graph classification/regression and link prediction.
+\end{itemize}
+
+\end{tcolorbox}
+
+
+\begin{tcolorbox}[title=Have a throughline in your paper and maintain it!,colback=red!20]
+    A paper must be \textbf{consistent and coherent} in what it wants to convey to the reader.
+    This means that you need to define and maintain a throughline in your paper.
+
+    Key place in the paper to check for coherence and consistency are
+    \begin{itemize}
+        \item \textbf{Title} $\rightarrow$ does it contain the key message, which is then picked up in the abstract and elaborated in the introduction, 
+        \item \textbf{Abstract}, 
+        \item \textbf{Introduction} $\rightarrow$ contributions list and research questions, respectively, 
+        \item \textbf{Datasets} $\rightarrow$  are suitable to answer the research questions from the list in the introduction,
+        \item \textbf{Procedure} $\rightarrow$ explains the steps of the experiments taken to answer the research questions, one at a time.
+    \end{itemize}
+
+
+    Whenever you make changes at one place, check and update the others, too!
+\end{tcolorbox}
+
+
+\begin{tcolorbox}[title=Instructions: Write following this structure.]
+
+To organize the introduction, the proposed structure of Jennifer Widom should be used. 
+Not using the structure may leave an introduction oftentimes meaningless, when it ends at the motivation and does not well explain the *why is it a problem* and *why is it not solved* parts.
+
+Write explicit paragraphs for each of the questions. 
+Furthermore, make sure that the introduction picks up every statement made by the abstract.
+The goal of the introduction is to extend the gist provided by the abstract by giving more detail, more context, explanations, and, very important, citations to definitions, related work, and methods.
+\end{tcolorbox}
+
+This template is based on the official ``Association for Computing Machinery (ACM) - SIG Proceedings Template'' provided on Overleaf. A documentation is provided in this project. The template is taken from Overleaf:
+\url{https://www.overleaf.com/latex/templates/association-for-computing-machinery-acm-sig-proceedings-template/bmvfhcdnxfty}
+
+\todopink{
+The official URL to this Overleaf template is:
+\url{https://www.overleaf.com/latex/templates/dsbda-templateforpaper-annotated/svwvwvqxfxtp}
+You may also use the view link (ready only):
+\url{https://www.overleaf.com/read/mpmsdhfcwdfk}.
+
+If you look for a template for presentations/slides, Fabian Singhofer is so kind to share his for DSBDA:
+\url{https://www.overleaf.com/read/qxrdtnzrrpwc}
+}
+
+
+
+Links are ``read''-links, so one can copy it into a new project.
+
+By default, the language is set to American English.
+
+The concept of the teaching programme is also documented and available here:
+\url{https://github.com/data-science-and-big-data-analytics/teaching-examples/blob/main/Scherp-TdL21-vortrag.pdf}
+
+Note that there are also new writing tools that support academic writing. 
+For example, Grammarly: \url{https://www.grammarly.com/blog/academic-writing/}
+
+%\subsection{Motivation}
+\label{sec:introduction}
+
+\todoyellow{Note: Yellow boxes provide background information, additional notes, recommendations, etc. and can later be removed.}
+
+\todogreen{Apply Jennifer Widom structure, which is encoded here in the yellow boxes.}
+
+\todoyellow{What is the motivation?}
+
+Motivate your work.
+
+% \subsection{Problem Statement (or: Problem Formalization)}
+
+\todoyellow{What is the problem?}
+
+Describe in precise terms what the problem is that you address. 
+This definition of the problem is used/referred to throughout the paper.
+
+\todoyellow{Why is it a problem?}
+
+Describe the relevancy of the problem. 
+
+\todoyellow{Why is it not yet solved?}
+
+Describe why are existing solutions insufficient.
+
+% \subsection{Contribution}
+
+\todoyellow{What is our solution approach?}
+
+Describe the method/algorithm that you propose to solve the problem.
+
+\todoyellow{What are the results?}
+
+Describe key results from your experiments. 
+Mention datasets, measures, and observations.
+Reflect on the key insights by a brief discussion.
+Make the reader interested in your paper.
+
+\todoyellow{What are your contributions?}
+
+\begin{tcolorbox}[title=Instruction: Write down your list of contributions.]
+The introduction (and the structure of it) needs to match the bullet items of contributions at the end of the introduction. There is a clear disconnection and break in the paper if the introduction describes the motivation well, but the contributions list is about something else, see also comment below. 
+
+Your contributions list is a main point of discussion. 
+It has to be done well. 
+\end{tcolorbox}
+
+Below, we summarize our contributions.
+\begin{itemize}
+    \item Provide a bullet-itemized list of research questions that you address. 
+    \item Later, each research question will then be turned into a contribution, \ie a brief answer to the question is given. 
+\end{itemize}
+
+\begin{tcolorbox}[title=Introduction What is a contribution item and what not.]
+The bullet items of contributions need to be a precise description of research questions that are phrased as how they make a contribution beyond the state of the art. 
+For example, ``We compare our method X with three strong baselines A, B, and C to demonstrate the effectiveness of our approach on nine benchmark datasets. [...].'' 
+The contributions list may not be a description of implementation steps, e.g., we first pre-process data, we train the models, and we evaluate the models, etc. 
+
+%Here is an example:
+
+\end{tcolorbox}
+
+
+% \subsection{Organization}
+The remainder of the paper is organized as follows.
+%
+Below, we summarize the related works.
+Section~\ref{sec:methods} provides a problem statement and introduces our models/methods.
+The experimental apparatus is described in Section~\ref{sec:experimentalapparatus}.
+An overview of the achieved results is reported in Section~\ref{sec:results}. 
+Section~\ref{sec:discussion} discusses the results, before we conclude.
+
+
+
+\section{Related Work}
+\label{sec:relatedwork}
+
+When reading the related work, we aim to understand the method(s), datasets used, results of the experiments, and what the results mean, \ie how the authors argue about the results in the discussion.
+
+\begin{tcolorbox}[title=Instructions: Checklist with Criteria]
+To check the trustworthiness of results, we always perform some checks (derived from~\cite{DBLP:journals/corr/abs-2204-03954v5-textclassification}).
+%
+Papers, where one has to tick one of the items below, do not allow for a fair comparison with the state of the art.
+Reasons include that they 
+
+\begin{itemize}
+\item used different or non-standard benchmark datasets,
+
+\item modified the datasets to use a different number of classes (\ie reducing the number of classes in the preprocessing),
+
+\item modified the datasets to use additional information (\eg additional header metadata in the 20ng text dataset),
+
+\item employed different train-test splits (\eg use more training samples than others), 
+
+\item used a different, smaller number of training examples (\eg run their methods only on 5\% of the training data while using a benchmark dataset),
+
+\item not report the train-test splits (and thus the training data used remains unclear),
+
+\item do not report hyperparameter values (particularly the learning rate), 
+
+\item do not report an average over multiple runs of the experiments together with the standard deviation (Avg. and SD will allow to assess the influence of random factors like the initialization of model weights),  
+
+\item have not optimized or do not use optimal hyperparameter values (\eg the learning rate strongly influences the results as demonstrated at the examples of BERT and RoBERTa by~\citet{DBLP:journals/corr/abs-2204-03954v5-textclassification}), 
+
+\item do unsual preprocessing on the datasets (\eg apply preprocessing for models that do not require it like BERT, drop samples in a multi-labeling task that have $1$ label and thus modify the datasets, etc.),
+%
+
+\item are unclear about the measure(s) used (\eg, while writing ``we use the F-score'' most likely means the (harmonic) F1-score, it still does not detail if micro-averaging, macro-averaging, or samples-averaging F1 is reported),
+%
+
+or
+
+\item it is not mentioned if the procedure applied considers training a (graph) neural network in an inductive versus transductive setting (transductive models are inherently performing better on graph tasks)
+%
+.
+
+
+\end{itemize}
+
+\textbf{IMPORTANT}: See also, and tead the summary of dozens of practices in machine learning that may invalidate the results of a research paper.
+%
+``Questionable practices in machine learning'', \url{https://arxiv.org/abs/2407.12220}
+
+\end{tcolorbox}
+
+The rationales for not using benchmark datasets or employing other train-test splits are not always clear.
+Also, the papers often do not properly report hyperparameter values or miss reporting any other of the items above.
+
+\begin{tcolorbox}[title=As a general rule when reading related work]
+
+Be suspicous and ask yourself: ``Can I trust their results?''
+Keep in mind: A primary objective of the paper is to put their method in a good light.
+\end{tcolorbox}
+
+And an important lesson when searching for literature.
+
+\begin{tcolorbox}[title=Lesson learned (once) again!]
+If you search for literature and do not find anything. Likely you just did not search for the right keywords.
+
+For example, if you search for research on ``(source) code segmentation'', you will be disappointed (or happy) not to find any.
+But do not be a fool. 
+There is work, it is ``text segmentation'' a classical area in natural language processing.
+You just have to think about source code being an (artificial) language that any modern tool will process in the same way as a natural language.
+
+A good hint is also if the task is visible in the community.
+For text segmentation there exists its own category on Papers with Code, see \url{https://paperswithcode.com/task/text-segmentation}.
+\end{tcolorbox}
+
+
+Writing hint:
+%
+Use~\cite{Abril07}
+% or~\citep{Abril07} --- some other styles support this
+or~\citet{Abril07}.
+
+But always put a tilde (\~) before the \symbol{92}cite.
+
+\subsection{Area 1}
+
+\subsection{Area 2}
+
+\subsection{Area ...}
+
+\subsection{Summary/Reflection}
+
+What do we learn from the literature concerning your work?
+Where are their strengths, and where are their weaknesses?
+What is different in the related work compared to the proposed approach?
+
+\section{<MyMethod> \textit{or} Methods \textit{or} Models}
+\label{sec:methods}
+
+Methods : Which methods do apply?
+
+\subsection{[Problem Statement/Problem Formalization]}
+\label{sec:problemstatement}
+
+(if not done as part of the introduction)
+
+\subsection{Assumptions}
+
+\begin{tcolorbox}
+[title=Assumptions: What are assumptions?]
+The assumptions describe explicitly what characteristics of the dataset, method, etc. are assumed when running the experiments. What assumptions you make are as different as the research questions. An example of an assumption in graph learning is "We assume to have access to unlabeled test nodes during training, i.e., we assume a transductive graph learning setting."
+\end{tcolorbox}
+
+- What are the assumptions that you make?
+
+Note: make sure there is an explicit section or subsection called ``Assumptions'' in your paper.
+
+\begin{tcolorbox}
+[title=Example: A textbook example of what an assumption is]
+Our primary assumption [for bibliographic metadata extraction] is that all necessary information can be found within a one-hop crawl of the landing page associated with the DOI. This assumption is based on our observation that publishers present key bibliographic information on the landing page or pages directly linked to it \eg the PDF of the publication.
+\end{tcolorbox}
+
+
+\begin{tcolorbox}
+[title=Assumptions: Difference to research questions.]
+The assumptions are clearly not the same as the research questions (that are to be stated in the introduction). *Writing the research questions in the section on assumptions is not possible.* 
+\end{tcolorbox}
+
+
+
+\subsection{Methods for Aspect 1}
+
+\todopink{Point of Discussion: Provide a bullet-itemized list of the aspects that are considered by your research.
+For each aspect, provide a description of the methods/models used and proposed (own methods).
+Make sure it is consistent with the research questions/contributions describe in the introduction.
+
+\textit{Example}: Aspects are: a) clustering algorithms, b) embedding methods, c) similarity measures. Instances for a) are DBCAN, $k$-means, etc., b) TF-IDF, BERT, etc., c) cosine similarity.}
+
+\begin{itemize}
+    \item Method 1
+    \item Method 2
+    \item ...
+\end{itemize}
+
+\subsection{Methods for Aspect 2}
+
+\subsection{Methods for Aspect 3}
+
+
+
+
+\subsection{Summary}
+
+\section{Experimental Apparatus}
+\label{sec:experimentalapparatus}
+
+Follow the description of the experimental apparaturs given the structure below.
+
+\todoyellow{Make sure to cover the questions provided in the EMNLP checklist, see Appendix~\ref{app:emnlp2021-checklist}.}
+
+
+\subsection{Datasets}
+\label{sec:datasets}
+
+The Simple-PPDB dataset, created by Ellie Pavlick and Chris Callison-Burch\cite{pavlick2016simple}, contains approximately 4.5 million rows of lexical simplifications derived from the PPDB dataset. Each entry consists of an input phrase and a corresponding simplified output phrase. Additionally, each entry includes metadata annotations describing the quality and the syntactic category of each phrase pair. Each row contains a Paraphrase score ranging from 1 to 5, rating the overall quality of the output phrase as a paraphrase of the input phrase. Furthermore, a Simplification score between 0.5 and 1.0 describes the models confidence that the output phrase is a simplification of the input phrase. The dataset also provides a syntactic category based on the Combinatory Categorial Grammar(CCG) formalism. We intend to use this dataset as a basis for training and evaluating a classical machine learning model for text simplification.
+\newline WikiLarge is a dataset for text simplification, which was introduced by Zhang and Lapata in 2017. It was constructed by automatically aligning sentences from English Wikipedia with their simplified counterparts from Simple English Wikipedia, resulting in approximately 150,000 training pairs, 494 validation entries and 191 test splits. Since the dataset released, it became one of the most widely used datasets in the text simplification community, with numerous works adopting it.
+\begin{table}[h]
+\centering
+\begin{tabular}{lr}
+\hline
+\textbf{Split} & \textbf{Size} \\
+\hline
+Train      & 148,843 \\
+Validation & 494     \\
+Test       & 191     \\
+\hline
+\end{tabular}
+\caption{WikiLarge dataset splits.}
+\label{tab:wikilarge}
+\end{table}
+\newline ASSET is an English evaluation dataset for text simplification. It contains 2,359 original sentences, each paired with 10 human-written simplifications. Since ASSET only provides validation and test splits and does not include a training split, it is not primarily intended for model training, but for evaluating and comparing text simplification systems. It is relevant for this project because its simplifications cover multiple rewriting operations, including paraphrasing, sentence splitting, deletion, reordering, and lexical simplification. This makes ASSET suitable for analyzing the trade-off between improved readability and the preservation of meaning and factual information.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\hline
+\textbf{Split} & \textbf{Original Sentences} & \textbf{Simplification References} \\
+\hline
+Train      & --    & --     \\
+Validation & 2,000 & 20,000 \\
+Test       & 359   & 3,590  \\
+\hline
+Total      & 2,359 & 23,590 \\
+\hline
+\end{tabular}
+\caption{ASSET dataset splits and number of simplification references.}
+\label{tab:asset}
+\end{table}
+
+
+WikiSmall is a dataset for text simplification that was introduced and used in the work of Xingxing Zhang and Mirella Lapata in 2017 . The dataset was constructed by aligning sentences from English Wikipedia with simplified versions from Simple English Wikipedia, creating parallel sentence pairs for simplification research. WikiSmall contains approximately 89,000 training sentence pairs and is commonly used for training and evaluating sentence simplification systems. 
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lr}
+\hline
+\textbf{Split} & Size\\
+\hline
+Train      & 88837\\
+Validation & 205\\
+Test       & 100\\
+\hline
+Total      & 89142\\
+\hline
+\end{tabular}
+\caption{WikiSmall dataset splits}
+\end{table}
+
+
+
+\label{sec:preprocessing}
+
+%Describe the steps that are needed to prepare the datasets for the experiments.
+%It is commonly about rather technical steps that are important for a good reproducibility of the work.
+
+\subsection{Baselines}
+
+Add a clear description of the baselines used.
+Argue why those baselines are chosen.
+
+\subsection{Procedure}
+\label{sec:procedure}
+
+\begin{tcolorbox}
+    [title=Procedure: What needs to be described to understand the experiments.]
+    The experimental procedure needs to be clearly described such that one can understand precisely which experiments are carried out and how. 
+    Do not mix in pre-processing (it is its own subsection above) nor implementation details (it is a subsection below). 
+    Focus on describing how the experiments are used to answer your research questions. 
+    So if there are three research questions in the order A, B, and C, one would expect that the procedure describes experiments corresponding to these research questions in exactly this order. 
+    If not already clear from the dataset description, include a clear statement about the dataset split including a rationale why this specific split is used. 
+    It can be as short as ``We use a standard train/validate/test-split of 80, 10, and 10 percent of the dataset, following the literature (cite the papers).''
+
+\end{tcolorbox}
+
+\todopink{Point of Discussion: Describe which methods you use along the aspects defined in your research, on which datasets they are applied, etc. Make sure it reflect fully the experiments that you want to carry out according to your own plan defined in the research questions.}
+
+Procedure: How do you run your experiments?
+
+\subsection{Hyperparameter Optimization}
+\label{sec:hyperparameteroptimization}
+
+\todoyellow{Note: If space is limited, this can be moved to supplementary materials}
+
+\todopink{Point of Discussion: What are the (critical) hyperparameters that you need to consider (beyond the learning rate)? 
+How do you plan to optimize the hyperparameters with respect to the models and datasets? 
+What is the hyperparameter search space?}
+
+\subsection{Measures \textit{or} Metrics}
+\label{sec:measures}
+
+
+Measure: How do you measure the results?
+
+\todopink{Point of Discussion:
+Regarding the measurements and what to measure, \ie to which level of detail, please carefully read:
+John Ousterhout's article on ``\textit{Always Measure One Level Deeper}''~\cite{DBLP:journals/cacm/Ousterhout18}.}
+% URL: 
+% https://cacm.acm.org/magazines/2018/7/229031-always-measure-one-level-deeper/fulltext
+
+\section{Results}
+\label{sec:results}
+
+- Report your results in tabular or otherwise structured form.
+
+- Limit to objective results, no interpretation of results
+
+\subsection{RQ1 Results}
+\label{sec:results-rq1}
+
+\subsection{RQ2 Results}
+\label{sec:results-rq2}
+
+\subsection{... Results}
+\label{sec:results-rq...}
+
+
+\section{Discussion}
+\label{sec:discussion}
+
+- Now interpret and reflect on your results.
+
+\subsection{Key Scientific Insights [Gained from the Results]}
+\label{sec:keyresults}
+
+- What is the key takeaway? Reflect on the results (what have we learned from them)?
+
+- What are the key results of your research?
+
+- What interesting insights could you obtain?
+
+- Break down by research question.
+
+\subsection{Threat to Validity}
+\label{sec:threattovalidity}
+
+- Why may your results be biased/not trustworthy? And why in fact are they trustworthy! How reliable are your analyses? Meaning, critically reflect on whether there may be errors / biases in your analyses. So: What (possible) threats exist that could have made the results unreliable, AND why are these not threats?
+
+- Trick is to write down potential threats and explain why they don't hold true here!
+
+- How reliable are your analyses? Meaning, critically reflect on whether there may be errors / biases in your analyses.
+
+\subsection{Generalization}
+\label{sec:generalization}
+
+- Will the results be transferable/generalize to other datasets, tasks, models, etc?
+
+- Can one transfer the insights/results to other datasets? ... other scenarios? ... other algorithms? Why can we assume that the results generalize?
+
+Why?
+
+\subsection{Future Work and Impact}
+\label{sec:futurework}
+
+What is future work?
+
+What is the general impact of your work?
+--- pick up arguments from introduction etc.
+
+[- But also: What is the practical impact. ]
+
+
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+\todoyellow{Summarize the key results in an interesting and new way.
+For example by expanding it to a general broader scope of science, economics, impact to life, etc. :-)}
+
+Provide a brief outlook to future work! (If not described in the Section~\ref{sec:futurework})
+
+
+\section*{Limitations}
+
+- Reflect on the limitations of your work, so what conclusion cannot or should not be derived from the work.
+
+See also EMNLP's \textbf{Mandatory Discussion of Limitations}.
+
+\begin{quote}
+    We believe that it is also important to discuss the limitations of your work, in addition to its strengths. EMNLP 2023 requires all papers to have a clear discussion of limitations, in a dedicated section titled “Limitations”. This section will appear at the end of the paper, after the discussion/conclusions section and before the references, and will not count towards the page limit. Papers without a limitation section will be automatically rejected without review.
+\end{quote}
+
+[...]
+
+\begin{quote}
+While we are open to different types of limitations, just mentioning that a set of results have been shown for English only probably does not reflect what we expect. Mentioning that the method works mostly for languages with limited morphology, like English, is a much better alternative. In addition, limitations such as low scalability to long text, the requirement of large GPU resources, or other things that inspire crucial further investigation are welcome.
+\end{quote}
+
+\url{https://2023.emnlp.org/calls/main_conference_papers/#mandatory-discussion-of-limitations}
+
+
+\section*{Author Statement}
+
+
+Author statement based on CRediT (Contributor Roles Taxonomy), see: \url{https://www.elsevier.com/authors/policies-and-guidelines/credit-author-statement}
+
+
+\section*{Ethical Statement}
+
+Write about ELSI, \ie Ethical, Legal, and Social Implications of your research.
+
+\begin{tcolorbox}[title=Instructions: How to write an ELSI statement?]
+If you have no idea what to write here, consult your favorite AI. Ask it for a checklist for ELSI considerations. 
+
+Should you ask the AI?
+Is it sufficient to ask the AI?
+\end{tcolorbox}
+
+
+%%
+%% The acknowledgments section is defined using the "acks" environment
+%% (and NOT an unnumbered section). This ensures the proper
+%% identification of the section in the article metadata, and the
+%% consistent spelling of the heading.
+\begin{acks}
+
+\todoyellow{Add this mandatory acknowledgment if you use the bwUniCluster 2.0.}
+The authors acknowledge support from the state of Baden-Württemberg through bwHPC.
+
+
+\todoyellow{Add this mandatory acknowledgment if you use the bwUniCluster 3.0.}
+
+In addition, when publishing results obtained with the help of bwUniCluster 3.0, you agree to mention the system in your acknowledgement with the following statement (quote):
+
+``
+This work was performed on the computational resource bwUniCluster funded by the Ministry of Science, Research and the Arts Baden-Württemberg and the Universities of the State of Baden-Württemberg, Germany, within the framework program bwHPC.
+''
+
+The public relations team of the bwHPC-S5 project (publications@bwhpc.de) has to be informed about each publication with details about authors, title, publication form (volume number etc.), DOI and date of publication. 
+For further information, see \url{https://wiki.bwhpc.de/e/BwUniCluster3.0/Acknowledgement}.
+
+\todoyellow{For this template. Not for your publication.}
+
+This template is co-funded under the ``2LIKE - Artificial Intelligence for Individualised Learning Path and Processes'' (16DHBKI001)  project by the German Federal Ministry of Education and Research (BMBF) and the Ministry of Science, Research and the Arts Baden-Württemberg within the funding line Artificial Intelligence in Higher Education. 
+
+\creditmasterproject{SEMESTER+YEAR}\mysupervisorrole
+
+\creditmasterproject{2022}
+
+\todoyellow{If related to a DFG project or others. Here is a common template:}
+
+This work was co-funded by the Deutsche Forschungsgemeinschaft (DFG) as part of the
+CodeInspector Project - 504226141.
+
+This research is co-funded by the CodeInspector project (No. 504226141) of the DFG, German Research Foundation.
+
+This research is co-funded by the SocEnRep project (No. 551687338) of the DFG, German Research Foundation.
+
+This research is co-funded by the SmartER project (No.
+515537520) of the DFG, German Research Foundation.
+
+This research is co-funded by the CodeInspector project (No. 504226141) of the DFG, German Research Foundation.
+
+\end{acks}
+
+%%
+%% The next two lines define the bibliography style to be used, and
+%% the bibliography file.
+\begin{tcolorbox}[title=Is this paper a submission to a specific conference or journal?]
+When submitting the paper to a specific conference or journal, check the previous years and issues, respectively.
+Add citations to papers published in the conference and journal to indicate the relevance of your work to the community and to existing research.
+\end{tcolorbox}
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{dsbda-references}
+
+%%
+%% If your work has an appendix, this is the place to put it.
+
+\newpage
+
+\appendix
+
+\section{Supplementary Materials}
+\label{appendix:supplementarymaterials}
+
+\todoyellow{Note: Backward references to main part of the paper is ok.
+But do not directly refer to figures or tables from body to here.} 
+
+\subsection{Extended Related Work}
+\label{appendix:extendedrelatedwork}
+
+\subsection{Extended Results}
+\label{appendix:extendedresults}
+
+\subsection{Hyperparameter Optimization}
+\label{appendix:hyperparameteroptimization}
+
+\subsection{Ablation Studies}
+\label{appendix:ablationstudies}
+
+\subsection{Detailed Discussions}
+\label{appendix:detaileddiscussion}
+
+\subsection{...}
+
+\include{resources/declaration}
+
+
+\section{Include a Checklist}
+
+\todoyellow{New}
+
+For example, the ``ACL 2023 Responsible NLP Checklist'' or the reproducibility criteria of NeurIPS.
+Every submission must also have a section on Ethical considerations and Limitations.
+
+
+
+\end{document}
+\endinput
+%%
+%% End of file `dsbda-paper.tex'.
