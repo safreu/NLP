@@ -1,18 +1,17 @@
-from typing import Self
+import pickle
+import re
 from dataclasses import dataclass
 from pathlib import Path
-import re
-import pickle
+from typing import Self
+
 
 @dataclass
 class SimplePPDB:
     entries: list[SimplePPDBEntry]
 
-
-
     @classmethod
-    def load_from_disk(cls, path: str='data/simple-ppdb/SimplePPDB') -> Self:
-        '''
+    def load_from_disk(cls, path: str = "data/simple-ppdb/SimplePPDB") -> Self:
+        """
         load data from given path
 
         Args:
@@ -22,48 +21,45 @@ class SimplePPDB:
             Instance of SimplePPDB
 
         Throws:
-            Runtime Exception, in case the formating of the lines in the file dont match the expectations
-        '''
-        
-        cache_file = Path(path).with_suffix('.pkl')
+            Runtime Exception, in case the formating of the lines
+            in the file dont match the expectations
+        """
+
+        cache_file = Path(path).with_suffix(".pkl")
 
         entries: list[SimplePPDBEntry] = []
 
         if cache_file.exists():
-            with open(cache_file, 'rb') as cached_file:
+            with open(cache_file, "rb") as cached_file:
                 entries = pickle.load(cached_file)
 
             return cls(entries)
 
-
-        with open(path, 'r', encoding='utf8') as file:
-            
+        with open(path, encoding="utf8") as file:
             for line in file:
-
                 match = re.match(
-                    r'^(\d+\.\d+)\s+(\d+\.\d+)\s+\[([^\]]+)\]\s+(.+?)(?:\t|\s{2,})(.+)$',
-                    line
+                    r"^(\d+\.\d+)\s+(\d+\.\d+)\s+\[([^\]]+)\]\s+(.+?)(?:\t|\s{2,})(.+)$", line
                 )
                 if match is None:
-                    raise RuntimeError(f'Invalid format: {line}')
+                    raise RuntimeError(f"Invalid format: {line}")
 
-                paraphrase_score, simplification_score, syntactic_category, input, output = match.groups()
+                p_score, s_score, category, input, output = match.groups()
 
                 entries.append(
                     SimplePPDBEntry(
-                        paraphrase_score=float(paraphrase_score),
-                        simplification_score=float(simplification_score),
-                        syntactic_category=syntactic_category,
+                        paraphrase_score=float(p_score),
+                        simplification_score=float(s_score),
+                        syntactic_category=category,
                         input=input,
-                        output=output
+                        output=output,
                     )
                 )
 
-        with open(cache_file, 'wb') as cached_file:
+        with open(cache_file, "wb") as cached_file:
             pickle.dump(entries, cached_file)
 
         return cls(entries)
-    
+
 
 @dataclass
 class SimplePPDBEntry:
