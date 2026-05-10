@@ -1,0 +1,140 @@
+% Latex-style DSBDA
+%
+% Version: January 2022
+
+%
+% --- General settings
+\widowpenalty=10000
+\clubpenalty=10000
+
+\usepackage{hyperref} % -- needed for \autoref{}
+\hypersetup{
+  breaklinks=true,   % splits links across lines
+  colorlinks=true,   % displays links as colored text instead of blocks
+  pdfusetitle=true,  % \title and \author values into pdf metadata
+  linkcolor={red!50!black},
+  citecolor={blue!50!black},
+  urlcolor={blue!80!black}
+}
+
+% --- Commands
+\usepackage{ltxcmds}
+\newcommand{\IfPackageLoaded}[3]{\ltx@ifpackageloaded{#1}{#2}{#3}}
+% Example: \IfPackageLoaded{natbib}{natbib loaded}{natbib not loaded}
+
+% --- To work with umlauts
+\usepackage[utf8]{inputenc}
+
+% --- General, useful packages
+\usepackage{xspace}
+
+% These are dependencies for mathcommands
+\usepackage{amsmath}
+\usepackage{amsthm}
+%\usepackage{amssymb} % -- already included
+\usepackage{bm}
+
+\usepackage{tcolorbox}
+
+\input{mathcommands}
+
+
+%%% --- Definition of Math Environments
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}[theorem]{Example}
+
+% Use this package to get references sorted
+% \usepackage{cite} -- clashes with ACM style, depending on where it is put
+
+% --- Deal with todos
+
+% -- no
+\IfPackageLoaded{todonotes}{}{\usepackage{todonotes}}
+\presetkeys{todonotes}
+%    {inline,backgroundcolor=green}{}
+    {backgroundcolor=green}{}
+% If you want to hide all comments
+%    {disable}{}
+
+% -- Simple technique for short vs. long versions (avoiding extensive if-then-else)
+% Switch between short (1st line) and long (2nd line)
+% Remove \color{blue} to not show the short/long text variant
+%\newcommand{\shortorextended}[2]{{\color{red}#1}} % Short version
+\newcommand{\shortorextended}[2]{{\color{blue}#2}} % Long version
+\newcommand{\extended}[1]{{\shortorextended{}{#1}}} % Helpermethod - no need to touch
+
+% Arxiv Variant or not
+\newcommand{\arxivonly}[1]{}
+%\newcommand{\arxivonly}[1]{#1}
+
+% Some own todo commands
+\newcommand{\todoyellow}[1]{\todo[color=yellow,inline]{#1}}
+\newcommand{\todogreen}[1]{\todo[color=green,inline]{#1}}
+\newcommand{\todopink}[1]{\todo[color=pink,inline]{#1}}
+\newcommand{\todored}[1]{\todo[color=red,inline]{#1heterogeneous}}
+\newcommand{\todosthmissing}{\todo[color=red]{Something missing.}}
+\newcommand{\todoremove}[1]{\todo[color=red,noinline]{Remove this?!: #1}}
+\newcommand{\todostopped}[1]{\todo[color=red]{@#1 STOPPED HERE!}}
+\newcommand{\todonote}[1]{\todo[color=cyan]{Note: #1}}
+
+\newcommand{\todoignore}[1]{}
+
+% Blue text
+\newcommand{\blue}[1]{{\color{blue}#1}} 
+
+% --- New and old content
+\newcommand{\newcontent}[1]{{\color{blue}#1}}
+\newcommand{\oldcontent}[1]{{\color{red}#1}}
+
+% --- Writing aids (in American English)
+\newcommand{\ie}{i.\,e.,\xspace}
+\newcommand{\eg}{e.\,g.,\xspace}
+\newcommand{\etal}{et~al.\xspace}
+\newcommand{\cf}{cf.\xspace}
+\newcommand{\wrt}{w.\,r.\,t.\xspace}
+\newcommand{\versus}{vs.\@ \xspace}
+
+% --- Math stuff
+\newcommand{\bigO}{\mathcal{O}}
+
+\newcommand{\iid}{i.\,i.\,d.}
+\newcommand{\noniid}{non-\iid}
+\newcommand{\ood}{out-of-distribution}
+\newcommand{\id}{in-distribution}
+
+% --- For citing URLs
+\newcommand{\lastaccess}{last accessed: \today}
+\newcommand{\onlineaccess}{[Online, accessed: \today]}
+
+
+% --- Author contribution (general statement)
+\newcommand{\mysupervisorrole}{\footnote{Author is contributing Conceptualization, Writing - Review \& Editing, and Supervision.
+Statement is based on the Contributor Roles Taxonomy, see: 
+\url{http://credit.niso.org/}
+%\url{https://www.elsevier.com/authors/policies-and-guidelines/credit-author-statement}
+}}
+
+% --- For credits, acknowledgement, reproducability, etc.
+\newcommand{\creditmasterproject}[1]{The presented research is the result of a Master module ``Project Data Science'' taught at the University of Ulm in #1.
+The last author is supervisor of the student group.}
+\newcommand{\dataavailabilityandreproducibility}{Data Availability and Reproducibility}
+\newcommand{\acknowledgments}{Acknowledgments}
+
+% --- Activate debugging mode
+\newcommand{\debugmode}{
+  \settopmatter{printacmref=false,printfolios=true} 
+  \renewcommand{\baselinestretch}{1.5}
+  \presetkeys{todonotes}{backgroundcolor=green}{}
+}
+
+% --- Some convenient commands
+\newcommand{\New}{{\color{red}New!}\xspace}
+
+
