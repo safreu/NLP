@@ -12,3 +12,17 @@ def apply_bleu(candidate: str, reference: str) -> float:
 
     print(score)
     return score
+
+standard = [
+    "The cat sits on the mat.",
+    "A quick brown fox jumps.",
+    "Completely unrelated sentence about quantum physics.",
+]
+simple = [
+    "A cat is sitting on the mat.",
+    "The fast brown fox is jumping.",
+    "The weather is nice today.",
+]
+
+for ref, can in zip(standard, simple):
+    apply_bleu(ref, can)
