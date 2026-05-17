@@ -13,6 +13,7 @@ dependencies = [
     "evaluate>=0.4.6",
     "sacremoses>=0.1.1",
     "sacrebleu>=2.6.0",
+    "bert-score>=0.3.13",
 ]
 [dependency-groups]
 dev = [
