@@ -8,8 +8,11 @@ dependencies = [
     "pandas>=3.0.2",
     "transformers>=5.6.1",
     "spacy>=3.8.13",
-    "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl", 
+    "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
     "torch>=2.11.0",
+    "evaluate>=0.4.6",
+    "sacremoses>=0.1.1",
+    "sacrebleu>=2.6.0",
     "bert-score>=0.3.13",
 ]
 [dependency-groups]
