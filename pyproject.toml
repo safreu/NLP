@@ -14,6 +14,8 @@ dependencies = [
     "sacremoses>=0.1.1",
     "sacrebleu>=2.6.0",
     "bert-score>=0.3.13",
+    "nltk>=3.9.4",
+    "rouge-score>=0.1.2",
 ]
 [dependency-groups]
 dev = [
