@@ -1,6 +1,6 @@
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 
-def apply_bleu(candidate: str, reference: str) -> float:
+def compute_bleuscore(candidate: str, reference: str) -> float:
     reference_tokens = [reference.split()]
     candidate_tokens = candidate.split()
 
@@ -25,4 +25,4 @@ simple = [
 ]
 
 for ref, can in zip(standard, simple):
-    apply_bleu(ref, can)
+    compute_bleuscore(ref, can)

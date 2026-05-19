@@ -1,6 +1,6 @@
 from rouge_score import rouge_scorer
 
-def apply_rouge(candidate: str, reference: str) -> float:
+def compute_rougescore(candidate: str, reference: str) -> float:
     scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
 
     scores = scorer.score(reference, candidate)
@@ -24,5 +24,5 @@ simple = [
 ]
 
 for ref, can in zip(standard, simple):
-    apply_rouge(ref, can)
+    compute_rougescore(ref, can)
 
