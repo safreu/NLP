@@ -1,3 +1,6 @@
+from pathlib import Path
+import json
+
 def write_results(results, path: str="results/evaluation_results.json"):
     folder = Path(path)
     folder.parent.mkdir(parennts=True, exist_ok=True)

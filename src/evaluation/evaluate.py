@@ -9,8 +9,7 @@ from evaluation.file_writer import write_predictions
 
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
-from pathlib import Path
-import json
+
 
 def evaluate_model(test_pairs, model_path: str = "models/text-simplifier/OneStop"):
     

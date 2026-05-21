@@ -16,7 +16,7 @@ def main() -> None:
     train_dataset = to_dataset(train)
     valid_dataset = to_dataset(valid)
     
-    #train_model(train=train_dataset, valid=valid_dataset)
+    train_model(train=train_dataset, valid=valid_dataset)
 
     results = evaluate_model(test)
     

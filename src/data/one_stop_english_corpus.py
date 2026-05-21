@@ -6,6 +6,20 @@ from pathlib import Path
 from typing import Self
 
 
+def normalize(text: str) -> str:    
+    text = str(text)
+    text = text.replace("\n", " ")
+    text = text.replace("\r", " ")
+    text = re.sub(r"\s+", " ", text)
+
+    return text.strip()
+
+@dataclass
+class OneStopEnglishEntry:
+    elementary: str
+    intermediate: str
+    advanced: str
+    source: str
 
 @dataclass
 class OneStopEnglish:
@@ -81,18 +95,3 @@ class OneStopEnglish:
             ))
             
         return pairs
-
-def normalize(text: str) -> str:    
-    text = str(text)
-    text = text.replace("\n", " ")
-    text = text.replace("\r", " ")
-    text = re.sub(r"\s+", " ", text)
-
-    return text.strip()
-
-@dataclass
-class OneStopEnglishEntry:
-    elementary: str
-    intermediate: str
-    advanced: str
-    source: str
