@@ -15,7 +15,6 @@ def compute_sari(sources: list[str], predictions: list[str], references: list[st
     
     return float(result["sari"])
 
-"""
 def main() -> None:
     # Load SARI metric
     sari = load("sari")
@@ -51,4 +50,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-"""
