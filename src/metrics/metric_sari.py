@@ -1,6 +1,21 @@
 from evaluate import load
 
+sari = load("sari")
 
+def compute_sari(sources: list[str], predictions: list[str], references: list[str]) -> float:
+    f_references = [
+        [reference] for reference in references
+    ]
+    
+    result = sari.compute(
+        sources=sources,
+        predictions=predictions,
+        references=f_references
+    )
+    
+    return float(result["sari"])
+
+"""
 def main() -> None:
     # Load SARI metric
     sari = load("sari")
@@ -36,3 +51,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+"""
