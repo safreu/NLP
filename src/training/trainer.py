@@ -8,7 +8,7 @@ from transformers import (
     Seq2SeqTrainingArguments
 )
 
-MODEL_NAME = "google/flan-t5-small"
+MODEL_NAME = "google/flan-t5-base"
 
 def train_model(train, valid):
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
@@ -45,7 +45,7 @@ def train_model(train, valid):
         save_strategy="epoch",
         learning_rate=1e-5,
         per_device_train_batch_size=16,
-        per_device_eval_batch_size=4,
+        per_device_eval_batch_size=16,
         num_train_epochs=10,
         predict_with_generate=True,
         logging_steps=10,

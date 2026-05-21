@@ -3,6 +3,7 @@ from data.one_stop_english_corpus import OneStopEnglish
 from training.dataset_builder import split_pairs, to_dataset
 from training.trainer import train_model
 from evaluation.evaluate import evaluate_model
+from evaluation.file_writer import write_results
 
 def main() -> None:
     print("setting up")
@@ -19,6 +20,8 @@ def main() -> None:
 
     results = evaluate_model(test)
     
+    write_results(results)
+        
     print(f"BLEU: {results['bleu']:.4f}")
     print(f"ROUGE-L: {results['rouge-l']:.4f}")
     print(f"SARI: {results['sari']:.4f}")

@@ -5,9 +5,12 @@ from metrics.metric_sari import compute_sari
 from metrics.f1 import compute_f1
 from metrics.flesch_kincaid import compute_flesch_kincaid
 
+from evaluation.file_writer import write_predictions
+
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
-
+from pathlib import Path
+import json
 
 def evaluate_model(test_pairs, model_path: str = "models/text-simplifier/OneStop"):
     
@@ -51,6 +54,9 @@ def evaluate_model(test_pairs, model_path: str = "models/text-simplifier/OneStop
                .removeprefix("simplify to intermediate: ")               
                .strip() for pair in test_pairs]
     references = [pair[1] for pair in test_pairs]
+    
+    write_predictions(sources, candidates, references)
+    
     results = {
         "bert": compute_bertscore(candidates, references),
         "bleu": compute_bleuscore(candidates, references),
