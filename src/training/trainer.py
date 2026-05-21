@@ -43,10 +43,10 @@ def train_model(train, valid):
         output_dir="models/text-simplifier/OneStop",
         eval_strategy="epoch",
         save_strategy="epoch",
-        learning_rate=3e-5,
-        per_device_train_batch_size=4,
+        learning_rate=1e-5,
+        per_device_train_batch_size=16,
         per_device_eval_batch_size=4,
-        num_train_epochs=5,
+        num_train_epochs=10,
         predict_with_generate=True,
         logging_steps=10,
         save_total_limit=2

@@ -66,17 +66,17 @@ class OneStopEnglish:
 
         for entry in self.entries:
             pairs.append((
-                f"simplify: {entry.advanced}",
+                f"simplify to elementary: {entry.advanced}",
                 entry.elementary
             ))
 
             pairs.append((
-                f"simplify: {entry.advanced}",
+                f"simplify to intermediate: {entry.advanced}",
                 entry.intermediate
             ))
 
             pairs.append((
-                f"simplify: {entry.intermediate}",
+                f"simplify to elementary: {entry.intermediate}",
                 entry.elementary
             ))
             

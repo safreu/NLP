@@ -33,7 +33,8 @@ def evaluate_model(test_pairs, model_path: str = "models/text-simplifier/OneStop
             output = model.generate(
                 **inputs,
                 max_new_tokens=256,
-                do_sample=False
+                do_sample=False,
+                num_beams=4
             )
         
         prediction = tokenizer.decode(
@@ -45,7 +46,10 @@ def evaluate_model(test_pairs, model_path: str = "models/text-simplifier/OneStop
         references.append(reference)
         
     
-    sources = [pair[0].removeprefix("simplify: ").strip() for pair in test_pairs]
+    sources = [pair[0]
+               .removeprefix("simplify to elementary: ")
+               .removeprefix("simplify to intermediate: ")               
+               .strip() for pair in test_pairs]
     references = [pair[1] for pair in test_pairs]
     results = {
         "bert": compute_bertscore(candidates, references),
