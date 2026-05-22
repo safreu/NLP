@@ -20,5 +20,5 @@ def clean_text(text: str) -> str:
 def remove_prompt(text: str) -> str:
     for prefix in PROMPT_PREFIX:
         text.removeprefix(prefix)
-    return text.split()
+    return text.strip()
     
