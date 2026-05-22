@@ -36,7 +36,8 @@ def evaluate_model(test_pairs, model_path: str = "models/text-simplifier/OneStop
                 **inputs,
                 max_new_tokens=256,
                 do_sample=False,
-                num_beams=4
+                num_beams=4,
+                length_penalty=0.8
             )
         
         prediction = tokenizer.decode(
@@ -49,8 +50,8 @@ def evaluate_model(test_pairs, model_path: str = "models/text-simplifier/OneStop
         
     
     sources = [pair[0]
-               .removeprefix("simplify to elementary: ")
-               .removeprefix("simplify to intermediate: ")               
+               .removeprefix("ewrite this in simpler English for elementary readers: ")
+               .removeprefix("rewrite this in simpler English for intermediate readers: ")               
                .strip() for pair in test_pairs]
     references = [pair[1] for pair in test_pairs]
     
@@ -64,4 +65,5 @@ def evaluate_model(test_pairs, model_path: str = "models/text-simplifier/OneStop
         "sari": compute_sari(sources, candidates, references),
         "rouge-l": compute_rougescore(candidates, references)
     }
+    
     return results
