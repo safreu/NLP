@@ -1,6 +1,4 @@
 import pickle
-from evaluation.evaluate import remove_prompt
-import pandas as pd
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Self
@@ -10,17 +8,52 @@ from preprocessing.filter import text_similarity, length_ratio
 
 @dataclass
 class OneStopEnglishEntry:
-    elementary: str
-    intermediate: str
-    advanced: str
     source: str
+    target: str
+    level: str
+    source_file: str
 
 @dataclass
 class OneStopEnglish:
     entries: list[OneStopEnglishEntry]
-
+    
+    @staticmethod
+    def _load_pair_file(file: Path, level: str) -> list[OneStopEnglishEntry]:
+        text = file.read_text(encoding="utf-8", errors="replace")
+        
+        blocks = text.split("*******")
+        
+        pairs: list[OneStopEnglishEntry] = []
+        
+        for block in blocks:
+            lines = [
+                clean_text(line)
+                for line in block.splitlines()
+                if clean_text(line)
+            ]
+            
+            if len(lines) < 2:
+                continue
+            
+            source = lines[0]
+            target = lines[1]
+            
+            if not source or not target:
+                continue
+            
+            pairs.append(
+                OneStopEnglishEntry(
+                    source=source,
+                    target=target,
+                    level=level,
+                    source_file=file.name
+                )
+            )
+            
+        return pairs
+        
     @classmethod
-    def load_from_disk(cls, path: str = "data/OneStopEnglishCorpus/Texts-Together-OneCSVperFile") -> Self:
+    def load_from_disk(cls, path: str="data/OneStopEnglishCorpus/Sentence-Aligned") -> Self:
         folder = Path(path)
 
         cache_file = folder.with_suffix(".pkl")
@@ -34,75 +67,70 @@ class OneStopEnglish:
         if not folder.exists():
             raise FileNotFoundError(f"Folder does not exists {folder}")
 
-        files = sorted(folder.glob("*.csv"))
+        files = {
+            "ADV-ELE.txt": "elementary",
+            "ADV-INT.txt": "intermediate",
+            "ELE-INT.txt": "elementary"
+        }
 
-        if not files:
-            raise FileNotFoundError(f"No CSV files in {folder}")
 
         entries: list[OneStopEnglishEntry] = []
 
-        for file in files:
-            try:
-                table = pd.read_csv(file, encoding="utf-8")
-            except UnicodeDecodeError:
-                table = pd.read_csv(file, encoding="cp1252")
-
-            columns = {"Elementary", "Intermediate", "Advanced"}
-
-            table.columns = table.columns.str.strip()
-
-            if not columns.issubset(table.columns):
-                raise RuntimeError(f"{file} is missing {columns - set(table.columns)}")            
-
-            for _, row in table.iterrows():
-                entries.append(
-                    OneStopEnglishEntry(
-                        elementary=str(clean_text(row["Elementary"])),
-                        intermediate=str(clean_text(row["Intermediate"])),
-                        advanced=str(clean_text(row["Advanced"])),
-                        source=file.name
-                    )
-                )
+        for filename, level in files.items():
+            file = folder / filename
+            
+            if not file.exists():
+                raise FileNotFoundError(f"No {filename} in {folder}")
+            
+            loaded = cls._load_pair_file(file, level)
+            entries.extend(loaded)
 
         with open(cache_file, "wb") as cached_file:
             pickle.dump(entries, cached_file)
 
         return cls(entries)
     
+    
     def as_training_pairs(self) -> list[tuple[str, str]]:
-        pairs = []
-        similiar = 0
-        ratio = 0
-        for entry in self.entries:
-            candidate_pairs = [
-                (
-                    elementary_prompt(entry.advanced),
-                    entry.elementary
-                ),
-                (
-                intermediate_prompt(entry.advanced),
-                entry.intermediate
-                ),
-                (
-                elementary_prompt(entry.intermediate),
-                entry.elementary
-                )
-            ]
-            
-            for source, target in candidate_pairs:
-                cleaned = remove_prompt(source)
+        pairs: list[tuple[str, str]] = []
 
-                if text_similarity(cleaned, target) > 0.95:
-                    similiar += 1
-                    continue
+        similar = 0
+        ratio = 0
+        duplicate = 0
+        
+        seen: set[tuple[str, str]] = set()
+        
+        for entry in self.entries:
+            if entry.level == "elementary":
+                source = elementary_prompt(entry.source)
+            elif entry.level == "intermediate":
+                source = intermediate_prompt(entry.source)
+            else:
+                raise RuntimeError(f"Unknown level: {entry.level}")
+            
+            target = entry.target
+            cleaned_source = remove_prompt(source)
+            
+
+            if text_similarity(cleaned_source, target) > 0.95:
+                similar += 1
+                continue
                 
-                if length_ratio(cleaned, target) < 0.4:
-                    ratio += 1
-                    continue
+            if length_ratio(cleaned_source, target) < 0.2:
+                ratio += 1
+                continue
                 
-                pairs.append((source, target))
+            training_pair = (source, target)
+            
+            if training_pair in seen:
+                duplicate += 1
+                continue
+
+            seen.add(training_pair)
+            pairs.append(training_pair)
                 
-        print(f"{str(similiar)} pairs were skipped, because of similiarity")
-        print(f"{str(ratio)} pairs were skipped, because of ratio")
+        print(f"{similar} pairs were skipped, because of similarity")
+        print(f"{ratio} pairs were skipped, because of ratio")
+        print(f"{duplicate} duplicate pairs skipped")
         
         return pairs

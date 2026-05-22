@@ -1,4 +1,5 @@
 import re
+import pandas as pd
 
 from prompts import ELEMENTARY_TEXT, INTERMEDIATE_TEXT
 
@@ -11,6 +12,8 @@ def normalize_whitespace(text: str) -> str:
     return " ".join(text.split())
 
 def clean_text(text: str) -> str:
+    if pd.isna(text):
+        return ""
     text = str(text)
     text = text.replace("\n", " ")
     text = text.replace("\r", " ")
