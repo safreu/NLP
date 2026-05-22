@@ -50,7 +50,7 @@ def evaluate_model(test_pairs, model_path: str = "models/text-simplifier/OneStop
         
     
     sources = [pair[0]
-               .removeprefix("ewrite this in simpler English for elementary readers: ")
+               .removeprefix("rewrite this in simpler English for elementary readers: ")
                .removeprefix("rewrite this in simpler English for intermediate readers: ")               
                .strip() for pair in test_pairs]
     references = [pair[1] for pair in test_pairs]

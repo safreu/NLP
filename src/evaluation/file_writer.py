@@ -3,16 +3,16 @@ import json
 
 def write_results(results, path: str="results/evaluation_results.json"):
     folder = Path(path)
-    folder.parent.mkdir(parennts=True, exist_ok=True)
+    folder.parent.mkdir(parents=True, exist_ok=True)
     
     with open(folder, "w", encoding="utf-8") as file:
-        json.dump(results, file, ident=4)
+        json.dump(results, file, indent=4)
     
     print(f"saved results to {folder}")
     
 def write_predictions(sources, candidates, references, path: str="results/predictions.json"):
     folder = Path(path)
-    folder.parent.mkdir(parennts=True, exist_ok=True)
+    folder.parent.mkdir(parents=True, exist_ok=True)
     
     rows = [
         {
@@ -24,6 +24,6 @@ def write_predictions(sources, candidates, references, path: str="results/predic
     ]
     
     with open(folder, "w", encoding="utf-8") as file:
-        json.dump(rows, file, ident=4, ensure_ascii=False)
+        json.dump(rows, file, indent=4, ensure_ascii=False)
     
     print(f"saved predictions to {folder}")
