@@ -1,5 +1,11 @@
-ELEMENTARY_TEXT = "rewrite this in simpler English for elementary readers: "
-INTERMEDIATE_TEXT = "rewrite this in simpler English for intermediate readers: "
+ELEMENTARY_TEXT = (
+    "rewrite this in simpler English for elementary readers. "
+    "Use short sentences and simple words: "
+)
+INTERMEDIATE_TEXT = (
+    "rewrite this in simpler English for intermediate readers. "
+    "Keep the meaning but use clearer language: "
+)
 
 def elementary_prompt(text: str) -> str:
     return f"{ELEMENTARY_TEXT}{text}"

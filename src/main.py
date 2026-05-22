@@ -20,7 +20,7 @@ def main() -> None:
     pairs = onestop.as_training_pairs()
     
     train, valid, test = split_pairs(pairs)
-    
+     
     train_dataset = to_dataset(train)
     valid_dataset = to_dataset(valid)
     

@@ -1,10 +1,12 @@
 import pickle
+from evaluation.evaluate import remove_prompt
 import pandas as pd
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Self
 from prompts import elementary_prompt, intermediate_prompt
-from preprocessing.cleaner import clean_text
+from preprocessing.cleaner import clean_text, remove_prompt
+from preprocessing.filter import text_similarity, length_ratio
 
 @dataclass
 class OneStopEnglishEntry:
@@ -69,21 +71,38 @@ class OneStopEnglish:
     
     def as_training_pairs(self) -> list[tuple[str, str]]:
         pairs = []
-
+        similiar = 0
+        ratio = 0
         for entry in self.entries:
-            pairs.append((
-                elementary_prompt(entry.advanced),
-                entry.elementary
-            ))
-
-            pairs.append((
+            candidate_pairs = [
+                (
+                    elementary_prompt(entry.advanced),
+                    entry.elementary
+                ),
+                (
                 intermediate_prompt(entry.advanced),
                 entry.intermediate
-            ))
-
-            pairs.append((
+                ),
+                (
                 elementary_prompt(entry.intermediate),
                 entry.elementary
-            ))
+                )
+            ]
             
+            for source, target in candidate_pairs:
+                cleaned = remove_prompt(source)
+
+                if text_similarity(cleaned, target) > 0.95:
+                    similiar += 1
+                    continue
+                
+                if length_ratio(cleaned, target) < 0.4:
+                    ratio += 1
+                    continue
+                
+                pairs.append((source, target))
+                
+        print(f"{str(similiar)} pairs were skipped, because of similiarity")
+        print(f"{str(ratio)} pairs were skipped, because of ratio")
+        
         return pairs
