@@ -1,0 +1,12 @@
+MODEL_NAME ="google/flan-t5-base"
+MODEL_OUTPUT_DIR = "models/text-simplifier/OneStop"
+
+MAX_INPUT_LENGTH = 256
+MAX_TARGET_LENGTH = 256
+
+BATCH_SIZE = 16
+EPOCHS = 10
+LEARNING_RATE = 1e-5
+
+NUM_BEAMS = 4
+LENGTH_PENALTY = 0.8

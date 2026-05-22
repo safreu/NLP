@@ -1,4 +1,13 @@
-from datasets import DatasetDict
+from config import (
+    MODEL_NAME, 
+    MODEL_OUTPUT_DIR, 
+    MAX_INPUT_LENGTH, 
+    MAX_TARGET_LENGTH,
+    LEARNING_RATE,
+    EPOCHS,
+    BATCH_SIZE,
+    
+)
 
 from transformers import (
     AutoTokenizer,
@@ -8,62 +17,79 @@ from transformers import (
     Seq2SeqTrainingArguments
 )
 
-MODEL_NAME = "google/flan-t5-base"
-
-def train_model(train, valid):
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-    model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
-
-    def preprocess(batch):
-        model_inputs = tokenizer(
-            batch["input"],
-            max_length=256,
-            truncation=True
-        )
-
-        labels = tokenizer(
-            text_target=batch["target"],
-            max_length=256,
-            truncation=True
-        )
-        
-        model_inputs["labels"] = labels["input_ids"]
-        
-        return model_inputs
+def load_model(model_name: str=MODEL_NAME):
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
     
-    train_token = train.map(preprocess, batched=True)
-    valid_token = valid.map(preprocess, batched=True)
-    
-    data_collator = DataCollatorForSeq2Seq(
-        tokenizer=tokenizer,
-        model=model
+    return model, tokenizer
+
+def tokenize_batch(batch, tokenizer):
+    model_inputs = tokenizer(
+        batch["input"],
+        max_length=MAX_INPUT_LENGTH,
+        truncation=True
+    )
+
+    labels = tokenizer(
+        text_target=batch["target"],
+        max_length=MAX_TARGET_LENGTH,
+        truncation=True
     )
     
-    args = Seq2SeqTrainingArguments(
-        output_dir="models/text-simplifier/OneStop",
+    model_inputs["labels"] = labels["input_ids"]
+    
+    return model_inputs
+
+def tokenize_dataset(dataset, tokenizer):
+    return dataset.map(
+        lambda batch: tokenize_batch(batch, tokenizer),
+        batched=True
+    )
+
+def create_training_args(path: str):
+    return Seq2SeqTrainingArguments(
+        output_dir=path,
         eval_strategy="epoch",
         save_strategy="epoch",
-        learning_rate=1e-5,
-        per_device_train_batch_size=16,
-        per_device_eval_batch_size=16,
-        num_train_epochs=10,
+        learning_rate=LEARNING_RATE,
+        per_device_train_batch_size=BATCH_SIZE,
+        per_device_eval_batch_size=BATCH_SIZE,
+        num_train_epochs=EPOCHS,
         predict_with_generate=True,
         logging_steps=10,
         save_total_limit=2
     )
     
-    trainer = Seq2SeqTrainer(
+def create_trainer(model, tokenizer, train_dataset, valid_dataset, path: str):
+    data_collator = DataCollatorForSeq2Seq(
+        tokenizer=tokenizer,
+        model=model
+    )
+    
+    return Seq2SeqTrainer(
         model=model,
-        args=args,
-        train_dataset=train_token,
-        eval_dataset=valid_token,
+        args=create_training_args(path),
+        train_dataset=train_dataset,
+        eval_dataset=valid_dataset,
         processing_class=tokenizer,
         data_collator=data_collator
     )
     
+def save_model(model, tokenizer, path: str):
+    model.save_pretrained(path)
+    tokenizer.save_pretrained(path)
+
+def train_model(train, valid, path: str=MODEL_OUTPUT_DIR):
+    model, tokenizer = load_model()
+    
+    train_tokenized = tokenize_dataset(train, tokenizer)
+    valid_tokenized = tokenize_dataset(valid, tokenizer)
+    
+    trainer = create_trainer(model, tokenizer, train_tokenized, valid_tokenized, path)
+    
     trainer.train()
     
-    trainer.save_model("models/text-simplifier/OneStop")
-    tokenizer.save_pretrained("models/text-simplifier/OneStop")
+    save_model(model, tokenizer, path)
+
     
     

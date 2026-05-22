@@ -1,18 +1,10 @@
 import pickle
-import re
 import pandas as pd
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Self
-
-
-def normalize(text: str) -> str:    
-    text = str(text)
-    text = text.replace("\n", " ")
-    text = text.replace("\r", " ")
-    text = re.sub(r"\s+", " ", text)
-
-    return text.strip()
+from prompts import elementary_prompt, intermediate_prompt
+from preprocessing.cleaner import clean_text
 
 @dataclass
 class OneStopEnglishEntry:
@@ -63,9 +55,9 @@ class OneStopEnglish:
             for _, row in table.iterrows():
                 entries.append(
                     OneStopEnglishEntry(
-                        elementary=str(normalize(row["Elementary"])),
-                        intermediate=str(normalize(row["Intermediate"])),
-                        advanced=str(normalize(row["Advanced"])),
+                        elementary=str(clean_text(row["Elementary"])),
+                        intermediate=str(clean_text(row["Intermediate"])),
+                        advanced=str(clean_text(row["Advanced"])),
                         source=file.name
                     )
                 )
@@ -80,17 +72,17 @@ class OneStopEnglish:
 
         for entry in self.entries:
             pairs.append((
-                f"rewrite this in simpler English for elementary readers: {entry.advanced}",
+                elementary_prompt(entry.advanced),
                 entry.elementary
             ))
 
             pairs.append((
-                f"rewrite this in simpler English for intermediate readers: {entry.advanced}",
+                intermediate_prompt(entry.advanced),
                 entry.intermediate
             ))
 
             pairs.append((
-                f"rewrite this in simpler English for elementary readers: {entry.intermediate}",
+                elementary_prompt(entry.intermediate),
                 entry.elementary
             ))
             

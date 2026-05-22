@@ -1,14 +1,22 @@
 
 from data.one_stop_english_corpus import OneStopEnglish
-from training.dataset_builder import split_pairs, to_dataset
+from preprocessing.dataset_builder import split_pairs, to_dataset
 from training.trainer import train_model
 from evaluation.evaluate import evaluate_model
-from evaluation.file_writer import write_results
+from evaluation.file_writer import write_results, create_run_dir
 
 def main() -> None:
     print("setting up")
+    
+    run_dir = create_run_dir()
+    model_dir = run_dir / "model"
+    results_path = run_dir / "scores.json"
+    predictions_path = run_dir / "predictions.json"
+    
+    print("Data loading")
     onestop: OneStopEnglish = OneStopEnglish.load_from_disk();    
-
+    print("Data loaded")
+    
     pairs = onestop.as_training_pairs()
     
     train, valid, test = split_pairs(pairs)
@@ -16,21 +24,16 @@ def main() -> None:
     train_dataset = to_dataset(train)
     valid_dataset = to_dataset(valid)
     
-    train_model(train=train_dataset, valid=valid_dataset)
-
-    results = evaluate_model(test)
+    print("starting training")
+    train_model(train=train_dataset, valid=valid_dataset, path=model_dir)
+    print("finished training")
     
-    write_results(results)
+    print("starting evaluation")
+    results = evaluate_model(test, model_dir, predictions_path)
+    print("finished evaluation")
+    
+    write_results(results, results_path)
         
-    print(f"BLEU: {results['bleu']:.4f}")
-    print(f"ROUGE-L: {results['rouge-l']:.4f}")
-    print(f"SARI: {results['sari']:.4f}")
-
-    print(f"BERTScore F1: {results['bert']['f1_mean']:.4f}")
-
-    print(f"Token F1: {results['f1']['f1_mean']:.4f}")
-
-    print(f"Flesch-Kincaid: {results['flesch']['mean']:.4f}")
 
 if __name__ == "__main__":
     main()
