@@ -1,10 +1,11 @@
 import pickle
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Self
 from prompts import elementary_prompt, intermediate_prompt
 from preprocessing.cleaner import clean_text, remove_prompt
 from preprocessing.filter import text_similarity, length_ratio
+from evaluation.datasetStats import DatasetStats
 
 @dataclass
 class OneStopEnglishEntry:
@@ -16,6 +17,7 @@ class OneStopEnglishEntry:
 @dataclass
 class OneStopEnglish:
     entries: list[OneStopEnglishEntry]
+    stats: DatasetStats = field(default_factory=DatasetStats)
     
     @staticmethod
     def _load_pair_file(file: Path, level: str) -> list[OneStopEnglishEntry]:
@@ -55,6 +57,7 @@ class OneStopEnglish:
     @classmethod
     def load_from_disk(cls, path: str="data/OneStopEnglishCorpus/Sentence-Aligned") -> Self:
         folder = Path(path)
+        stats = DatasetStats()
 
         cache_file = folder.with_suffix(".pkl")
 
@@ -83,20 +86,21 @@ class OneStopEnglish:
                 raise FileNotFoundError(f"No {filename} in {folder}")
             
             loaded = cls._load_pair_file(file, level)
+            
+            stats.add_loaded(level, len(loaded))
+            
+                        
             entries.extend(loaded)
 
         with open(cache_file, "wb") as cached_file:
             pickle.dump(entries, cached_file)
 
-        return cls(entries)
+        return cls(entries, stats)
     
     
     def as_training_pairs(self) -> list[tuple[str, str]]:
         pairs: list[tuple[str, str]] = []
 
-        similar = 0
-        ratio = 0
-        duplicate = 0
         
         seen: set[tuple[str, str]] = set()
         
@@ -110,27 +114,29 @@ class OneStopEnglish:
             
             target = entry.target
             cleaned_source = remove_prompt(source)
-            
 
-            if text_similarity(cleaned_source, target) > 0.95:
-                similar += 1
+            similarity = text_similarity(cleaned_source, target)
+            ratio_score = length_ratio(cleaned_source, target)
+            
+            self.stats.similarity_scores.append(similarity)
+            self.stats.length_ratios.append(ratio_score)
+            
+            if similarity > 0.8:
+                self.stats.skipped_similar += 1
                 continue
                 
-            if length_ratio(cleaned_source, target) < 0.2:
-                ratio += 1
+            if ratio_score < 0.2:
+                self.stats.skipped_length_ratio += 1
                 continue
                 
             training_pair = (source, target)
             
             if training_pair in seen:
-                duplicate += 1
+                self.stats.skipped_duplicate += 1
                 continue
 
+            self.stats.add_kept(entry.level)
             seen.add(training_pair)
             pairs.append(training_pair)
-                
-        print(f"{similar} pairs were skipped, because of similarity")
-        print(f"{ratio} pairs were skipped, because of ratio")
-        print(f"{duplicate} duplicate pairs skipped")
         
         return pairs

@@ -1,4 +1,4 @@
-MODEL_NAME ="google/flan-t5-base"
+MODEL_NAME ="google/flan-t5-small"
 MODEL_OUTPUT_DIR = "models/text-simplifier/OneStop"
 
 MAX_INPUT_LENGTH = 256

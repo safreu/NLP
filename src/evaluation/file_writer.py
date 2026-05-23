@@ -1,6 +1,6 @@
 from pathlib import Path
 import json
-
+from dataclasses import asdict
 
 RUNS_DIR = Path("runs")
 
@@ -62,3 +62,15 @@ def write_predictions(sources, candidates, references, path: str="results/predic
         json.dump(rows, file, indent=4, ensure_ascii=False)
     
     print(f"saved predictions to {folder}")
+    
+def write_stats(stats, path: str="results/stats.json"):
+    folder = Path(path)
+    folder.parent.mkdir(parents=True, exist_ok=True)
+    
+    with open(folder, "w", encoding="utf-8") as file:
+        json.dump(
+            stats.to_dict(),
+            file,
+            indent=4,
+            ensure_ascii=False
+        )

@@ -17,11 +17,15 @@ from transformers import (
     Seq2SeqTrainingArguments
 )
 
+import torch
+torch.set_num_threads(16)
+
 def load_model(model_name: str=MODEL_NAME):
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
     
     return model, tokenizer
+
 
 def tokenize_batch(batch, tokenizer):
     model_inputs = tokenizer(
@@ -40,11 +44,14 @@ def tokenize_batch(batch, tokenizer):
     
     return model_inputs
 
+
 def tokenize_dataset(dataset, tokenizer):
     return dataset.map(
         lambda batch: tokenize_batch(batch, tokenizer),
-        batched=True
+        batched=True,
+        num_proc=16
     )
+
 
 def create_training_args(path: str):
     return Seq2SeqTrainingArguments(
@@ -57,8 +64,10 @@ def create_training_args(path: str):
         num_train_epochs=EPOCHS,
         predict_with_generate=True,
         logging_steps=10,
-        save_total_limit=2
+        save_total_limit=2,
+        dataloader_num_workers=8
     )
+    
     
 def create_trainer(model, tokenizer, train_dataset, valid_dataset, path: str):
     data_collator = DataCollatorForSeq2Seq(
@@ -75,9 +84,11 @@ def create_trainer(model, tokenizer, train_dataset, valid_dataset, path: str):
         data_collator=data_collator
     )
     
+    
 def save_model(model, tokenizer, path: str):
     model.save_pretrained(path)
     tokenizer.save_pretrained(path)
+    
 
 def train_model(train, valid, path: str=MODEL_OUTPUT_DIR):
     model, tokenizer = load_model()
@@ -90,6 +101,3 @@ def train_model(train, valid, path: str=MODEL_OUTPUT_DIR):
     trainer.train()
     
     save_model(model, tokenizer, path)
-
-    
-    
