@@ -37,7 +37,7 @@ def main() -> None:
     results = evaluate_model(test, model_dir, predictions_path)
     print("finished evaluation")
     
-    #write_results(results, results_path)
+    write_results(results, results_path)
         
 
 if __name__ == "__main__":

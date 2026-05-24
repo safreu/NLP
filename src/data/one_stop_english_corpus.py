@@ -37,8 +37,12 @@ class OneStopEnglish:
             if len(lines) < 2:
                 continue
             
-            source = lines[0]
-            target = lines[1]
+            if file.name == "ELE-INT.txt":
+                source = lines[1]
+                target = lines[0]
+            else:
+                source = lines[0]
+                target = lines[1]
             
             if not source or not target:
                 continue
