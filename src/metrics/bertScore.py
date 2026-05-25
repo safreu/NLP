@@ -56,35 +56,3 @@ def compute_bertscore(
         "recall_mean": float(recall.mean()),
         "f1_mean": float(f1.mean()),
     }
-
-
-if __name__ == "__main__":
-
-    # placeholder example for testing
-    standard = [
-        "The cat sits on the mat.",
-        "A quick brown fox jumps.",
-        "Completely unrelated sentence about quantum physics.",
-    ]
-    simple = [
-        "A cat is sitting on the mat.",
-        "The fast brown fox is jumping.",
-        "The weather is nice today.",
-    ]
-
-    result = compute_bertscore(standard, simple, lang="en", verbose=True)
-
-    for i, (c, ref) in enumerate(zip(standard, simple, strict=True)):
-        print(f"[{i}] cand={c!r}")
-        print(f"    ref ={ref!r}")
-        print(
-            f"    Precision: {result['precision'][i]:.4f} "
-            f"Recall: {result['recall'][i]:.4f} "
-            f"F: {result['f1'][i]:.4f}"
-        )
-
-    print(
-        f"\nMean Precision: {result['precision_mean']:.4f} "
-        f"Mean Recall={result['recall_mean']:.4f} "
-        f"Mean F1: {result['f1_mean']:.4f}"
-    )
