@@ -50,7 +50,7 @@ MAX_TARGET_LENGTH = 128
 
 NUM_EPOCHS = 3
 BATCH_SIZE = 16
-LEARNING_RATE = 3e-4
+LEARNING_RATE = 1e-4
 
 # preprocessing filter thresholds (mirrors data.one_stop_english_corpus)
 MAX_SIMILARITY = 0.8
