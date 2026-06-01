@@ -40,10 +40,10 @@ from preprocessing.filter import length_ratio, text_similarity
 from evaluation.metrics_builder import compute_all_metrics
 from evaluation.file_writer import create_run_dir, write_predictions, write_results
 
-MODEL_NAME = "t5-small"
+MODEL_NAME = "google/flan-t5-base"
 TASK_PREFIX = "simplify: "
 
-OUTPUT_DIR = "./t5-small-simplification"
+OUTPUT_DIR = "./flan-t5-base-simplification"
 
 MAX_INPUT_LENGTH = 128
 MAX_TARGET_LENGTH = 128
@@ -119,7 +119,7 @@ for name, loader in DATASET_LOADERS.items():
         loaded = loader()
         raw_pairs.extend(loaded)
         print(f"  [ok]   {name}: {len(loaded)} pairs")
-    except Exception as error:  # noqa: BLE001 - skip unavailable datasets
+    except Exception as error: 
         print(f"  [skip] {name}: {type(error).__name__}: {error}")
 
 if not raw_pairs:
