@@ -37,7 +37,8 @@ from preprocessing.cleaner import clean_text
 from preprocessing.dataset_builder import split_pairs, to_dataset  
 from preprocessing.filter import length_ratio, text_similarity 
 
-from evaluation.metrics_builder import compute_all_metrics 
+from evaluation.metrics_builder import compute_all_metrics
+from evaluation.file_writer import create_run_dir, write_predictions, write_results
 
 MODEL_NAME = "t5-small"
 TASK_PREFIX = "simplify: "
@@ -314,7 +315,7 @@ for i in range(min(5, len(predictions))):
 
 
 # evaluation-only benchmark: multi-reference SARI on ASSET
-def evaluate_on_asset() -> None:
+def evaluate_on_asset() -> float:
     from metrics.metric_sari import sari
 
     dataset = load_dataset("facebook/asset", "simplification")["test"]
@@ -335,10 +336,36 @@ def evaluate_on_asset() -> None:
     print("\n" + "=" * 60)
     print(f"ASSET multi-reference SARI (test, {len(asset_sources)} sentences): {score:.4f}")
     print("=" * 60)
+    return score
 
 
 print("\nEvaluating on ASSET ...")
 try:
-    evaluate_on_asset()
+    asset_sari = evaluate_on_asset()
 except Exception as error:
     print(f"[skip] ASSET evaluation: {type(error).__name__}: {error}")
+    asset_sari = None
+
+
+# save results as JSON                                                    #
+run_dir = create_run_dir()
+
+scores = {
+    "model": OUTPUT_DIR,
+    "num_test_sentences": len(predictions),
+    "test_split": {
+        "bertscore_precision_mean": results["bert"]["precision_mean"],
+        "bertscore_recall_mean": results["bert"]["recall_mean"],
+        "bertscore_f1_mean": results["bert"]["f1_mean"],
+        "bleu": results["bleu"],
+        "token_f1_mean": results["f1"]["f1_mean"],
+        "flesch_kincaid_mean": results["flesch"]["mean"],
+        "sari": results["sari"],
+        "rouge_l": results["rouge-l"],
+    },
+    "asset_multi_reference_sari": asset_sari,
+}
+
+write_results(scores, str(run_dir / "scores.json"))
+write_predictions(sources, predictions, test_targets, str(run_dir / "predictions.json"))
+print(f"\nAll results saved under: {run_dir}")
