@@ -1,0 +1,15 @@
+{
+    "model": "./flan-t5-base-simplification",
+    "num_test_sentences": 17109,
+    "test_split": {
+        "bertscore_precision_mean": 0.9261955618858337,
+        "bertscore_recall_mean": 0.9194891452789307,
+        "bertscore_f1_mean": 0.9224892854690552,
+        "bleu": 0.3458868413853883,
+        "token_f1_mean": 0.5920997974722878,
+        "flesch_kincaid_mean": 9.468810870479912,
+        "sari": 50.66280896445035,
+        "rouge_l": 0.5580049323996863
+    },
+    "asset_multi_reference_sari": 44.63675556760449
+}
