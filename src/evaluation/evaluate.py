@@ -36,7 +36,8 @@ def generate_prediction(input_text: str, model, tokenizer, device):
             max_new_tokens=MAX_TARGET_LENGTH,
             do_sample=False,
             num_beams=NUM_BEAMS,
-            length_penalty=LENGTH_PENALTY
+            length_penalty=LENGTH_PENALTY,
+            no_repeat_ngram_size=3,
         )
         
     return tokenizer.decode(output[0], skip_special_tokens=True)
