@@ -4,6 +4,7 @@ from preprocessing.dataset_builder import split_pairs, to_dataset
 from training.trainer import train_model
 from evaluation.evaluate import evaluate_model, evaluate_checkpoint
 from evaluation.file_writer import write_results, create_run_dir, write_stats
+from evaluation.checkpoint_compare import compare_best_checkpoints
 
 def main() -> None:
     print("setting up")
@@ -38,6 +39,15 @@ def main() -> None:
     print("finished evaluation")
     
     write_results(results, results_path)
+    
+    compare_best_checkpoints(
+        scores_path=results_path,
+        model_dir=model_dir,
+        output_path=run_dir/"best_checkpoints_comparison.json",
+        metric_path="sari",
+        k=5,
+        higher_is_better=True,
+    )
         
 
 if __name__ == "__main__":
