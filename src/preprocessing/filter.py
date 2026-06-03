@@ -9,9 +9,10 @@ def text_similarity(source: str, target: str) -> bool:
     ).ratio()
     
 def length_ratio(source: str, target: str) -> float:
-    cleaned_source = normalize_text(target).split()
-    cleaned_target = normalize_text(source).split()
-    
+
+    cleaned_source = normalize_text(source).split()
+    cleaned_target = normalize_text(target).split()
+
     if len(cleaned_source) == 0:
         return 0.0
     

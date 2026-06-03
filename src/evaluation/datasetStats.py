@@ -27,7 +27,10 @@ class DatasetStats:
         data["total kept"] = sum(self.kept_per_level.values())
         
         if self.similarity_scores:
-            data["similarity_avg"] = sum(self.similarity_scores) / len(self.similarity_scores)
+            similarity_avg = sum(self.similarity_scores) / len(self.similarity_scores)
+            data["similarity_avg"] = similarity_avg
+            data["copy_rate"] = similarity_avg
+            data["edit_rate"] = 1.0 - similarity_avg
             data["similarity_min"] = min(self.similarity_scores)
             data["similarity_max"] = max(self.similarity_scores)
             
