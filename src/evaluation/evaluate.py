@@ -38,6 +38,8 @@ def generate_prediction(input_text: str, model, tokenizer, device):
             num_beams=NUM_BEAMS,
             length_penalty=LENGTH_PENALTY,
             no_repeat_ngram_size=3,
+            repetition_penalty=1.3,
+            encoder_no_repeat_ngram_size=4,
         )
         
     return tokenizer.decode(output[0], skip_special_tokens=True)

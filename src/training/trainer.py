@@ -72,7 +72,8 @@ def create_training_args(path: str):
 def create_trainer(model, tokenizer, train_dataset, valid_dataset, path: str):
     data_collator = DataCollatorForSeq2Seq(
         tokenizer=tokenizer,
-        model=model
+        model=model,
+        label_pad_token_id=-100,
     )
     
     return Seq2SeqTrainer(

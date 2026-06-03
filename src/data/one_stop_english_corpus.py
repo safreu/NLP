@@ -65,12 +65,14 @@ class OneStopEnglish:
         stats = DatasetStats()
 
         cache_file = folder.with_suffix(".pkl")
-
+        
+        '''
         if cache_file.exists():
             with open(cache_file, "rb") as cached_file:
                 entries = pickle.load(cached_file)
 
             return cls(entries)
+        '''
 
         if not folder.exists():
             raise FileNotFoundError(f"Folder does not exists {folder}")
