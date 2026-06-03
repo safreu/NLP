@@ -13,3 +13,12 @@ LENGTH_PENALTY = 0.9
 MIN_LENGTH_RATIO = 0.2
 SIMILARITY_THRESHOLD = 0.9
 SEED = 42
+
+GENERATION_CONFIG = {
+    "max_new_tokens": MAX_TARGET_LENGTH,
+    "do_sample": False,
+    "num_beams": NUM_BEAMS,
+    "length_penalty": LENGTH_PENALTY,
+    "no_repeat_ngram_size": 3,
+    "repetition_penalty": 1.1,
+}

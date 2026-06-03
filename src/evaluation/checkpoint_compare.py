@@ -1,10 +1,5 @@
 from pathlib import Path
-import json
-
-def load_json(path: Path):
-    with open(path, "r", encoding="utf-8") as file:
-        return json.load(file)
-    
+from storage.json_store import write_json, read_json
     
 def get_nested_score(result: dict, metric_path: str) -> float:
     for key in metric_path.split("."):
@@ -29,7 +24,7 @@ def load_checkpoint_predictions(model_dir: Path, checkpoint_name: str):
     if not path.exists():
         raise FileNotFoundError(f"No prediction file found: {path}")
 
-    return load_json(path)
+    return read_json(path)
 
 
 def compare_predictions(top_checkpoints, model_dir: Path):
@@ -93,7 +88,7 @@ def compare_best_checkpoints(
     model_dir = Path(model_dir)
     output_path = Path(output_path)
     
-    scores = load_json(scores_path)
+    scores = read_json(scores_path)
     
     best_checkpoints = best_k_checkpoints(
         scores=scores,
@@ -105,7 +100,7 @@ def compare_best_checkpoints(
     comparison = compare_predictions(best_checkpoints, model_dir)
     
     report = {
-                "metric_used": metric_path,
+        "metric_used": metric_path,
         "higher_is_better": higher_is_better,
         "top_checkpoints": [
             {
@@ -117,9 +112,6 @@ def compare_best_checkpoints(
         "comparison": comparison,
     }
     
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    with open(output_path, "w", encoding="utf-8") as file:
-        json.dump(report, file, indent=4, ensure_ascii=False)
+    write_json(report, output_path)
         
     return report

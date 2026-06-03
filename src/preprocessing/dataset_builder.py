@@ -16,6 +16,7 @@ def split_pairs(pairs, test_size=0.2, random_state=SEED):
     )
     return train_pairs, valid_pairs, test_pairs
 
+
 def to_dataset(pairs):
     return Dataset.from_dict({
         "input": [pair[0] for pair in pairs],

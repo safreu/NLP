@@ -1,6 +1,4 @@
 from dataclasses import dataclass, field, asdict
-from pathlib import Path
-import json
 
 @dataclass
 class DatasetStats:
@@ -24,7 +22,7 @@ class DatasetStats:
         data = asdict(self)
         
         data["total_loaded"] = sum(self.loaded_per_level.values())
-        data["total kept"] = sum(self.kept_per_level.values())
+        data["total_kept"] = sum(self.kept_per_level.values())
         
         if self.similarity_scores:
             similarity_avg = sum(self.similarity_scores) / len(self.similarity_scores)
@@ -35,7 +33,7 @@ class DatasetStats:
             data["similarity_max"] = max(self.similarity_scores)
             
         if self.length_ratios:
-            data["lenght_ratio_avg"] = sum(self.length_ratios) / len(self.length_ratios)
+            data["length_ratio_avg"] = sum(self.length_ratios) / len(self.length_ratios)
             data["length_ratio_min"] = min(self.length_ratios)
             data["length_ratio_max"] = max(self.length_ratios)
         
