@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from accelerate import checkpointing
 from preprocessing.cleaner import remove_prompt
 from evaluation.file_writer import write_predictions
 from evaluation.metrics_builder import compute_all_metrics
@@ -38,8 +41,8 @@ def generate_prediction(input_text: str, model, tokenizer, device):
             num_beams=NUM_BEAMS,
             length_penalty=LENGTH_PENALTY,
             no_repeat_ngram_size=3,
-            repetition_penalty=1.3,
-            encoder_no_repeat_ngram_size=4,
+            repetition_penalty=1.1,
+            encoder_no_repeat_ngram_size=0,
         )
         
     return tokenizer.decode(output[0], skip_special_tokens=True)
@@ -69,3 +72,29 @@ def evaluate_model(test_pairs, model_path: str=MODEL_OUTPUT_DIR, predictions_pat
     write_predictions(sources, candidates, references, predictions_path)
     
     return compute_all_metrics(sources, candidates, references)
+
+def evaluate_checkpoint(test_pairs, run_model_dir: str):
+    model_dir = Path(run_model_dir)
+    
+    checkpoints = sorted(
+        model_dir.glob("checkpoint-*"),
+        key=lambda p: int(p.name.split("-")[-1])
+    )
+    
+    all_results = {}
+    
+    for checkpoint in checkpointing:
+        print(f"Evaluating {checkpoint}")
+        
+        prediction_path = checkpoint / "predictions.json"
+        
+        results = evaluate_model(
+            test_pairs=test_pairs,
+            model_path=str(checkpoint),
+            predictions_path=str(prediction_path)
+        )
+        
+        all_results[checkpoint.name] = results
+        
+    return all_results
+        

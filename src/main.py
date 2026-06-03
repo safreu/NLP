@@ -2,7 +2,7 @@
 from data.one_stop_english_corpus import OneStopEnglish
 from preprocessing.dataset_builder import split_pairs, to_dataset
 from training.trainer import train_model
-from evaluation.evaluate import evaluate_model
+from evaluation.evaluate import evaluate_model, evaluate_checkpoint
 from evaluation.file_writer import write_results, create_run_dir, write_stats
 
 def main() -> None:
@@ -34,7 +34,7 @@ def main() -> None:
     print("finished training")
     
     print("starting evaluation")
-    results = evaluate_model(test, model_dir, predictions_path)
+    results = evaluate_checkpoint(test, model_dir)
     print("finished evaluation")
     
     write_results(results, results_path)
