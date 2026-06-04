@@ -3,6 +3,7 @@ from enum import Enum
 
 from data.dataset_loader import DatasetLoader
 from evaluation.checkpoint_compare import compare_best_checkpoints
+from evaluation.prediction_analysis import analyze_prediction_copies
 from preprocessing.dataset_builder import to_dataset
 from training.trainer import train_model
 from evaluation.evaluate import evaluate_checkpoints, evaluate_model
@@ -45,6 +46,12 @@ class TrainingPipeline:
             )
             
         write_json(results, scores_path)
+        
+        analyze_prediction_copies(
+            predictions_path=predictions_path,
+            output_path=pipeline_dir / "copy_analysis.json",
+            near_copy_threshold=0.95,
+        )
         
     
     def run(self, run_dir: Path) -> None:

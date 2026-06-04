@@ -64,7 +64,7 @@ def create_training_args(path: str):
         num_train_epochs=EPOCHS,
         predict_with_generate=True,
         logging_steps=10,
-        save_total_limit=None,
+        save_total_limit=3,
         dataloader_num_workers=8,
         weight_decay=0.01,
     )

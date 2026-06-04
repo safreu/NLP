@@ -43,7 +43,7 @@ class WikiLargeLoader:
             
         train_pairs = self._to_pairs(train_split)
         valid_pairs = self._to_pairs(valid_split)
-        test_pairs = self._to_pairs(test_pairs)
+        test_pairs = self._to_pairs(test_split)
         
         return train_pairs, valid_pairs, test_pairs
             
