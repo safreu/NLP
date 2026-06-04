@@ -38,7 +38,9 @@ class TrainingPipeline:
                 metric_path="sari",
                 k=5,
                 higher_is_better=True,
+                copy_tresshold=0.95
             )
+                        
             return
         
         results = evaluate_model(
