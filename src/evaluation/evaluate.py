@@ -8,6 +8,7 @@ from config import (
     GENERATION_CONFIG,
     MODEL_OUTPUT_DIR,
     MAX_INPUT_LENGTH,
+    TrainingConfig,
 )
 
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
@@ -25,7 +26,7 @@ def load_model(model_path: str):
     return model, tokenizer, device
 
 
-def generate_batch(input_texts: list[str], model, tokenizer, device):
+def generate_batch(input_texts: list[str], model, tokenizer, device, config: TrainingConfig):
     inputs = tokenizer(
         input_texts,
         return_tensors="pt",
@@ -37,13 +38,13 @@ def generate_batch(input_texts: list[str], model, tokenizer, device):
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
-            **GENERATION_CONFIG,
+            **config.generation_config,
         )
         
     return tokenizer.batch_decode(outputs, skip_special_tokens=True)
     
 
-def generate_predictions(test_pairs, model, tokenizer, device, batch_size=16):
+def generate_predictions(test_pairs, model, tokenizer, device, config: TrainingConfig, batch_size=16):
     candidates = []
     references = []
 
@@ -58,6 +59,7 @@ def generate_predictions(test_pairs, model, tokenizer, device, batch_size=16):
             model=model,
             tokenizer=tokenizer,
             device=device,
+            config=config,
         )
         
         candidates.extend(predictions)
@@ -70,10 +72,10 @@ def extract_sources(test_pairs):
     return [remove_prompt(input_text) for input_text, _ in test_pairs]
 
 
-def evaluate_model(test_pairs, model_path: str=MODEL_OUTPUT_DIR, predictions_path: str="results.json"):
+def evaluate_model(test_pairs, config: TrainingConfig, model_path: str=MODEL_OUTPUT_DIR, predictions_path: str="results.json"):
     model, tokenizer, device = load_model(model_path)
 
-    candidates, references = generate_predictions(test_pairs, model, tokenizer, device)
+    candidates, references = generate_predictions(test_pairs, model, tokenizer, device, config)
     
     sources = extract_sources(test_pairs)
     
@@ -82,7 +84,7 @@ def evaluate_model(test_pairs, model_path: str=MODEL_OUTPUT_DIR, predictions_pat
     return compute_all_metrics(sources, candidates, references)
 
 
-def evaluate_checkpoints(test_pairs, run_model_dir: str):
+def evaluate_checkpoints(test_pairs, run_model_dir: str, config: TrainingConfig):
     model_dir = Path(run_model_dir)
     
     checkpoints = sorted(
@@ -100,7 +102,8 @@ def evaluate_checkpoints(test_pairs, run_model_dir: str):
         results = evaluate_model(
             test_pairs=test_pairs,
             model_path=str(checkpoint),
-            predictions_path=str(prediction_path)
+            predictions_path=str(prediction_path),
+            config=config
         )
         
         all_results[checkpoint.name] = results

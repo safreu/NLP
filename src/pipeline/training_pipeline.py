@@ -1,6 +1,7 @@
 from pathlib import Path
 from enum import Enum
 
+from config import TrainingConfig
 from data.dataset_loader import DatasetLoader
 from evaluation.checkpoint_compare import compare_best_checkpoints
 from evaluation.prediction_analysis import analyze_prediction_copies
@@ -14,9 +15,10 @@ class EvaluationMode(Enum):
     CHECKPOINTS = "checkpoints"
 
 class TrainingPipeline:
-    def __init__(self, name: str, dataset_loader: DatasetLoader, evaluation_mode: EvaluationMode=EvaluationMode.FINAL_MODEL):
+    def __init__(self, name: str, dataset_loader: DatasetLoader, config: TrainingConfig, evaluation_mode: EvaluationMode=EvaluationMode.FINAL_MODEL):
         self.name = name
         self.dataset_loader = dataset_loader
+        self.config = config
         self.evaluation_mode = evaluation_mode
         
         
@@ -25,7 +27,7 @@ class TrainingPipeline:
         scores_path = pipeline_dir / "scores.json"
         
         if self.evaluation_mode == EvaluationMode.CHECKPOINTS:
-            results = evaluate_checkpoints(test, model_dir)
+            results = evaluate_checkpoints(test, model_dir, self.config)
             
             write_json(results, scores_path)
             
@@ -43,6 +45,7 @@ class TrainingPipeline:
                 test_pairs=test,
                 model_path=model_dir,
                 predictions_path=predictions_path,
+                config=self.config,
             )
             
         write_json(results, scores_path)
@@ -50,7 +53,7 @@ class TrainingPipeline:
         analyze_prediction_copies(
             predictions_path=predictions_path,
             output_path=pipeline_dir / "copy_analysis.json",
-            near_copy_threshold=0.95,
+            copy_tresshold=0.95,
         )
         
     
@@ -72,6 +75,7 @@ class TrainingPipeline:
             train=train_dataset,
             valid=valid_dataset,
             path=model_dir,
+            config=self.config,
         )
         
         self._evaluate(test, model_dir, pipeline_dir)
