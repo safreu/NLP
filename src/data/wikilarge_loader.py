@@ -24,7 +24,7 @@ class WikiLargeLoader:
         dataset = load_dataset("an-atlas/wikilarge")
         
         train_split = dataset["train"].shuffle(seed=self.seed)
-        valid_split = dataset["valid"]
+        valid_split = dataset["validation"]
         test_split = dataset["test"]
         
         if self.max_train_samples is not None:

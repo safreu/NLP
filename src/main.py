@@ -16,7 +16,7 @@ def main() -> None:
     TrainingPipeline(
         name="wikilarge",
         dataset_loader=WikiLargeLoader(),
-        evaluation_mode=EvaluationMode.FINAL_MODE,
+        evaluation_mode=EvaluationMode.FINAL_MODEL,
     ).run(experiment_dir)
 
 if __name__ == "__main__":

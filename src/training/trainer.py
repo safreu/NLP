@@ -65,7 +65,8 @@ def create_training_args(path: str):
         predict_with_generate=True,
         logging_steps=10,
         save_total_limit=None,
-        dataloader_num_workers=8
+        dataloader_num_workers=8,
+        weight_decay=0.01,
     )
     
     

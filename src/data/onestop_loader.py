@@ -7,5 +7,5 @@ class OneStopLoader:
     
     def load_pairs(self) -> tuple[list[Pair], list[Pair], list[Pair]]:
         corpus = OneStopEnglish.load_from_disk()
-        pairs = corpus.as_training_pairs
+        pairs = corpus.as_training_pairs()
         return split_pairs(pairs)
