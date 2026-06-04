@@ -28,5 +28,5 @@ class TrainingConfig:
             "num_beams": self.num_beams,
             "length_penalty": self.length_penalty,
             "no_repeat_ngram_size": self.no_repeat_ngram_size,
-            "repetition_penalty": self.repitition_penalty,
+            "repetition_penalty": self.repetition_penalty,
         }
