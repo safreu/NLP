@@ -1,11 +1,12 @@
 import re
 import pandas as pd
 
-from prompts import ELEMENTARY_TEXT, INTERMEDIATE_TEXT
+from prompts import ELEMENTARY_TEXT, INTERMEDIATE_TEXT, SIMPLIFY_TEXT
 
 PROMPT_PREFIX = [
     ELEMENTARY_TEXT,
-    INTERMEDIATE_TEXT
+    INTERMEDIATE_TEXT,
+    SIMPLIFY_TEXT,
 ]
 
 def normalize_whitespace(text: str) -> str:
