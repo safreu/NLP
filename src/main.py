@@ -18,7 +18,7 @@ def main() -> None:
     TrainingPipeline(
         name="wikilarge",
         dataset_loader=WikiLargeLoader(max_train_samples=10000, max_eval_samples=1000),
-        config=TrainingConfig(epochs=5)
+        config=TrainingConfig(epochs=5),
         evaluation_mode=EvaluationMode.FINAL_MODEL,
     ).run(experiment_dir)
 

@@ -4,12 +4,7 @@ from storage.json_store import write_json
 from storage.prediction_store import prediction_rows
 from preprocessing.cleaner import remove_prompt
 from evaluation.metrics_builder import compute_all_metrics
-from config import (
-    GENERATION_CONFIG,
-    MODEL_OUTPUT_DIR,
-    MAX_INPUT_LENGTH,
-    TrainingConfig,
-)
+from config import TrainingConfig
 
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
@@ -30,7 +25,7 @@ def generate_batch(input_texts: list[str], model, tokenizer, device, config: Tra
     inputs = tokenizer(
         input_texts,
         return_tensors="pt",
-        max_length=MAX_INPUT_LENGTH,
+        max_length=config.max_input_length,
         padding=True,
         truncation=True
     ).to(device)
@@ -72,7 +67,7 @@ def extract_sources(test_pairs):
     return [remove_prompt(input_text) for input_text, _ in test_pairs]
 
 
-def evaluate_model(test_pairs, config: TrainingConfig, model_path: str=MODEL_OUTPUT_DIR, predictions_path: str="results.json"):
+def evaluate_model(test_pairs, config: TrainingConfig, model_path: str, predictions_path: str="results.json"):
     model, tokenizer, device = load_model(model_path)
 
     candidates, references = generate_predictions(test_pairs, model, tokenizer, device, config)
