@@ -19,3 +19,5 @@
 - `origin/main` wurde in `dev` gemergt.
 - Der Konflikt in `src/main.py` wurde zugunsten des aktuellen `dev`-Pipeline-Codes geloest; der alte `SimplePPDB`-Demo-Code aus `main` bleibt entfernt.
 - `origin/feature/asset-sari-trained-model-validation` wurde in `dev` gemergt.
+- `origin/fix-copy-rate` wurde in `dev` gemergt.
+- Der Konflikt in `src/main.py` wurde zugunsten der neueren `TrainingPipeline`-Einstiegslogik geloest.

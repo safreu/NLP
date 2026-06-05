@@ -1,13 +1,4 @@
-from config import (
-    MODEL_NAME, 
-    MODEL_OUTPUT_DIR, 
-    MAX_INPUT_LENGTH, 
-    MAX_TARGET_LENGTH,
-    LEARNING_RATE,
-    EPOCHS,
-    BATCH_SIZE,
-    
-)
+from config import TrainingConfig
 
 from transformers import (
     AutoTokenizer,
@@ -20,23 +11,23 @@ from transformers import (
 import torch
 torch.set_num_threads(16)
 
-def load_model(model_name: str=MODEL_NAME):
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+def load_model(config: TrainingConfig):
+    tokenizer = AutoTokenizer.from_pretrained(config.model_name)
+    model = AutoModelForSeq2SeqLM.from_pretrained(config.model_name)
     
     return model, tokenizer
 
 
-def tokenize_batch(batch, tokenizer):
+def tokenize_batch(batch, tokenizer, config: TrainingConfig):
     model_inputs = tokenizer(
         batch["input"],
-        max_length=MAX_INPUT_LENGTH,
+        max_length=config.max_input_length,
         truncation=True
     )
 
     labels = tokenizer(
         text_target=batch["target"],
-        max_length=MAX_TARGET_LENGTH,
+        max_length=config.max_target_length,
         truncation=True
     )
     
@@ -45,39 +36,42 @@ def tokenize_batch(batch, tokenizer):
     return model_inputs
 
 
-def tokenize_dataset(dataset, tokenizer):
+def tokenize_dataset(dataset, tokenizer, config: TrainingConfig):
     return dataset.map(
-        lambda batch: tokenize_batch(batch, tokenizer),
+        lambda batch: tokenize_batch(batch, tokenizer, config),
         batched=True,
         num_proc=16
     )
 
 
-def create_training_args(path: str):
+def create_training_args(path: str, config: TrainingConfig):
     return Seq2SeqTrainingArguments(
         output_dir=path,
         eval_strategy="epoch",
         save_strategy="epoch",
-        learning_rate=LEARNING_RATE,
-        per_device_train_batch_size=BATCH_SIZE,
-        per_device_eval_batch_size=BATCH_SIZE,
-        num_train_epochs=EPOCHS,
+        learning_rate=config.learning_rate,
+        per_device_train_batch_size=config.batch_size,
+        per_device_eval_batch_size=config.batch_size,
+        num_train_epochs=config.epochs,
         predict_with_generate=True,
         logging_steps=10,
-        save_total_limit=2,
-        dataloader_num_workers=8
+        save_total_limit=config.save_total_limit,
+        dataloader_num_workers=8,
+        weight_decay=0.01,
+        seed=config.seed
     )
     
     
-def create_trainer(model, tokenizer, train_dataset, valid_dataset, path: str):
+def create_trainer(model, tokenizer, train_dataset, valid_dataset, path: str, config: TrainingConfig):
     data_collator = DataCollatorForSeq2Seq(
         tokenizer=tokenizer,
-        model=model
+        model=model,
+        label_pad_token_id=-100,
     )
     
     return Seq2SeqTrainer(
         model=model,
-        args=create_training_args(path),
+        args=create_training_args(path, config),
         train_dataset=train_dataset,
         eval_dataset=valid_dataset,
         processing_class=tokenizer,
@@ -90,13 +84,13 @@ def save_model(model, tokenizer, path: str):
     tokenizer.save_pretrained(path)
     
 
-def train_model(train, valid, path: str=MODEL_OUTPUT_DIR):
-    model, tokenizer = load_model()
+def train_model(train, valid, path: str, config: TrainingConfig):
+    model, tokenizer = load_model(config)
     
-    train_tokenized = tokenize_dataset(train, tokenizer)
-    valid_tokenized = tokenize_dataset(valid, tokenizer)
+    train_tokenized = tokenize_dataset(train, tokenizer, config)
+    valid_tokenized = tokenize_dataset(valid, tokenizer, config)
     
-    trainer = create_trainer(model, tokenizer, train_tokenized, valid_tokenized, path)
+    trainer = create_trainer(model, tokenizer, train_tokenized, valid_tokenized, path, config)
     
     trainer.train()
     

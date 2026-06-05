@@ -1,43 +1,25 @@
-from data.one_stop_english_corpus import OneStopEnglish
-from preprocessing.dataset_builder import split_pairs, to_dataset
-from training.trainer import train_model
-from evaluation.evaluate import evaluate_model
-from evaluation.file_writer import write_results, create_run_dir, write_stats
+from config import TrainingConfig
+from data.onestop_loader import OneStopLoader
+from data.wikilarge_loader import WikiLargeLoader
+from pipeline.training_pipeline import EvaluationMode, TrainingPipeline
+from storage.run_store import create_run_dir
 
 def main() -> None:
-    print("setting up")
+    experiment_dir = create_run_dir()
     
-    run_dir = create_run_dir()
-    model_dir = run_dir / "model"
-    results_path = run_dir / "scores.json"
-    predictions_path = run_dir / "predictions.json"
-    stats_path = run_dir / "stats.json"
+    TrainingPipeline(
+        name="onestop",
+        dataset_loader=OneStopLoader(),
+        config=TrainingConfig(),
+        evaluation_mode=EvaluationMode.CHECKPOINTS,
+    ).run(experiment_dir)
     
-    print("Data loading")
-    onestop: OneStopEnglish = OneStopEnglish.load_from_disk();   
-    print("Data loaded")
-    
-    pairs = onestop.as_training_pairs()
-    
-    train, valid, test = split_pairs(pairs)
-     
-    train_dataset = to_dataset(train)
-    valid_dataset = to_dataset(valid)
-    
-    print("printing stats")
-    write_stats(onestop.stats, stats_path)
-
-    
-    print("starting training")
-    train_model(train=train_dataset, valid=valid_dataset, path=model_dir)
-    print("finished training")
-    
-    print("starting evaluation")
-    results = evaluate_model(test, model_dir, predictions_path)
-    print("finished evaluation")
-    
-    write_results(results, results_path)
-        
+    TrainingPipeline(
+        name="wikilarge",
+        dataset_loader=WikiLargeLoader(max_train_samples=10000, max_eval_samples=2000),
+        config=TrainingConfig(epochs=3, max_target_length=128),
+        evaluation_mode=EvaluationMode.CHECKPOINTS,
+    ).run(experiment_dir)
 
 if __name__ == "__main__":
     main()

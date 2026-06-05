@@ -6,6 +6,7 @@ from prompts import elementary_prompt, intermediate_prompt
 from preprocessing.cleaner import clean_text, remove_prompt
 from preprocessing.filter import text_similarity, length_ratio
 from evaluation.datasetStats import DatasetStats
+from config import SIMILARITY_THRESHOLD, MIN_LENGTH_RATIO
 
 @dataclass
 class OneStopEnglishEntry:
@@ -64,12 +65,14 @@ class OneStopEnglish:
         stats = DatasetStats()
 
         cache_file = folder.with_suffix(".pkl")
-
+        
+        '''
         if cache_file.exists():
             with open(cache_file, "rb") as cached_file:
                 entries = pickle.load(cached_file)
 
             return cls(entries)
+        '''
 
         if not folder.exists():
             raise FileNotFoundError(f"Folder does not exists {folder}")
@@ -125,11 +128,11 @@ class OneStopEnglish:
             self.stats.similarity_scores.append(similarity)
             self.stats.length_ratios.append(ratio_score)
             
-            if similarity > 0.8:
+            if similarity > SIMILARITY_THRESHOLD:
                 self.stats.skipped_similar += 1
                 continue
                 
-            if ratio_score < 0.2:
+            if ratio_score < MIN_LENGTH_RATIO:
                 self.stats.skipped_length_ratio += 1
                 continue
                 

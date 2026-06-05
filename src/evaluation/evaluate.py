@@ -1,16 +1,14 @@
+from pathlib import Path
+
+from storage.json_store import write_json
+from storage.prediction_store import prediction_rows
 from preprocessing.cleaner import remove_prompt
-from evaluation.file_writer import write_predictions
 from evaluation.metrics_builder import compute_all_metrics
-from config import (
-    MODEL_OUTPUT_DIR,
-    MAX_INPUT_LENGTH,
-    MAX_TARGET_LENGTH,
-    NUM_BEAMS,
-    LENGTH_PENALTY,
-)
+from config import TrainingConfig
 
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
+torch.set_num_threads(16)
 
 def load_model(model_path: str):
     tokenizer = AutoTokenizer.from_pretrained(model_path)
@@ -22,47 +20,88 @@ def load_model(model_path: str):
 
     return model, tokenizer, device
 
-def generate_prediction(input_text: str, model, tokenizer, device):
+
+def generate_batch(input_texts: list[str], model, tokenizer, device, config: TrainingConfig):
     inputs = tokenizer(
-        input_text,
+        input_texts,
         return_tensors="pt",
-        max_length=MAX_INPUT_LENGTH,
+        max_length=config.max_input_length,
+        padding=True,
         truncation=True
     ).to(device)
     
     with torch.no_grad():
-        output = model.generate(
+        outputs = model.generate(
             **inputs,
-            max_new_tokens=MAX_TARGET_LENGTH,
-            do_sample=False,
-            num_beams=NUM_BEAMS,
-            length_penalty=LENGTH_PENALTY
+            **config.generation_config,
         )
         
-    return tokenizer.decode(output[0], skip_special_tokens=True)
+    return tokenizer.batch_decode(outputs, skip_special_tokens=True)
+    
 
-def generate_predictions(test_pairs, model, tokenizer, device):
+def generate_predictions(test_pairs, model, tokenizer, device, config: TrainingConfig, batch_size=16):
     candidates = []
     references = []
- 
-    for input_text, reference in test_pairs:
-        prediction = generate_prediction(input_text, model, tokenizer, device)
+
+    for i in range(0, len(test_pairs), batch_size):
+        batch = test_pairs[i:i + batch_size]
         
-        candidates.append(prediction)
-        references.append(reference)
+        input_texts = [input_text for input_text, _ in batch]
+        batch_refs = [ref for _, ref in batch]
         
+        predictions = generate_batch(
+            input_texts,
+            model=model,
+            tokenizer=tokenizer,
+            device=device,
+            config=config,
+        )
+        
+        candidates.extend(predictions)
+        references.extend(batch_refs)
+    
     return candidates, references
+
 
 def extract_sources(test_pairs):
     return [remove_prompt(input_text) for input_text, _ in test_pairs]
 
-def evaluate_model(test_pairs, model_path: str=MODEL_OUTPUT_DIR, predictions_path: str="results.json"):
+
+def evaluate_model(test_pairs, config: TrainingConfig, model_path: str, predictions_path: str="results.json"):
     model, tokenizer, device = load_model(model_path)
 
-    candidates, references = generate_predictions(test_pairs, model, tokenizer, device)
+    candidates, references = generate_predictions(test_pairs, model, tokenizer, device, config)
     
     sources = extract_sources(test_pairs)
     
-    write_predictions(sources, candidates, references, predictions_path)
+    write_json(prediction_rows(sources, candidates, references), predictions_path)
     
     return compute_all_metrics(sources, candidates, references)
+
+
+def evaluate_checkpoints(test_pairs, run_model_dir: str, config: TrainingConfig):
+    model_dir = Path(run_model_dir)
+    
+    checkpoints = sorted(
+        model_dir.glob("checkpoint-*"),
+        key=lambda p: int(p.name.split("-")[-1])
+    )
+    
+    all_results = {}
+    
+    for checkpoint in checkpoints:
+        print(f"Evaluating {checkpoint}")
+        
+        prediction_path = checkpoint / "predictions.json"
+        
+        results = evaluate_model(
+            test_pairs=test_pairs,
+            model_path=str(checkpoint),
+            predictions_path=str(prediction_path),
+            config=config
+        )
+        
+        all_results[checkpoint.name] = results
+        
+    return all_results
+        
