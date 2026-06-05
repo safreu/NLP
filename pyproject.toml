@@ -1,15 +1,23 @@
 [project]
 name = "nlp"
 version = "0.1.0"
-requires-python = ">=3.14"
+requires-python = ">=3.11,<3.15"
 dependencies = [
     "datasets>=4.8.4",
     "numpy>=2.4.4",
     "pandas>=3.0.2",
     "transformers>=5.6.1",
     "spacy>=3.8.13",
-    "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl", 
+    "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
     "torch>=2.11.0",
+    "evaluate>=0.4.6",
+    "sacremoses>=0.1.1",
+    "sacrebleu>=2.6.0",
+    "bert-score>=0.3.13",
+    "nltk>=3.9.4",
+    "rouge-score>=0.1.2",
+    "scikit-learn>=1.8.0",
+    "accelerate>=1.13.0",
 ]
 [dependency-groups]
 dev = [
@@ -43,3 +51,14 @@ addopts = "-ra -q"
 
 [tool.uv]
 package = true
+
+# On Linux (bwUniCluster) install the CUDA 12.8 build of torch so it matches
+# the cluster's NVIDIA driver. On macOS this falls back to the default PyPI
+# wheel (with MPS support).
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128", marker = "sys_platform == 'linux'" }]
