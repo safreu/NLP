@@ -1,33 +1,33 @@
 # Changelog
 
-## 2026-06-05 - Branch-Cleanup und Repository-Konsolidierung
+## 2026-06-05 - Branch Cleanup and Repository Consolidation
 
-### Ausgangszustand
-- Alle Remotes und Tags wurden mit `git fetch --all --prune --tags` aktualisiert.
-- Der lokale Worktree war nicht sauber und wurde vor den Merges gesichert: `pre-branch-cleanup-2026-06-05`.
-- `origin/main` ist der Default-Branch, `origin/dev` enthielt aber den Großteil der aktuellen Entwicklungsarbeit.
-- `origin/main` und `origin/dev` waren divergiert; `origin/main` enthielt einen Revert von altem `SimplePPDB`-Demo-Code, `origin/dev` enthielt neuere Pipeline- und Trainingsarbeit.
+### Initial State
+- All remotes and tags were updated with `git fetch --all --prune --tags`.
+- The local worktree was not clean and was saved before the merges: `pre-branch-cleanup-2026-06-05`.
+- `origin/main` was the default branch, but `origin/dev` contained most of the current development work.
+- `origin/main` and `origin/dev` had diverged; `origin/main` contained a revert of old `SimplePPDB` demo code, while `origin/dev` contained newer pipeline and training work.
 
-### Geplanter Ablauf
-- `main` in `dev` integrieren und den erwarteten Konflikt in `src/main.py` aufloesen.
-- Noch offene Branches in `dev` integrieren: `feature/asset-sari-trained-model-validation`, `fix-copy-rate`, `t5-pipeline`.
-- Verfuegbare Checks ausfuehren.
-- `dev` nach `main` mergen.
-- Vollstaendig integrierte lokale und Remote-Branches loeschen.
+### Planned Procedure
+- Integrate `main` into `dev` and resolve the expected conflict in `src/main.py`.
+- Integrate the remaining open branches into `dev`: `feature/asset-sari-trained-model-validation`, `fix-copy-rate`, `t5-pipeline`.
+- Run the available checks.
+- Merge `dev` into `main`.
+- Delete fully integrated local and remote branches.
 
-### Durchgefuehrt
-- `origin/main` wurde in `dev` gemergt.
-- Der Konflikt in `src/main.py` wurde zugunsten des aktuellen `dev`-Pipeline-Codes geloest; der alte `SimplePPDB`-Demo-Code aus `main` bleibt entfernt.
-- `origin/feature/asset-sari-trained-model-validation` wurde in `dev` gemergt.
-- `origin/fix-copy-rate` wurde in `dev` gemergt.
-- Der Konflikt in `src/main.py` wurde zugunsten der neueren `TrainingPipeline`-Einstiegslogik geloest.
-- `origin/t5-pipeline` wurde in `dev` gemergt.
-- Die von `t5-pipeline` bereits getrackten Run-Artefakte unter `runs/` wurden mit uebernommen.
-- Nach den Merges wurden Ruff-Lint-Probleme aus den integrierten Branches behoben.
-- Das T5-Skript nutzt jetzt die aktuelle `storage`-Schicht statt der entfernten `evaluation.file_writer`-Datei.
-- Checks: `uv run pytest` bestanden, `uv run ruff check .` bestanden.
-- `dev` wurde nach `origin/dev` gepusht.
-- `dev` wurde in `main` gemergt und nach `origin/main` gepusht.
-- Geloeschte Remote-Branches: `apply-BLEU`, `apply-rouge`, `f1-metric`, `feature/asset-sari-trained-model-validation`, `feature/sari-asset-pipeline`, `feature/sari-metric`, `fix-copy-rate`, `fleschkincaid-metric`, `import-OneStopEnglishCorpus`, `import-asset`, `import-simple_ppdb`, `import-wikilarge`, `import-wikismall`, `metric_BERTScore`, `pipeline_wiki_large`, `revert-8-apply-BLEU`, `t5-pipeline`, `train-pipeline-OneStopEnglishCorpus`.
-- Geloeschte lokale Branches: `feature/asset-sari-trained-model-validation`, `feature/sari-asset-pipeline`, `feature/sari-metric`, `import-asset`.
-- Der vorherige lokale Worktree bleibt im Stash `pre-branch-cleanup-2026-06-05` gesichert. Er wurde nicht automatisch wieder angewendet, weil er grosse Trainingsartefakte und untracked `runs/`-Dateien enthaelt, die mit inzwischen getrackten Dateien kollidieren koennen.
+### Completed
+- `origin/main` was merged into `dev`.
+- The conflict in `src/main.py` was resolved in favor of the current `dev` pipeline code; the old `SimplePPDB` demo code from `main` remains removed.
+- `origin/feature/asset-sari-trained-model-validation` was merged into `dev`.
+- `origin/fix-copy-rate` was merged into `dev`.
+- The conflict in `src/main.py` was resolved in favor of the newer `TrainingPipeline` entry-point logic.
+- `origin/t5-pipeline` was merged into `dev`.
+- The run artifacts already tracked by `t5-pipeline` under `runs/` were kept.
+- Ruff lint issues from the integrated branches were fixed after the merges.
+- The T5 script now uses the current `storage` layer instead of the removed `evaluation.file_writer` file.
+- Checks passed: `uv run pytest`, `uv run ruff check .`.
+- `dev` was pushed to `origin/dev`.
+- `dev` was merged into `main` and pushed to `origin/main`.
+- Deleted remote branches: `apply-BLEU`, `apply-rouge`, `f1-metric`, `feature/asset-sari-trained-model-validation`, `feature/sari-asset-pipeline`, `feature/sari-metric`, `fix-copy-rate`, `fleschkincaid-metric`, `import-OneStopEnglishCorpus`, `import-asset`, `import-simple_ppdb`, `import-wikilarge`, `import-wikismall`, `metric_BERTScore`, `pipeline_wiki_large`, `revert-8-apply-BLEU`, `t5-pipeline`, `train-pipeline-OneStopEnglishCorpus`.
+- Deleted local branches: `feature/asset-sari-trained-model-validation`, `feature/sari-asset-pipeline`, `feature/sari-metric`, `import-asset`.
+- The previous local worktree remains saved in the stash `pre-branch-cleanup-2026-06-05`. It was not applied automatically because it contains large training artifacts and untracked `runs/` files that may collide with files that are now tracked.
