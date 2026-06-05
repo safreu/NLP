@@ -21,3 +21,5 @@
 - `origin/feature/asset-sari-trained-model-validation` wurde in `dev` gemergt.
 - `origin/fix-copy-rate` wurde in `dev` gemergt.
 - Der Konflikt in `src/main.py` wurde zugunsten der neueren `TrainingPipeline`-Einstiegslogik geloest.
+- `origin/t5-pipeline` wurde in `dev` gemergt.
+- Die von `t5-pipeline` bereits getrackten Run-Artefakte unter `runs/` wurden mit uebernommen.
