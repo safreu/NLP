@@ -10,9 +10,9 @@ import torch
 from datasets import load_dataset
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from config import LENGTH_PENALTY, MAX_INPUT_LENGTH, MAX_TARGET_LENGTH, MODEL_OUTPUT_DIR, NUM_BEAMS
-from metrics.metric_sari import compute_sari
+from config import TrainingConfig
 from prompts import elementary_prompt, intermediate_prompt
+from storage.paths import LATEST_RUN_FILE
 
 DATASET_NAME = "facebook/asset"
 DATASET_CONFIG = "simplification"
@@ -24,10 +24,9 @@ DEFAULT_MAX_EXAMPLES = 20
 DEFAULT_PROMPT_LEVEL = "elementary"
 DEFAULT_PREDICTIONS_PATH = Path("results/asset_sari_predictions.json")
 DEFAULT_SCORE_PATH = Path("results/asset_sari_score.json")
-RUNS_DIR = Path("runs")
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Evaluate a trained text simplification model on ASSET with SARI."
     )
@@ -36,7 +35,15 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help=(
             "Path or Hugging Face model name to evaluate. If omitted, the script uses "
-            "runs/latest.txt + /model when available, otherwise MODEL_OUTPUT_DIR from config.py."
+            "a model from runs/latest.txt when available, otherwise TrainingConfig.model_name."
+        ),
+    )
+    parser.add_argument(
+        "--pipeline-name",
+        default=None,
+        help=(
+            "Optional pipeline subdirectory inside the latest run, for example wikilarge. "
+            "Used only when --model-path is omitted."
         ),
     )
     parser.add_argument(
@@ -75,31 +82,66 @@ def parse_args() -> argparse.Namespace:
         help="Where to write the SARI score metadata.",
     )
 
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 
-def resolve_model_path(model_path: str | None) -> str:
+def resolve_model_path(
+    model_path: str | None,
+    config: TrainingConfig | None = None,
+    pipeline_name: str | None = None,
+) -> str:
     if model_path:
         return model_path
 
-    latest_model_dir = get_latest_run_model_dir()
-    if latest_model_dir is not None:
-        return str(latest_model_dir)
+    config = config or TrainingConfig()
+    latest_model_dirs = get_latest_run_model_dirs(pipeline_name)
+    if len(latest_model_dirs) == 1:
+        return str(latest_model_dirs[0])
 
-    return str(MODEL_OUTPUT_DIR)
+    if len(latest_model_dirs) > 1:
+        candidates = ", ".join(str(path) for path in latest_model_dirs)
+        raise RuntimeError(
+            "Multiple model directories were found in the latest run. "
+            f"Pass --model-path or --pipeline-name explicitly. Candidates: {candidates}"
+        )
+
+    if pipeline_name:
+        raise FileNotFoundError(
+            f"No model directory found for pipeline {pipeline_name!r} in the latest run."
+        )
+
+    return config.model_name
 
 
-def get_latest_run_model_dir() -> Path | None:
-    latest_file = RUNS_DIR / "latest.txt"
-    if not latest_file.exists():
+def get_latest_run_dir() -> Path | None:
+    if not LATEST_RUN_FILE.exists():
         return None
 
-    latest_run_dir = Path(latest_file.read_text(encoding="utf-8").strip())
-    model_dir = latest_run_dir / "model"
-    if model_dir.exists():
-        return model_dir
+    latest_run_path = LATEST_RUN_FILE.read_text(encoding="utf-8").strip()
+    if not latest_run_path:
+        return None
 
-    return None
+    return Path(latest_run_path)
+
+
+def get_latest_run_model_dirs(pipeline_name: str | None = None) -> list[Path]:
+    latest_run_dir = get_latest_run_dir()
+    if latest_run_dir is None:
+        return []
+
+    if pipeline_name:
+        model_dir = latest_run_dir / pipeline_name / "model"
+        return [model_dir] if model_dir.exists() else []
+
+    model_dirs: list[Path] = []
+    legacy_model_dir = latest_run_dir / "model"
+    if legacy_model_dir.exists():
+        model_dirs.append(legacy_model_dir)
+
+    model_dirs.extend(
+        sorted(path for path in latest_run_dir.glob("*/model") if path.exists())
+    )
+    return model_dirs
 
 
 def load_asset_examples(
@@ -156,23 +198,21 @@ def generate_prediction(
     model: Any,
     tokenizer: Any,
     device: str,
+    config: TrainingConfig,
     prompt_level: str,
 ) -> str:
     input_text = build_prompt(source, prompt_level)
     inputs = tokenizer(
         input_text,
         return_tensors="pt",
-        max_length=MAX_INPUT_LENGTH,
+        max_length=config.max_input_length,
         truncation=True,
     ).to(device)
 
     with torch.no_grad():
         output = model.generate(
             **inputs,
-            max_new_tokens=MAX_TARGET_LENGTH,
-            do_sample=False,
-            num_beams=NUM_BEAMS,
-            length_penalty=LENGTH_PENALTY,
+            **config.generation_config,
         )
 
     prediction = tokenizer.decode(output[0], skip_special_tokens=True)
@@ -184,10 +224,12 @@ def generate_predictions(
     model: Any,
     tokenizer: Any,
     device: str,
+    config: TrainingConfig,
     prompt_level: str,
 ) -> list[str]:
     return [
-        generate_prediction(source, model, tokenizer, device, prompt_level) for source in sources
+        generate_prediction(source, model, tokenizer, device, config, prompt_level)
+        for source in sources
     ]
 
 
@@ -222,6 +264,7 @@ def write_score(
     split: str,
     max_examples: int,
     prompt_level: str,
+    config: TrainingConfig,
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     score_data = {
@@ -233,6 +276,8 @@ def write_score(
         "max_examples": None if max_examples <= 0 else max_examples,
         "model_path": model_path,
         "prompt_level": prompt_level,
+        "configured_model_name": config.model_name,
+        "generation_config": config.generation_config,
     }
 
     path.write_text(json.dumps(score_data, indent=4, ensure_ascii=False), encoding="utf-8")
@@ -257,7 +302,8 @@ def print_examples(
 
 def main() -> None:
     args = parse_args()
-    model_path = resolve_model_path(args.model_path)
+    config = TrainingConfig()
+    model_path = resolve_model_path(args.model_path, config, args.pipeline_name)
     device = select_device(args.device)
 
     print(f"Loading ASSET split: {args.split}")
@@ -267,7 +313,16 @@ def main() -> None:
     model, tokenizer = load_seq2seq_model(model_path, device)
 
     print(f"Generating {len(sources)} predictions on {device}")
-    predictions = generate_predictions(sources, model, tokenizer, device, args.prompt_level)
+    predictions = generate_predictions(
+        sources,
+        model,
+        tokenizer,
+        device,
+        config,
+        args.prompt_level,
+    )
+
+    from metrics.metric_sari import compute_sari
 
     sari_score = compute_sari(sources, predictions, references)
     write_predictions(args.predictions_path, sources, predictions, references)
@@ -278,6 +333,7 @@ def main() -> None:
         args.split,
         args.max_examples,
         args.prompt_level,
+        config,
     )
 
     print_examples(sources[:5], predictions[:5], references[:5])

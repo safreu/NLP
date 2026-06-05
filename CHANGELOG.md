@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Fixed the ASSET SARI pipeline after the configuration refactor by using `TrainingConfig` instead of removed module-level constants.
+
+### Changed
+- Updated ASSET SARI model resolution documentation for latest-run pipeline model directories and `TrainingConfig.model_name` fallback behavior.
+
 ## 2026-06-05 - Branch Cleanup and Repository Consolidation
 
 ### Initial State

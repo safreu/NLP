@@ -106,7 +106,7 @@ Use the validation split for development. Use the test split only for final repo
 ## Evaluate A Specific Model
 
 ```powershell
-python -m pipeline.sari_asset_pipeline --model-path runs/run_003/model --max-examples 0
+python -m pipeline.sari_asset_pipeline --model-path runs/run_003/wikilarge/model --max-examples 0
 ```
 
 Why: use this to avoid accidentally evaluating the wrong model through `runs/latest.txt`.
@@ -116,15 +116,17 @@ The pipeline chooses a model in this order:
 | Priority | Model Source |
 | --- | --- |
 | 1 | `--model-path` argument |
-| 2 | `runs/latest.txt` plus `/model` |
-| 3 | `MODEL_OUTPUT_DIR` from `src/config.py` |
+| 2 | `--pipeline-name` plus `runs/latest.txt`, for example `runs/run_003/wikilarge/model` |
+| 3 | The latest run, if it contains exactly one model directory |
+| 4 | `TrainingConfig.model_name` from `src/config.py` |
 
-If multiple teammates trained different models, always pass `--model-path` explicitly.
+If the latest run contains multiple model directories, pass `--model-path` or `--pipeline-name`
+explicitly so the script does not evaluate the wrong model.
 
 ## Compare Two Models
 
 ```powershell
-python -m pipeline.sari_asset_pipeline --model-path runs/run_003/model --max-examples 0 --predictions-path results/model_a_predictions.json --score-path results/model_a_score.json
+python -m pipeline.sari_asset_pipeline --model-path runs/run_003/wikilarge/model --max-examples 0 --predictions-path results/model_a_predictions.json --score-path results/model_a_score.json
 ```
 
 ```powershell
@@ -219,7 +221,7 @@ Why: use this to keep results from different runs separate.
 ## Create A Named Result Folder For One Model
 
 ```powershell
-python -m pipeline.sari_asset_pipeline --model-path runs/run_003/model --max-examples 0 --predictions-path results/run_003_asset/asset_sari_predictions.json --score-path results/run_003_asset/asset_sari_score.json
+python -m pipeline.sari_asset_pipeline --model-path runs/run_003/wikilarge/model --max-examples 0 --predictions-path results/run_003_asset/asset_sari_predictions.json --score-path results/run_003_asset/asset_sari_score.json
 ```
 
 Why: use this when you want each model evaluation to have its own result directory.
@@ -229,6 +231,7 @@ Why: use this when you want each model evaluation to have its own result directo
 | Argument | Values | Purpose |
 | --- | --- | --- |
 | `--model-path` | Local model path or Hugging Face model name | Selects the model to evaluate |
+| `--pipeline-name` | Latest-run subdirectory, for example `wikilarge` | Selects a model from `runs/latest.txt` when `--model-path` is omitted |
 | `--split` | `validation`, `test` | Selects the ASSET split |
 | `--max-examples` | Integer, `0` for full split | Limits the number of examples |
 | `--prompt-level` | `elementary`, `intermediate`, `none` | Selects the prompt style |
@@ -263,8 +266,17 @@ The score file contains metadata like this:
     "dataset_config": "simplification",
     "split": "validation",
     "max_examples": null,
-    "model_path": "runs/run_003/model",
-    "prompt_level": "elementary"
+    "model_path": "runs/run_003/wikilarge/model",
+    "prompt_level": "elementary",
+    "configured_model_name": "google/flan-t5-base",
+    "generation_config": {
+        "max_new_tokens": 256,
+        "do_sample": false,
+        "num_beams": 4,
+        "length_penalty": 0.9,
+        "no_repeat_ngram_size": 3,
+        "repetition_penalty": 1.1
+    }
 }
 ```
 
