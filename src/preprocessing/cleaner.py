@@ -10,6 +10,7 @@ PROMPT_PREFIX = [
     SIMPLIFY_TEXT,
 ]
 
+
 def normalize_whitespace(text: str) -> str:
     return " ".join(text.split())
 
@@ -32,4 +33,3 @@ def remove_prompt(text: str) -> str:
 
 def normalize_text(text: str) -> str:
     return text.strip().lower()
-    

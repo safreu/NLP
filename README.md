@@ -1,5 +1,9 @@
 # Quick Start
 
+[![CI](https://github.com/safreu/NLP/actions/workflows/workflow.yml/badge.svg?branch=dev)](https://github.com/safreu/NLP/actions/workflows/workflow.yml)
+[![Tests](https://img.shields.io/badge/tests-GitHub%20Actions-blue?logo=github)](https://github.com/safreu/NLP/actions/workflows/workflow.yml)
+[![Coverage](https://img.shields.io/badge/coverage-see%20Actions%20summary-blueviolet?logo=github)](https://github.com/safreu/NLP/actions/workflows/workflow.yml)
+
 ```bash
 git clone git@gitlab.uni-ulm.de:slb51/nlp.git
 cd nlp
@@ -94,6 +98,12 @@ uv run nox
 - CI runs on every push and pull request.
 - The Test job generates a summary with total tests, failures, errors, skipped, and line coverage.
 - You can view these directly in the GitHub Actions run summary without downloading artifacts.
+
+Where to see the numbers:
+
+- Open the latest CI run in GitHub Actions.
+- Click the Test job.
+- The run summary shows test counts and line coverage percentage.
 
 Coverage and test reports are still uploaded as artifacts for deeper inspection when needed.
 

@@ -28,67 +28,63 @@ class TrainingPipeline:
         self.dataset_loader = dataset_loader
         self.config = config
         self.evaluation_mode = evaluation_mode
-        
-        
+
     def _evaluate(self, test, model_dir, pipeline_dir):
         predictions_path = pipeline_dir / "predictions.json"
         scores_path = pipeline_dir / "scores.json"
-        
+
         if self.evaluation_mode == EvaluationMode.CHECKPOINTS:
             results = evaluate_checkpoints(test, model_dir, self.config)
-            
+
             write_json(results, scores_path)
-            
+
             compare_best_checkpoints(
                 scores_path=scores_path,
                 model_dir=model_dir,
-                output_path=pipeline_dir/"best_checkpoints_comparison.json",
+                output_path=pipeline_dir / "best_checkpoints_comparison.json",
                 metric_path="sari",
                 k=5,
                 higher_is_better=True,
-                copy_tresshold=0.95
+                copy_tresshold=0.95,
             )
-                        
+
             return
-        
+
         results = evaluate_model(
-                test_pairs=test,
-                model_path=model_dir,
-                predictions_path=predictions_path,
-                config=self.config,
-            )
-            
+            test_pairs=test,
+            model_path=model_dir,
+            predictions_path=predictions_path,
+            config=self.config,
+        )
+
         write_json(results, scores_path)
-        
+
         analyze_prediction_copies(
             predictions_path=predictions_path,
             output_path=pipeline_dir / "copy_analysis.json",
             copy_tresshold=0.95,
         )
-        
-    
+
     def run(self, run_dir: Path) -> None:
         pipeline_dir = run_dir / self.name
         pipeline_dir.mkdir(parents=True, exist_ok=True)
-        
+
         model_dir = pipeline_dir / "model"
 
-        
         print(f"Running Pipeline {self.name}")
-        
+
         train, valid, test = self.dataset_loader.load_pairs()
-        
+
         train_dataset = to_dataset(train)
         valid_dataset = to_dataset(valid)
-        
+
         train_model(
             train=train_dataset,
             valid=valid_dataset,
             path=model_dir,
             config=self.config,
         )
-        
+
         self._evaluate(test, model_dir, pipeline_dir)
-    
-        
+
         print(f"Finished Pipeline {self.name}")

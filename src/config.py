@@ -4,6 +4,7 @@ MIN_LENGTH_RATIO = 0.2
 SIMILARITY_THRESHOLD = 0.9
 SEED = 42
 
+
 @dataclass
 class TrainingConfig:
     model_name: str = "google/flan-t5-base"
@@ -14,12 +15,12 @@ class TrainingConfig:
     learning_rate: float = 2e-4
     save_total_limit: int = 2
     seed: int = 42
-    
+
     num_beams: int = 4
     length_penalty: float = 0.9
     no_repeat_ngram_size: int = 3
     repetition_penalty: float = 1.1
-    
+
     @property
     def generation_config(self) -> dict:
         return {

@@ -120,7 +120,7 @@ for name, loader in DATASET_LOADERS.items():
         loaded = loader()
         raw_pairs.extend(loaded)
         print(f"  [ok]   {name}: {len(loaded)} pairs")
-    except Exception as error: 
+    except Exception as error:
         print(f"  [skip] {name}: {type(error).__name__}: {error}")
 
 if not raw_pairs:
@@ -179,10 +179,7 @@ if MAX_EVAL_SAMPLES is not None:
 
 train_dataset = to_dataset(train_pairs)
 valid_dataset = to_dataset(valid_pairs)
-print(
-    f"\nSplits -> train: {len(train_pairs)}, "
-    f"valid: {len(valid_pairs)}, test: {len(test_pairs)}"
-)
+print(f"\nSplits -> train: {len(train_pairs)}, valid: {len(valid_pairs)}, test: {len(test_pairs)}")
 
 
 # load model + tokenizer
@@ -306,7 +303,7 @@ print(f"  ROUGE-L            : {results['rouge-l']:.4f}")
 print("=" * 60)
 
 
-# few examples                                                          
+# few examples
 print("\nExamples:")
 for i in range(min(5, len(predictions))):
     print(f"\n[{i}]")
@@ -322,8 +319,7 @@ def evaluate_on_asset() -> float:
     dataset = load_dataset("facebook/asset", "simplification")["test"]
     asset_sources = [clean_text(row["original"]) for row in dataset]
     asset_references = [
-        [clean_text(simplification) for simplification in row["simplifications"]]
-        for row in dataset
+        [clean_text(simplification) for simplification in row["simplifications"]] for row in dataset
     ]
     asset_predictions = simplify([TASK_PREFIX + source for source in asset_sources])
 

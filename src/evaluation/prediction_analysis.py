@@ -12,20 +12,20 @@ def analyze_prediction_copies(
 ):
     predictions_path = Path(predictions_path)
     output_path = Path(output_path)
-    
+
     predictions = read_json(predictions_path)
-    
+
     exact_copies = []
     near_copies = []
     different_predictions = []
-    
+
     for index, row in enumerate(predictions):
         source = row["source"]
         candidate = row["candidate"]
         reference = row["reference"]
-        
+
         similarity = filter.text_similarity(source, candidate)
-        
+
         result = {
             "index": index,
             "similarity": similarity,
@@ -33,16 +33,16 @@ def analyze_prediction_copies(
             "candidate": candidate,
             "reference": reference,
         }
-        
+
         if normalize_text(source) == normalize_text(candidate):
             exact_copies.append(result)
         elif similarity >= copy_tresshold:
             near_copies.append(result)
         else:
             different_predictions.append(result)
-            
+
     total = len(predictions)
-    
+
     report = {
         "num_predictions": total,
         "exact_copy_count": len(exact_copies),
@@ -56,9 +56,6 @@ def analyze_prediction_copies(
         "near_copies": near_copies,
         "different_predictions": different_predictions,
     }
-    
+
     write_json(report, output_path)
     return report
-        
-        
-    

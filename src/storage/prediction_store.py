@@ -12,7 +12,7 @@ def prediction_rows(sources, candidates, references):
         }
         for source, candidate, reference in zip(sources, candidates, references, strict=True)
     ]
-    
-    
+
+
 def write_predictions(sources, candidates, references, path: Path) -> None:
     write_json(prediction_rows(sources, candidates, references), path)

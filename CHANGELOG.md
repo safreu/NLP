@@ -14,6 +14,7 @@
 
 ### CI
 - CI lint now runs in check-only mode, tests fail on real failures, and the workflow posts a test/coverage summary into the GitHub Actions run summary.
+- Reformatted Python files with Ruff to satisfy the new lint gate.
 
 ### Removed
 - Removed generated run outputs, test reports, OS metadata, and local dataset cache files from Git tracking.

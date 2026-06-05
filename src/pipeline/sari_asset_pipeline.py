@@ -138,9 +138,7 @@ def get_latest_run_model_dirs(pipeline_name: str | None = None) -> list[Path]:
     if legacy_model_dir.exists():
         model_dirs.append(legacy_model_dir)
 
-    model_dirs.extend(
-        sorted(path for path in latest_run_dir.glob("*/model") if path.exists())
-    )
+    model_dirs.extend(sorted(path for path in latest_run_dir.glob("*/model") if path.exists()))
     return model_dirs
 
 
