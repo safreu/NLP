@@ -23,3 +23,6 @@
 - Der Konflikt in `src/main.py` wurde zugunsten der neueren `TrainingPipeline`-Einstiegslogik geloest.
 - `origin/t5-pipeline` wurde in `dev` gemergt.
 - Die von `t5-pipeline` bereits getrackten Run-Artefakte unter `runs/` wurden mit uebernommen.
+- Nach den Merges wurden Ruff-Lint-Probleme aus den integrierten Branches behoben.
+- Das T5-Skript nutzt jetzt die aktuelle `storage`-Schicht statt der entfernten `evaluation.file_writer`-Datei.
+- Checks: `uv run pytest` bestanden, `uv run ruff check .` bestanden.

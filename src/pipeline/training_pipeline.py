@@ -1,21 +1,29 @@
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
 
 from config import TrainingConfig
 from data.dataset_loader import DatasetLoader
 from evaluation.checkpoint_compare import compare_best_checkpoints
+from evaluation.evaluate import evaluate_checkpoints, evaluate_model
 from evaluation.prediction_analysis import analyze_prediction_copies
 from preprocessing.dataset_builder import to_dataset
-from training.trainer import train_model
-from evaluation.evaluate import evaluate_checkpoints, evaluate_model
 from storage.json_store import write_json
+from training.trainer import train_model
+
 
 class EvaluationMode(Enum):
     FINAL_MODEL = "final_model"
     CHECKPOINTS = "checkpoints"
 
+
 class TrainingPipeline:
-    def __init__(self, name: str, dataset_loader: DatasetLoader, config: TrainingConfig, evaluation_mode: EvaluationMode=EvaluationMode.FINAL_MODEL):
+    def __init__(
+        self,
+        name: str,
+        dataset_loader: DatasetLoader,
+        config: TrainingConfig,
+        evaluation_mode: EvaluationMode = EvaluationMode.FINAL_MODEL,
+    ):
         self.name = name
         self.dataset_loader = dataset_loader
         self.config = config

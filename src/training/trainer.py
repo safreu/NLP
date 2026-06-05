@@ -1,14 +1,14 @@
-from config import TrainingConfig
-
+import torch
 from transformers import (
-    AutoTokenizer,
     AutoModelForSeq2SeqLM,
+    AutoTokenizer,
     DataCollatorForSeq2Seq,
     Seq2SeqTrainer,
-    Seq2SeqTrainingArguments
+    Seq2SeqTrainingArguments,
 )
 
-import torch
+from config import TrainingConfig
+
 torch.set_num_threads(16)
 
 def load_model(config: TrainingConfig):
@@ -62,7 +62,14 @@ def create_training_args(path: str, config: TrainingConfig):
     )
     
     
-def create_trainer(model, tokenizer, train_dataset, valid_dataset, path: str, config: TrainingConfig):
+def create_trainer(
+    model,
+    tokenizer,
+    train_dataset,
+    valid_dataset,
+    path: str,
+    config: TrainingConfig,
+):
     data_collator = DataCollatorForSeq2Seq(
         tokenizer=tokenizer,
         model=model,

@@ -1,5 +1,7 @@
 from pathlib import Path
-from storage.paths import RUNS_DIR, get_run_dir, LATEST_RUN_FILE
+
+from storage.paths import LATEST_RUN_FILE, RUNS_DIR, get_run_dir
+
 
 def create_run_dir() -> Path:
     RUNS_DIR.mkdir(exist_ok=True)

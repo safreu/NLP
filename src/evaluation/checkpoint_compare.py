@@ -1,8 +1,10 @@
 from pathlib import Path
+
 from preprocessing.cleaner import normalize_text
 from preprocessing.filter import text_similarity
-from storage.json_store import write_json, read_json
-    
+from storage.json_store import read_json, write_json
+
+
 def get_nested_score(result: dict, metric_path: str) -> float:
     for key in metric_path.split("."):
         result = result[key]
@@ -107,10 +109,12 @@ def compare_predictions(top_checkpoints, model_dir: Path, copy_tresshold: float 
         else:
             diff_predictions.append(row)
             
-    for checkpoint, stats in copy_stats.items():
+    for stats in copy_stats.values():
         stats["exact_copy_ratio"] = stats["exact_copy_count"] / num_predictions
         stats["near_copy_ratio"] = stats["near_copy_count"] / num_predictions
-        stats["different_from_source_ratio"] = stats["different_from_source_count"] / num_predictions
+        stats["different_from_source_ratio"] = (
+            stats["different_from_source_count"] / num_predictions
+        )
         stats["avg_source_candidate_similarity"] = stats["similarity_sum"] / num_predictions
         del stats["similarity_sum"]
             

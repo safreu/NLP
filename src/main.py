@@ -4,6 +4,7 @@ from data.wikilarge_loader import WikiLargeLoader
 from pipeline.training_pipeline import EvaluationMode, TrainingPipeline
 from storage.run_store import create_run_dir
 
+
 def main() -> None:
     experiment_dir = create_run_dir()
     

@@ -1,5 +1,7 @@
 from pathlib import Path
+
 from storage.json_store import write_json
+
 
 def prediction_rows(sources, candidates, references):
     return [

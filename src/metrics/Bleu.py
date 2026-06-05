@@ -1,5 +1,5 @@
-from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-from nltk.translate.bleu_score import corpus_bleu
+from nltk.translate.bleu_score import SmoothingFunction, corpus_bleu
+
 
 def compute_bleuscore(candidates: list[str], references: list[str]) -> float:
     

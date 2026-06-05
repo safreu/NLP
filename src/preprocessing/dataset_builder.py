@@ -1,6 +1,8 @@
-from config import SEED
 from datasets import Dataset
 from sklearn.model_selection import train_test_split
+
+from config import SEED
+
 
 def split_pairs(pairs, test_size=0.2, random_state=SEED):
     train_pairs, to_split_pairs = train_test_split(

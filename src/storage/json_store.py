@@ -1,6 +1,7 @@
-from pathlib import Path
 import json
+from pathlib import Path
 from typing import Any
+
 
 def read_json(path: Path | str) -> Any:
     path = Path(path)

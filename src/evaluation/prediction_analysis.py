@@ -1,9 +1,15 @@
 from pathlib import Path
+
+from preprocessing import filter
 from preprocessing.cleaner import normalize_text
 from storage.json_store import read_json, write_json
-from preprocessing import filter
 
-def analyze_prediction_copies(predictions_path: str | Path, output_path: str | Path, copy_tresshold: float=0.95):
+
+def analyze_prediction_copies(
+    predictions_path: str | Path,
+    output_path: str | Path,
+    copy_tresshold: float = 0.95,
+):
     predictions_path = Path(predictions_path)
     output_path = Path(output_path)
     

@@ -1,14 +1,21 @@
 from datasets import load_dataset
+
 from data.dataset_loader import Pair
 from prompts import simplify_prompt
+
 
 class WikiLargeLoader:
     name = "wikilarge"
     
-    def __init__(self, max_train_samples: int | None = None, max_eval_samples: int | None = None, seed: int=42):
-        self.max_train_samples=max_train_samples
-        self.max_eval_samples=max_eval_samples
-        self.seed=seed
+    def __init__(
+        self,
+        max_train_samples: int | None = None,
+        max_eval_samples: int | None = None,
+        seed: int = 42,
+    ):
+        self.max_train_samples = max_train_samples
+        self.max_eval_samples = max_eval_samples
+        self.seed = seed
         
         
     def _to_pairs(self, split) ->list[Pair]:

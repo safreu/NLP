@@ -1,5 +1,7 @@
 from difflib import SequenceMatcher
+
 from preprocessing.cleaner import normalize_text
+
 
 def text_similarity(source: str, target: str) -> float:
     return SequenceMatcher(

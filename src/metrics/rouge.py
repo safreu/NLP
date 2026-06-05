@@ -1,5 +1,6 @@
 from rouge_score import rouge_scorer
 
+
 def compute_rougescore(candiates: list[str], references: list[str]) -> float:
     scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
     scores = [

@@ -27,7 +27,9 @@ def compute_bertscore(
 ) -> BERTScoreResult:
     
     if len(standard) != len(simple):
-        raise ValueError(f"Standard length ({len(standard)}) and simple length ({len(simple)}) doesn't match.")
+        raise ValueError(
+            f"Standard length ({len(standard)}) and simple length ({len(simple)}) doesn't match."
+        )
 
     if device is None:
         if torch.cuda.is_available():

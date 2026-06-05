@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import sys
@@ -32,13 +33,13 @@ REPO_ROOT = SRC_DIR.parent
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-# preprocessing/ folder
-from preprocessing.cleaner import clean_text 
-from preprocessing.dataset_builder import split_pairs, to_dataset  
-from preprocessing.filter import length_ratio, text_similarity 
-
 from evaluation.metrics_builder import compute_all_metrics
-from evaluation.file_writer import create_run_dir, write_predictions, write_results
+from preprocessing.cleaner import clean_text
+from preprocessing.dataset_builder import split_pairs, to_dataset
+from preprocessing.filter import length_ratio, text_similarity
+from storage.json_store import write_json
+from storage.prediction_store import prediction_rows
+from storage.run_store import create_run_dir
 
 MODEL_NAME = "google/flan-t5-base"
 TASK_PREFIX = "simplify: "
@@ -366,6 +367,6 @@ scores = {
     "asset_multi_reference_sari": asset_sari,
 }
 
-write_results(scores, str(run_dir / "scores.json"))
-write_predictions(sources, predictions, test_targets, str(run_dir / "predictions.json"))
+write_json(scores, run_dir / "scores.json")
+write_json(prediction_rows(sources, predictions, test_targets), run_dir / "predictions.json")
 print(f"\nAll results saved under: {run_dir}")

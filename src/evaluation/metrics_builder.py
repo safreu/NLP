@@ -1,9 +1,10 @@
-from metrics.Bleu import compute_bleuscore
-from metrics.rouge import compute_rougescore
 from metrics.bertScore import compute_bertscore
-from metrics.metric_sari import compute_sari
+from metrics.Bleu import compute_bleuscore
 from metrics.f1 import compute_f1
 from metrics.flesch_kincaid import compute_flesch_kincaid
+from metrics.metric_sari import compute_sari
+from metrics.rouge import compute_rougescore
+
 
 def compute_all_metrics(sources, candidates, references):
     return {

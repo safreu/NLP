@@ -1,13 +1,14 @@
 from pathlib import Path
 
+import torch
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+
+from config import TrainingConfig
+from evaluation.metrics_builder import compute_all_metrics
+from preprocessing.cleaner import remove_prompt
 from storage.json_store import write_json
 from storage.prediction_store import prediction_rows
-from preprocessing.cleaner import remove_prompt
-from evaluation.metrics_builder import compute_all_metrics
-from config import TrainingConfig
 
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-import torch
 torch.set_num_threads(16)
 
 def load_model(model_path: str):
@@ -39,7 +40,14 @@ def generate_batch(input_texts: list[str], model, tokenizer, device, config: Tra
     return tokenizer.batch_decode(outputs, skip_special_tokens=True)
     
 
-def generate_predictions(test_pairs, model, tokenizer, device, config: TrainingConfig, batch_size=16):
+def generate_predictions(
+    test_pairs,
+    model,
+    tokenizer,
+    device,
+    config: TrainingConfig,
+    batch_size=16,
+):
     candidates = []
     references = []
 
@@ -67,7 +75,12 @@ def extract_sources(test_pairs):
     return [remove_prompt(input_text) for input_text, _ in test_pairs]
 
 
-def evaluate_model(test_pairs, config: TrainingConfig, model_path: str, predictions_path: str="results.json"):
+def evaluate_model(
+    test_pairs,
+    config: TrainingConfig,
+    model_path: str,
+    predictions_path: str = "results.json",
+):
     model, tokenizer, device = load_model(model_path)
 
     candidates, references = generate_predictions(test_pairs, model, tokenizer, device, config)
