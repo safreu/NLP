@@ -302,3 +302,16 @@ pyrightconfig.json
 # VSCode
 .vscode
 
+# Operating system metadata
+.DS_Store
+
+# Test reports
+pytest.xml
+
+# Local experiment outputs and model artifacts
+runs/
+results/
+models/
+
+# Generated dataset caches
+data/**/*.pkl

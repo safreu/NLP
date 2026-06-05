@@ -8,6 +8,9 @@
 ### Changed
 - Updated ASSET SARI model resolution documentation for latest-run pipeline model directories and `TrainingConfig.model_name` fallback behavior.
 
+### Removed
+- Removed generated run outputs, test reports, OS metadata, and local dataset cache files from Git tracking.
+
 ## 2026-06-05 - Branch Cleanup and Repository Consolidation
 
 ### Initial State

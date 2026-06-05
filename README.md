@@ -15,6 +15,17 @@ uv run nox
 - docs -> Documentation regarding this project
 - src -> Source directory containing the code
 - tests -> Directory containing the tests
+
+## Local outputs and generated files
+
+Experiment outputs are local artifacts and are ignored by Git by default:
+
+- `runs/` stores run-specific predictions, scores, metadata, and model outputs.
+- `results/` stores ad-hoc evaluation outputs.
+- `models/` stores local model checkpoints.
+- `data/**/*.pkl` stores generated dataset caches.
+
+Keep reproducible source data, code, and documentation in Git. Do not commit generated run outputs unless they are intentionally curated examples for the report.
 ---
 
 # Development Setup
