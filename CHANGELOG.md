@@ -26,3 +26,7 @@
 - Nach den Merges wurden Ruff-Lint-Probleme aus den integrierten Branches behoben.
 - Das T5-Skript nutzt jetzt die aktuelle `storage`-Schicht statt der entfernten `evaluation.file_writer`-Datei.
 - Checks: `uv run pytest` bestanden, `uv run ruff check .` bestanden.
+- `dev` wurde nach `origin/dev` gepusht.
+- `dev` wurde in `main` gemergt und nach `origin/main` gepusht.
+- Geloeschte Remote-Branches: `apply-BLEU`, `apply-rouge`, `f1-metric`, `feature/asset-sari-trained-model-validation`, `feature/sari-asset-pipeline`, `feature/sari-metric`, `fix-copy-rate`, `fleschkincaid-metric`, `import-OneStopEnglishCorpus`, `import-asset`, `import-simple_ppdb`, `import-wikilarge`, `import-wikismall`, `metric_BERTScore`, `pipeline_wiki_large`, `revert-8-apply-BLEU`, `t5-pipeline`, `train-pipeline-OneStopEnglishCorpus`.
+- Geloeschte lokale Branches: `feature/asset-sari-trained-model-validation`, `feature/sari-asset-pipeline`, `feature/sari-metric`, `import-asset`.
