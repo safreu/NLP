@@ -14,3 +14,7 @@
 - Verfuegbare Checks ausfuehren.
 - `dev` nach `main` mergen.
 - Vollstaendig integrierte lokale und Remote-Branches loeschen.
+
+### Durchgefuehrt
+- `origin/main` wurde in `dev` gemergt.
+- Der Konflikt in `src/main.py` wurde zugunsten des aktuellen `dev`-Pipeline-Codes geloest; der alte `SimplePPDB`-Demo-Code aus `main` bleibt entfernt.
