@@ -30,3 +30,4 @@
 - `dev` wurde in `main` gemergt und nach `origin/main` gepusht.
 - Geloeschte Remote-Branches: `apply-BLEU`, `apply-rouge`, `f1-metric`, `feature/asset-sari-trained-model-validation`, `feature/sari-asset-pipeline`, `feature/sari-metric`, `fix-copy-rate`, `fleschkincaid-metric`, `import-OneStopEnglishCorpus`, `import-asset`, `import-simple_ppdb`, `import-wikilarge`, `import-wikismall`, `metric_BERTScore`, `pipeline_wiki_large`, `revert-8-apply-BLEU`, `t5-pipeline`, `train-pipeline-OneStopEnglishCorpus`.
 - Geloeschte lokale Branches: `feature/asset-sari-trained-model-validation`, `feature/sari-asset-pipeline`, `feature/sari-metric`, `import-asset`.
+- Der vorherige lokale Worktree bleibt im Stash `pre-branch-cleanup-2026-06-05` gesichert. Er wurde nicht automatisch wieder angewendet, weil er grosse Trainingsartefakte und untracked `runs/`-Dateien enthaelt, die mit inzwischen getrackten Dateien kollidieren koennen.
