@@ -89,6 +89,16 @@ uv run nox
 
 ---
 
+# CI and Reports
+
+- CI runs on every push and pull request.
+- The Test job generates a summary with total tests, failures, errors, skipped, and line coverage.
+- You can view these directly in the GitHub Actions run summary without downloading artifacts.
+
+Coverage and test reports are still uploaded as artifacts for deeper inspection when needed.
+
+---
+
 # Running the Project
 
 ## Run a file directly

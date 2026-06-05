@@ -12,6 +12,9 @@
 - Updated ASSET SARI model resolution documentation for latest-run pipeline model directories and `TrainingConfig.model_name` fallback behavior.
 - Deferred loading of the Hugging Face SARI metric until SARI is computed, keeping imports fast and side-effect free.
 
+### CI
+- CI lint now runs in check-only mode, tests fail on real failures, and the workflow posts a test/coverage summary into the GitHub Actions run summary.
+
 ### Removed
 - Removed generated run outputs, test reports, OS metadata, and local dataset cache files from Git tracking.
 

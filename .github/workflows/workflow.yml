@@ -11,7 +11,6 @@ on:
 jobs:
   lint:
     name: Lint
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -34,7 +33,6 @@ jobs:
 
   test:
     name: Test
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -59,6 +57,48 @@ jobs:
             --cov=src \
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml
+
+      - name: Summarize test and coverage results
+        if: always()
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          summary_path = Path(os.environ["GITHUB_STEP_SUMMARY"])
+          pytest_xml = Path("pytest.xml")
+          coverage_xml = Path("coverage.xml")
+
+          lines = ["## Test and Coverage Summary"]
+
+          if pytest_xml.exists():
+              root = ET.parse(pytest_xml).getroot()
+              total = int(root.attrib.get("tests", 0))
+              failures = int(root.attrib.get("failures", 0))
+              errors = int(root.attrib.get("errors", 0))
+              skipped = int(root.attrib.get("skipped", 0))
+              lines.extend(
+                  [
+                      "### Tests",
+                      f"- Total: {total}",
+                      f"- Failures: {failures}",
+                      f"- Errors: {errors}",
+                      f"- Skipped: {skipped}",
+                  ]
+              )
+          else:
+              lines.extend(["### Tests", "- No pytest.xml report found."])
+
+          if coverage_xml.exists():
+              root = ET.parse(coverage_xml).getroot()
+              line_rate = float(root.attrib.get("line-rate", 0.0)) * 100.0
+              lines.extend(["### Coverage", f"- Line coverage: {line_rate:.2f}%"])
+          else:
+              lines.extend(["### Coverage", "- No coverage.xml report found."])
+
+          summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
 
       - name: Upload test report
         uses: actions/upload-artifact@v4
