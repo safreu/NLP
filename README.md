@@ -14,11 +14,13 @@ uv run nox
 ---
 
 # Project Structure
-## WIP
 
-- docs -> Documentation regarding this project
-- src -> Source directory containing the code
-- tests -> Directory containing the tests
+This repository deliberately uses a `src` layout with top-level import names. The project is installed in editable mode by `uv sync`, so imports such as `from config import TrainingConfig` and `from metrics.f1 import compute_f1` work without setting `PYTHONPATH`.
+
+- `src/main.py` -> application entry point used by the `src` command
+- `src/config.py` and `src/prompts.py` -> top-level modules
+- `src/data/`, `src/evaluation/`, `src/metrics/`, `src/pipeline/`, `src/preprocessing/`, `src/storage/`, `src/training/` -> top-level packages
+- `tests/` -> test suite
 
 ## Local outputs and generated files
 
@@ -70,6 +72,12 @@ uv add --dev package_name
 ## Run tests
 
 ```bash
+uv run pytest
+```
+
+Or run the nox test session:
+
+```bash
 uv run nox -s tests
 ```
 
@@ -111,34 +119,13 @@ Coverage and test reports are still uploaded as artifacts for deeper inspection 
 
 # Running the Project
 
-## Run a file directly
+## Run the project entry point
 
 ```bash
-uv run python path/to/file.py
+uv run src
 ```
 
-## Define and use an entry point (recommended)
-
-Project structure:
-
-```
-src/nlp/
-  __init__.py
-  main.py
-```
-
-Example `src/nlp/main.py`:
-
-```python
-def main() -> None:
-    print("setting up")
-
-
-if __name__ == "__main__":
-    main()
-```
-
-Define the script in `pyproject.toml`:
+The command is configured in `pyproject.toml`:
 
 ```toml
 [project.scripts]
@@ -148,13 +135,13 @@ src = "main:main"
 Explanation:
 
 - `src` := command name  
-- `main` := refers to `src/main.py`  
+- `main` := module name, resolved from `src/main.py` by the package layout in `pyproject.toml`  
 - `main` := function that will be executed  
 
-Run the entry point:
+## Run a module command
 
 ```bash
-uv run scr
+uv run python -m pipeline.sari_asset_pipeline --help
 ```
 
 ---

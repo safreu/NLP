@@ -16,43 +16,25 @@ SARI is a text simplification metric. It compares three things:
 
 SARI is useful because text simplification is not only about matching a reference. It also checks whether the model kept useful words, deleted unnecessary words, and added good simplifications.
 
-## Windows PowerShell Setup
+## Setup
 
-Run this before using imports such as `from metrics.metric_sari import compute_sari` from the repository root:
+Run this from the repository root before using imports such as `from metrics.metric_sari import compute_sari`:
 
 ```powershell
-$env:PYTHONPATH = "src"
+uv sync --dev
 ```
 
-Why: the project imports modules from the `src` directory directly.
-
-## macOS/Linux Setup
-
-Run this before using imports such as `from metrics.metric_sari import compute_sari` from the repository root:
-
-```bash
-export PYTHONPATH=src
-```
-
-Why: the project imports modules from the `src` directory directly.
+Why: `uv sync` installs the project in editable mode from `src`, so top-level imports do not require `PYTHONPATH`.
 
 ## Run The Built-In SARI Demo
 
 ```powershell
-python src/metrics/metric_sari.py
+uv run python -m metrics.metric_sari
 ```
 
 Why: this checks that the `evaluate` package can load the SARI metric and compute a score on a tiny example.
 
 This command does not evaluate your trained model. It only runs the demo example inside `metric_sari.py`.
-
-## Run The Demo With uv
-
-```powershell
-uv run python src/metrics/metric_sari.py
-```
-
-Why: this uses the project environment managed by `uv`, which is helpful if dependencies are installed through `uv.lock`.
 
 ## Use `compute_sari` In Python
 
