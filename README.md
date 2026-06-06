@@ -119,11 +119,18 @@ Coverage and test reports are still uploaded as artifacts for deeper inspection 
 
 # Running the Project
 
-## Run the project entry point
+## Run the default experiment
 
 ```bash
 uv run src
 ```
+
+This creates the next `runs/run_XXX` directory, writes `config.json`, and reproduces the previous `src/main.py` behavior:
+
+| Pipeline | Defaults |
+| --- | --- |
+| `onestop` | `TrainingConfig()` with checkpoint evaluation |
+| `wikilarge` | `epochs=3`, `max_target_length=128`, `max_train_samples=10000`, `max_eval_samples=2000`, checkpoint evaluation |
 
 The command is configured in `pyproject.toml`:
 
@@ -137,6 +144,35 @@ Explanation:
 - `src` := command name  
 - `main` := module name, resolved from `src/main.py` by the package layout in `pyproject.toml`  
 - `main` := function that will be executed  
+
+## Run a quick experiment
+
+```bash
+uv run src --dataset wikilarge --epochs 1 --batch-size 4 --wikilarge-max-train-samples 100 --wikilarge-max-eval-samples 20 --output-path runs/quick_wikilarge
+```
+
+Why: use this shape for a small CLI sanity check before running longer training jobs.
+
+## Run a full WikiLarge experiment
+
+```bash
+uv run src --dataset wikilarge --wikilarge-max-train-samples 0 --wikilarge-max-eval-samples 0 --output-path runs/full_wikilarge
+```
+
+Why: `0` disables the WikiLarge sample cap and uses the full train, validation, and test splits.
+
+## Common experiment flags
+
+| Flag | Purpose |
+| --- | --- |
+| `--dataset all\|onestop\|wikilarge` | Selects which pipeline to run |
+| `--model-name MODEL` | Overrides `TrainingConfig.model_name` |
+| `--epochs N` | Overrides the selected dataset defaults |
+| `--batch-size N` | Overrides train and evaluation batch size |
+| `--evaluation-mode final_model\|checkpoints` | Selects final-model or checkpoint evaluation |
+| `--output-path PATH` | Writes the run to a specific directory instead of the next `runs/run_XXX` |
+
+Every run writes the resolved configuration to `config.json` in the run directory.
 
 ## Run a module command
 
