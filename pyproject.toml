@@ -34,6 +34,7 @@ dev = [
 ]
 
 [project.scripts]
+aggregate-results = "evaluation.result_aggregation:main"
 src = "main:main"
 
 [tool.setuptools]

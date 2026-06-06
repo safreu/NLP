@@ -174,6 +174,23 @@ Why: `0` disables the WikiLarge sample cap and uses the full train, validation, 
 
 Every run writes the resolved configuration to `config.json` in the run directory.
 
+## Aggregate experiment scores
+
+Create a Markdown table that can be copied into the report:
+
+```bash
+uv run aggregate-results runs/run_001 runs/run_002
+```
+
+Write CSV or JSON instead:
+
+```bash
+uv run aggregate-results runs/run_001 runs/run_002 --format csv --output results/score_summary.csv
+uv run aggregate-results runs/run_001 runs/run_002 --format json --output results/score_summary.json
+```
+
+The table includes SARI, FKGL, BERTScore precision/recall/F1, BLEU, ROUGE-L, and token F1. Missing metrics are written as `NA` in Markdown and CSV, and as `null` in JSON.
+
 ## Run a module command
 
 ```bash

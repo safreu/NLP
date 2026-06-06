@@ -8,6 +8,7 @@ import pytest
     "module_name",
     [
         "main",
+        "evaluation.result_aggregation",
         "pipeline.training_pipeline",
         "pipeline.sari_asset_pipeline",
         "metrics.metric_sari",
