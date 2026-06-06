@@ -174,6 +174,17 @@ Why: `0` disables the WikiLarge sample cap and uses the full train, validation, 
 
 Every run writes the resolved configuration to `config.json` in the run directory.
 
+## Evaluate simple baselines
+
+Run copy and rule-based baselines before interpreting trained model scores:
+
+```bash
+uv run evaluate-baselines --dataset wikilarge --max-examples 100 --output-path runs/baselines_quick
+uv run aggregate-results runs/baselines_quick
+```
+
+The baseline runner writes one pipeline directory per dataset and baseline, for example `runs/baselines_quick/wikilarge_copy/scores.json`. The `copy` baseline returns the source text unchanged after prompt removal. The `punctuation_split` baseline is a deliberately simple rule-based baseline that splits on semicolons, colons, dashes, and a few clause boundaries.
+
 ## Aggregate experiment scores
 
 Create a Markdown table that can be copied into the report:

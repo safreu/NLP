@@ -35,6 +35,7 @@ dev = [
 
 [project.scripts]
 aggregate-results = "evaluation.result_aggregation:main"
+evaluate-baselines = "pipeline.baseline_pipeline:main"
 src = "main:main"
 
 [tool.setuptools]

@@ -9,6 +9,7 @@ import pytest
     [
         "main",
         "evaluation.result_aggregation",
+        "pipeline.baseline_pipeline",
         "pipeline.training_pipeline",
         "pipeline.sari_asset_pipeline",
         "metrics.metric_sari",
