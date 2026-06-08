@@ -22,9 +22,9 @@ SIMPLIFICATIONS_COLUMN = "simplifications"
 
 DEFAULT_MAX_EXAMPLES = 20
 DEFAULT_PROMPT_LEVEL = "elementary"
+RUN_PATHS = RunPaths.for_runs_root()
 DEFAULT_PREDICTIONS_PATH = Path("results/asset_sari_predictions.json")
 DEFAULT_SCORE_PATH = Path("results/asset_sari_score.json")
-RUN_PATHS = RunPaths.for_runs_root()
 
 
 def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
