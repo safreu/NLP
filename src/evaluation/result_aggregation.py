@@ -273,36 +273,52 @@ def load_model_lookup(run_root: Path) -> dict[str, str]:
             if model_name is not None:
                 lookup[pipeline_name] = model_name
 
-    datasets = config.get("datasets")
-    baselines = config.get("baselines")
-    if (
-        isinstance(datasets, Sequence)
-        and not isinstance(datasets, str | bytes | bytearray)
-        and isinstance(baselines, Sequence)
-        and not isinstance(baselines, str | bytes | bytearray)
-    ):
-        dataset_names = [item for item in datasets if isinstance(item, str) and item]
-        baseline_names: list[str] = []
-
-        for baseline_config in baselines:
-            if not isinstance(baseline_config, Mapping):
-                continue
-
-            baseline_name = normalize_mapping(baseline_config).get("name")
-            if isinstance(baseline_name, str) and baseline_name:
-                baseline_names.append(baseline_name)
-
-        for dataset_name in dataset_names:
-            for baseline_name in baseline_names:
-                lookup[f"{dataset_name}_{baseline_name}"] = baseline_name
-
     return lookup
 
 
+def load_baseline_names(run_root: Path) -> list[str]:
+    config_path = run_root / "config.json"
+    if not config_path.exists():
+        return []
+
+    data = read_json(config_path)
+    if not isinstance(data, Mapping):
+        return []
+
+    config = normalize_mapping(data)
+    baselines = config.get("baselines")
+    if not isinstance(baselines, Sequence) or isinstance(baselines, str | bytes | bytearray):
+        return []
+
+    baseline_names: list[str] = []
+    for baseline_config in baselines:
+        if not isinstance(baseline_config, Mapping):
+            continue
+
+        baseline_name = normalize_mapping(baseline_config).get("name")
+        if isinstance(baseline_name, str) and baseline_name:
+            baseline_names.append(baseline_name)
+
+    return sorted(baseline_names, key=lambda baseline_name: (-len(baseline_name), baseline_name))
+
+
+def resolve_baseline_name(name: str, baseline_names: Sequence[str]) -> str | None:
+    if not name:
+        return None
+
+    for baseline_name in baseline_names:
+        if name == baseline_name or name.endswith(f"_{baseline_name}"):
+            return baseline_name
+
+    return None
+
+
 def infer_model_name(
+    run: str,
     pipeline: str,
     run_root: Path | None,
     model_lookup_cache: dict[Path, dict[str, str]],
+    baseline_name_cache: dict[Path, list[str]],
 ) -> str:
     if run_root is None:
         return ""
@@ -312,8 +328,19 @@ def infer_model_name(
         model_lookup = load_model_lookup(run_root)
         model_lookup_cache[run_root] = model_lookup
 
-    if pipeline and pipeline in model_lookup:
-        return model_lookup[pipeline]
+    for candidate in (pipeline, run):
+        if candidate and candidate in model_lookup:
+            return model_lookup[candidate]
+
+    baseline_names = baseline_name_cache.get(run_root)
+    if baseline_names is None:
+        baseline_names = load_baseline_names(run_root)
+        baseline_name_cache[run_root] = baseline_names
+
+    for candidate in (pipeline, run):
+        baseline_name = resolve_baseline_name(candidate, baseline_names)
+        if baseline_name is not None:
+            return baseline_name
 
     unique_models = set(model_lookup.values())
     if len(unique_models) == 1:
@@ -344,11 +371,18 @@ def row_for_payload(
 def aggregate_path(path: Path) -> list[ResultRow]:
     rows: list[ResultRow] = []
     model_lookup_cache: dict[Path, dict[str, str]] = {}
+    baseline_name_cache: dict[Path, list[str]] = {}
 
     for scores_path in find_score_files(path):
         scores = load_scores(scores_path)
         run, pipeline = infer_run_and_pipeline(path, scores_path)
-        model = infer_model_name(pipeline, find_run_root(scores_path), model_lookup_cache)
+        model = infer_model_name(
+            run,
+            pipeline,
+            find_run_root(scores_path),
+            model_lookup_cache,
+            baseline_name_cache,
+        )
 
         for checkpoint, payload in score_payloads(scores):
             rows.append(row_for_payload(run, pipeline, model, checkpoint, scores_path, payload))

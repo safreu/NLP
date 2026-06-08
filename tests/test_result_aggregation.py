@@ -22,6 +22,17 @@ def write_training_run_config(run_dir: Path, pipeline_name: str, model_name: str
     )
 
 
+def write_baseline_run_config(run_dir: Path, baselines: object) -> None:
+    write_json(
+        {
+            "datasets": ["onestop", "wikilarge"],
+            "baselines": baselines,
+            "max_examples": None,
+        },
+        run_dir / "config.json",
+    )
+
+
 def metric_payload() -> dict[str, object]:
     return {
         "bert": {
@@ -77,6 +88,65 @@ def test_aggregate_direct_scores_file_infers_pipeline_context(tmp_path: Path) ->
     assert rows[0]["model"] == "google/flan-t5-base"
 
 
+def test_aggregate_baseline_direct_scores_file_resolves_copy_model(tmp_path: Path) -> None:
+    run_dir = tmp_path / "baselines_full"
+    write_baseline_run_config(
+        run_dir,
+        [
+            {"name": "copy", "description": "Copies the source sentence."},
+            {"name": "punctuation_split", "description": "Splits on punctuation."},
+        ],
+    )
+    scores_path = run_dir / "wikilarge_copy" / "scores.json"
+    write_score_file(scores_path, metric_payload())
+
+    rows = result_aggregation.aggregate_results([scores_path])
+
+    assert rows[0]["run"] == "wikilarge_copy"
+    assert rows[0]["pipeline"] == ""
+    assert rows[0]["model"] == "copy"
+
+
+def test_aggregate_baseline_run_directory_resolves_punctuation_split_model(tmp_path: Path) -> None:
+    run_dir = tmp_path / "baselines_full"
+    write_baseline_run_config(
+        run_dir,
+        [
+            {"name": "split", "description": "Generic split baseline."},
+            {"name": "punctuation_split", "description": "Splits on punctuation."},
+        ],
+    )
+    pipeline_dir = run_dir / "wikilarge_punctuation_split"
+    write_score_file(pipeline_dir / "scores.json", metric_payload())
+
+    rows = result_aggregation.aggregate_results([pipeline_dir])
+
+    assert rows[0]["run"] == "wikilarge_punctuation_split"
+    assert rows[0]["pipeline"] == ""
+    assert rows[0]["model"] == "punctuation_split"
+
+
+def test_aggregate_parent_directory_resolves_multiple_baseline_runs(tmp_path: Path) -> None:
+    run_dir = tmp_path / "baselines_full"
+    write_baseline_run_config(
+        run_dir,
+        [
+            {"name": "copy", "description": "Copies the source sentence."},
+            {"name": "punctuation_split", "description": "Splits on punctuation."},
+        ],
+    )
+    write_score_file(run_dir / "wikilarge_copy" / "scores.json", metric_payload())
+    write_score_file(run_dir / "wikilarge_punctuation_split" / "scores.json", metric_payload())
+
+    rows = result_aggregation.aggregate_results([run_dir])
+    models_by_pipeline = {str(row["pipeline"]): row["model"] for row in rows}
+
+    assert models_by_pipeline == {
+        "wikilarge_copy": "copy",
+        "wikilarge_punctuation_split": "punctuation_split",
+    }
+
+
 def test_aggregate_checkpoint_scores(tmp_path: Path) -> None:
     run_dir = tmp_path / "run_002"
     write_training_run_config(run_dir, "wikilarge", "facebook/bart-base")
@@ -99,6 +169,18 @@ def test_aggregate_checkpoint_scores(tmp_path: Path) -> None:
     assert rows[1]["model"] == "facebook/bart-base"
     assert rows[1]["fkgl"] is None
     assert rows[1]["bleu"] == 0.4
+
+
+def test_invalid_baseline_configuration_keeps_empty_model(tmp_path: Path) -> None:
+    run_dir = tmp_path / "baselines_full"
+    write_baseline_run_config(run_dir, ["copy", {"description": "Missing baseline name."}])
+    scores_path = run_dir / "wikilarge_copy" / "scores.json"
+    write_score_file(scores_path, metric_payload())
+
+    rows = result_aggregation.aggregate_results([scores_path])
+
+    assert rows[0]["run"] == "wikilarge_copy"
+    assert rows[0]["model"] == ""
 
 
 def test_aggregate_flat_legacy_scores(tmp_path: Path) -> None:
