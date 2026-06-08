@@ -123,4 +123,5 @@ def test_run_baselines_writes_scores_predictions_and_aggregate_rows(
     assert scores["sari"] == 39.5
     assert rows[0]["run"] == "baseline_run"
     assert rows[0]["pipeline"] == "wikilarge_copy"
+    assert rows[0]["model"] == "copy"
     assert rows[0]["sari"] == 39.5

@@ -4,6 +4,7 @@
 
 ### Added
 - Added smoke tests for core module imports so broken pipeline imports are caught early.
+- Added a `visualize-results` CLI that writes readability-preservation trade-off plots plus CSV and Markdown summaries from aggregated run results.
 
 ### Fixed
 - Fixed the ASSET SARI pipeline after the configuration refactor by using `TrainingConfig` instead of removed module-level constants.
@@ -11,6 +12,7 @@
 ### Changed
 - Updated ASSET SARI model resolution documentation for latest-run pipeline model directories and `TrainingConfig.model_name` fallback behavior.
 - Deferred loading of the Hugging Face SARI metric until SARI is computed, keeping imports fast and side-effect free.
+- Extended aggregated result tables with a `model` column so runs can be compared across checkpoints, baselines, and trained models.
 
 ### CI
 - CI lint now runs in check-only mode, tests fail on real failures, and the workflow posts a test/coverage summary into the GitHub Actions run summary.
