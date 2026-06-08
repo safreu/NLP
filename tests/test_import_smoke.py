@@ -14,6 +14,8 @@ import pytest
         "pipeline.training_pipeline",
         "pipeline.sari_asset_pipeline",
         "metrics.metric_sari",
+        "metrics.Bleu",
+        "metrics.rouge",
         "storage.json_store",
         "storage.paths",
         "storage.prediction_store",
