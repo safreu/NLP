@@ -12,7 +12,7 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 from config import TrainingConfig
 from prompts import elementary_prompt, intermediate_prompt
-from storage.paths import LATEST_RUN_FILE
+from storage.paths import RunPaths
 
 DATASET_NAME = "facebook/asset"
 DATASET_CONFIG = "simplification"
@@ -24,6 +24,7 @@ DEFAULT_MAX_EXAMPLES = 20
 DEFAULT_PROMPT_LEVEL = "elementary"
 DEFAULT_PREDICTIONS_PATH = Path("results/asset_sari_predictions.json")
 DEFAULT_SCORE_PATH = Path("results/asset_sari_score.json")
+RUN_PATHS = RunPaths.for_runs_root()
 
 
 def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
@@ -114,10 +115,12 @@ def resolve_model_path(
 
 
 def get_latest_run_dir() -> Path | None:
-    if not LATEST_RUN_FILE.exists():
+    latest_run_file = RUN_PATHS.latest_txt_path
+
+    if not latest_run_file.exists():
         return None
 
-    latest_run_path = LATEST_RUN_FILE.read_text(encoding="utf-8").strip()
+    latest_run_path = latest_run_file.read_text(encoding="utf-8").strip()
     if not latest_run_path:
         return None
 

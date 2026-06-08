@@ -4,13 +4,16 @@
 
 ### Added
 - Added smoke tests for core module imports so broken pipeline imports are caught early.
+- Added focused tests for latest-run resolution and pipeline path wiring after the RunPaths refactor.
 
 ### Fixed
 - Fixed the ASSET SARI pipeline after the configuration refactor by using `TrainingConfig` instead of removed module-level constants.
+- Aligned trainer path annotations with the `Path` values passed by the pipeline.
 
 ### Changed
 - Updated ASSET SARI model resolution documentation for latest-run pipeline model directories and `TrainingConfig.model_name` fallback behavior.
 - Deferred loading of the Hugging Face SARI metric until SARI is computed, keeping imports fast and side-effect free.
+- Centralized run path construction through `RunPaths.for_runs_root()` and moved run-store defaults to that factory.
 
 ### CI
 - CI lint now runs in check-only mode, tests fail on real failures, and the workflow posts a test/coverage summary into the GitHub Actions run summary.

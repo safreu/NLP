@@ -13,10 +13,10 @@ class DatasetStats:
     similarity_scores: list[float] = field(default_factory=list)
     length_ratios: list[float] = field(default_factory=list)
 
-    def add_loaded(self, level: str, count: int):
+    def add_loaded(self, level: str, count: int) -> None:
         self.loaded_per_level[level] = self.loaded_per_level.get(level, 0) + count
 
-    def add_kept(self, level: str):
+    def add_kept(self, level: str) -> None:
         self.kept_per_level[level] = self.kept_per_level.get(level, 0) + 1
 
     def to_dict(self) -> dict:

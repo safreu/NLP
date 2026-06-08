@@ -7,6 +7,7 @@ from config import TrainingConfig
 from evaluation.metrics_builder import compute_all_metrics
 from preprocessing.cleaner import remove_prompt
 from storage.json_store import write_json
+from storage.paths import RunPaths
 from storage.prediction_store import prediction_rows
 
 torch.set_num_threads(16)
@@ -79,22 +80,21 @@ def extract_sources(test_pairs):
 def evaluate_model(
     test_pairs,
     config: TrainingConfig,
-    model_path: str,
-    predictions_path: str = "results.json",
+    run_paths: RunPaths,
 ):
-    model, tokenizer, device = load_model(model_path)
+    model, tokenizer, device = load_model(run_paths.model_path)
 
     candidates, references = generate_predictions(test_pairs, model, tokenizer, device, config)
 
     sources = extract_sources(test_pairs)
 
-    write_json(prediction_rows(sources, candidates, references), predictions_path)
+    write_json(prediction_rows(sources, candidates, references), run_paths.predictions_path)
 
     return compute_all_metrics(sources, candidates, references)
 
 
-def evaluate_checkpoints(test_pairs, run_model_dir: str, config: TrainingConfig):
-    model_dir = Path(run_model_dir)
+def evaluate_checkpoints(test_pairs, run_paths: RunPaths, config: TrainingConfig):
+    model_dir = Path(run_paths.model_dir)
 
     checkpoints = sorted(model_dir.glob("checkpoint-*"), key=lambda p: int(p.name.split("-")[-1]))
 
@@ -107,8 +107,7 @@ def evaluate_checkpoints(test_pairs, run_model_dir: str, config: TrainingConfig)
 
         results = evaluate_model(
             test_pairs=test_pairs,
-            model_path=str(checkpoint),
-            predictions_path=str(prediction_path),
+            run_paths=RunPaths(model_path=str(checkpoint), predictions_path=str(prediction_path)),
             config=config,
         )
 

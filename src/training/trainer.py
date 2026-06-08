@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torch
 from transformers import (
     AutoModelForSeq2SeqLM,
@@ -37,7 +39,7 @@ def tokenize_dataset(dataset, tokenizer, config: TrainingConfig):
     )
 
 
-def create_training_args(path: str, config: TrainingConfig):
+def create_training_args(path: Path | str, config: TrainingConfig):
     return Seq2SeqTrainingArguments(
         output_dir=path,
         eval_strategy="epoch",
@@ -60,7 +62,7 @@ def create_trainer(
     tokenizer,
     train_dataset,
     valid_dataset,
-    path: str,
+    path: Path | str,
     config: TrainingConfig,
 ):
     data_collator = DataCollatorForSeq2Seq(
@@ -79,12 +81,12 @@ def create_trainer(
     )
 
 
-def save_model(model, tokenizer, path: str):
+def save_model(model, tokenizer, path: Path | str):
     model.save_pretrained(path)
     tokenizer.save_pretrained(path)
 
 
-def train_model(train, valid, path: str, config: TrainingConfig):
+def train_model(train, valid, path: Path | str, config: TrainingConfig):
     model, tokenizer = load_model(config)
 
     train_tokenized = tokenize_dataset(train, tokenizer, config)
