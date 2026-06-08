@@ -200,7 +200,18 @@ uv run aggregate-results runs/run_001 runs/run_002 --format csv --output results
 uv run aggregate-results runs/run_001 runs/run_002 --format json --output results/score_summary.json
 ```
 
-The table includes SARI, FKGL, BERTScore precision/recall/F1, BLEU, ROUGE-L, and token F1. Missing metrics are written as `NA` in Markdown and CSV, and as `null` in JSON.
+The table includes run, pipeline, model, checkpoint, SARI, FKGL, BERTScore precision/recall/F1, BLEU, ROUGE-L, and token F1. Missing metrics are written as `NA` in Markdown and CSV, and as `null` in JSON.
+
+## Visualize readability-preservation trade-offs
+
+Generate a reproducible plot from aggregated results:
+
+```bash
+uv run aggregate-results runs/run_001 runs/run_002 --format json --output results/score_summary.json
+uv run visualize-results results/score_summary.json --output-dir results/visualizations
+```
+
+This writes `readability_preservation_tradeoff.png`, `readability_preservation_tradeoff.csv`, and `readability_preservation_tradeoff.md`. The PNG combines a SARI-vs-FKGL scatter plot with a mean BERTScore F1 comparison per model.
 
 ## Run a module command
 

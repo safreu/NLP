@@ -9,10 +9,13 @@ import pytest
     [
         "main",
         "evaluation.result_aggregation",
+        "evaluation.result_visualization",
         "pipeline.baseline_pipeline",
         "pipeline.training_pipeline",
         "pipeline.sari_asset_pipeline",
         "metrics.metric_sari",
+        "metrics.Bleu",
+        "metrics.rouge",
         "storage.json_store",
         "storage.paths",
         "storage.prediction_store",
@@ -25,16 +28,27 @@ def test_core_modules_import_without_side_effects(module_name: str) -> None:
     assert module is not None
 
 
-def test_console_script_entry_point_loads() -> None:
+@pytest.mark.parametrize(
+    ("script_name", "entry_point_value"),
+    [
+        ("aggregate-results", "evaluation.result_aggregation:main"),
+        ("evaluate-baselines", "pipeline.baseline_pipeline:main"),
+        ("src", "main:main"),
+        ("visualize-results", "evaluation.result_visualization:main"),
+    ],
+)
+def test_console_script_entry_point_loads(script_name: str, entry_point_value: str) -> None:
     matches = [
         entry_point
         for entry_point in entry_points(group="console_scripts")
-        if entry_point.name == "src"
+        if entry_point.name == script_name
     ]
 
     assert len(matches) == 1
-    assert matches[0].value == "main:main"
-    assert matches[0].load() is importlib.import_module("main").main
+    assert matches[0].value == entry_point_value
+
+    module_name, function_name = entry_point_value.split(":", maxsplit=1)
+    assert matches[0].load() is getattr(importlib.import_module(module_name), function_name)
 
 
 def test_metric_sari_import_is_lazy(monkeypatch: pytest.MonkeyPatch) -> None:
