@@ -43,6 +43,7 @@ class _FakeTokenizer:
         add_generation_prompt: bool,
         return_tensors: str,
         return_dict: bool,
+        **kwargs: object,
     ) -> BatchEncoding:
         # A three-token prompt. BatchEncoding supports .to(device), ** unpacking
         # and indexing, just like the real apply_chat_template output.

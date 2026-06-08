@@ -15,7 +15,7 @@ cd "$SLURM_SUBMIT_DIR"
 uv sync --dev
 
 uv run python -m pipeline.llm_zero_shot_pipeline generate \
-    --model-name "${MODEL_NAME:-google/gemma-4-12b-it}" \
+    --model-name "${MODEL_NAME:-google/gemma-4-12B-it}" \
     --split "${SPLIT:-test}" \
     --max-examples "${MAX_EXAMPLES:-0}" \
     --predictions-path results/asset_llm_zero_shot_predictions.json
@@ -23,6 +23,6 @@ uv run python -m pipeline.llm_zero_shot_pipeline generate \
 uv run python -m pipeline.llm_zero_shot_pipeline score \
     --predictions-path results/asset_llm_zero_shot_predictions.json \
     --score-path results/asset_llm_zero_shot_score.json \
-    --model-name "${MODEL_NAME:-google/gemma-4-12b-it}" \
+    --model-name "${MODEL_NAME:-google/gemma-4-12B-it}" \
     --split "${SPLIT:-test}" \
     --max-examples "${MAX_EXAMPLES:-0}"

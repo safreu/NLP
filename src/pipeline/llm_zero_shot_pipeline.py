@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, set_seed
+from transformers import AutoModelForMultimodalLM, AutoProcessor, set_seed
 
 from config import SEED
 from pipeline.sari_asset_pipeline import (
@@ -21,8 +21,9 @@ from pipeline.sari_asset_pipeline import (
 )
 from prompts import ZERO_SHOT_SIMPLIFY_INSTRUCTION, zero_shot_simplify_messages
 
-# Default model is the instruction-tuned Gemma-4 12B variant
-DEFAULT_MODEL_NAME = "google/gemma-4-12b-it"
+# Default model is the instruction-tuned Gemma-4 12B variant (multimodal weights;
+# the HF repo id is case-sensitive, hence the capital B).
+DEFAULT_MODEL_NAME = "google/gemma-4-12B-it"
 DEFAULT_REVISION: str | None = None
 DEFAULT_MAX_NEW_TOKENS = 256
 DEFAULT_MAX_EXAMPLES = 20
@@ -157,8 +158,11 @@ def load_causal_model(
     device: str,
     hf_token: str | None = None,
 ) -> tuple[Any, Any]:
-    tokenizer: Any = AutoTokenizer.from_pretrained(model_name, revision=revision, token=hf_token)
-    model: Any = AutoModelForCausalLM.from_pretrained(
+    # Gemma 4 ships as a multimodal model, so it is loaded with AutoProcessor +
+    # AutoModelForMultimodalLM. The processor exposes apply_chat_template/decode,
+    # so the text-only generation path downstream is unchanged.
+    processor: Any = AutoProcessor.from_pretrained(model_name, revision=revision, token=hf_token)
+    model: Any = AutoModelForMultimodalLM.from_pretrained(
         model_name,
         revision=revision,
         token=hf_token,
@@ -169,7 +173,7 @@ def load_causal_model(
         model.to(device)
     model.eval()
 
-    return model, tokenizer
+    return model, processor
 
 
 def generate_prediction(
@@ -185,6 +189,10 @@ def generate_prediction(
         add_generation_prompt=True,
         return_tensors="pt",
         return_dict=True,
+        # Gemma 4 is a "thinking" model: without this it emits a reasoning block
+        # before the answer, which would pollute the prediction. Unknown template
+        # kwargs are ignored by models without a thinking mode, so this is safe.
+        enable_thinking=False,
     ).to(device)
 
     prompt_length = int(inputs["input_ids"].shape[-1])
