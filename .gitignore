@@ -309,9 +309,16 @@ pyrightconfig.json
 pytest.xml
 
 # Local experiment outputs and model artifacts
-runs/
-results/
-models/
-
+/runs/
+/results/
+/models/
+/outputs/
+/checkpoints/
+/cache/
+/data/
 # Generated dataset caches
 data/**/*.pkl
+*.pkl
+*.pt
+*.bin
+*.safetensors

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 
 MIN_LENGTH_RATIO = 0.2
 SIMILARITY_THRESHOLD = 0.9
@@ -22,7 +23,7 @@ class TrainingConfig:
     repetition_penalty: float = 1.1
 
     @property
-    def generation_config(self) -> dict:
+    def generation_config(self) -> dict[str, Any]:
         return {
             "max_new_tokens": self.max_target_length,
             "do_sample": False,

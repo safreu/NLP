@@ -9,6 +9,7 @@ from data.onestop_loader import OneStopLoader
 from data.wikilarge_loader import WikiLargeLoader
 from pipeline.training_pipeline import EvaluationMode, TrainingPipeline
 from storage.json_store import write_json
+from storage.paths import RunPaths
 from storage.run_store import create_run_dir
 
 DEFAULT_DATASET = "all"
@@ -174,12 +175,14 @@ def build_experiments(args: argparse.Namespace) -> list[ExperimentSpec]:
     return experiments
 
 
-def resolve_run_dir(output_path: Path | None) -> Path:
+def resolve_run_dir(output_path: Path | None) -> RunPaths:
     if output_path is None:
-        return create_run_dir()
+        run_dir = RunPaths(create_run_dir())
+        return run_dir
 
-    output_path.mkdir(parents=True, exist_ok=True)
-    return output_path
+    run_dir = RunPaths(output_path)
+    run_dir.root.mkdir(parents=True, exist_ok=True)
+    return run_dir
 
 
 def training_config_data(config: TrainingConfig) -> dict[str, object]:
@@ -218,14 +221,14 @@ def run_config_data(
 
 def write_run_config(
     args: argparse.Namespace,
-    run_dir: Path,
+    run_dir: RunPaths,
     experiments: Sequence[ExperimentSpec],
 ) -> None:
-    write_json(run_config_data(args, run_dir, experiments), run_dir / "config.json")
+    write_json(run_config_data(args, run_dir.root, experiments), run_dir.config_path)
 
 
-def run_experiments(args: argparse.Namespace) -> Path:
-    run_dir = resolve_run_dir(args.output_path)
+def run_experiments(args: argparse.Namespace) -> RunPaths:
+    run_dir: RunPaths = resolve_run_dir(args.output_path)
     experiments = build_experiments(args)
 
     write_run_config(args, run_dir, experiments)
@@ -235,8 +238,9 @@ def run_experiments(args: argparse.Namespace) -> Path:
             name=experiment.name,
             dataset_loader=experiment.dataset_loader,
             config=experiment.config,
+            run_paths=run_dir,
             evaluation_mode=experiment.evaluation_mode,
-        ).run(run_dir)
+        ).run()
 
     return run_dir
 

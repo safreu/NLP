@@ -80,13 +80,14 @@ def test_run_experiments_writes_config_and_runs_selected_pipeline(
             name,
             dataset_loader,
             config,
+            run_paths,
             evaluation_mode,
         ):
             self.name = name
             self.config = config
 
-        def run(self, run_dir: Path) -> None:
-            pipeline_calls.append((self.name, run_dir, self.config.epochs))
+        def run(self) -> None:
+            pipeline_calls.append((self.name, output_path, self.config.epochs))
 
     monkeypatch.setattr(main, "TrainingPipeline", StubTrainingPipeline)
 
@@ -104,7 +105,7 @@ def test_run_experiments_writes_config_and_runs_selected_pipeline(
 
     run_dir = main.run_experiments(args)
 
-    assert run_dir == output_path
+    assert run_dir.root == output_path
     assert pipeline_calls == [("wikilarge", output_path, 1)]
 
     run_config = read_json(output_path / "config.json")
