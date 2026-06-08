@@ -8,6 +8,31 @@ def write_score_file(path: Path, data: object) -> None:
     write_json(data, path)
 
 
+def write_training_run_config(run_dir: Path, pipeline_name: str, model_name: str) -> None:
+    write_json(
+        {
+            "pipelines": [
+                {
+                    "name": pipeline_name,
+                    "training_config": {"model_name": model_name},
+                }
+            ]
+        },
+        run_dir / "config.json",
+    )
+
+
+def write_baseline_run_config(run_dir: Path, baselines: object) -> None:
+    write_json(
+        {
+            "datasets": ["onestop", "wikilarge"],
+            "baselines": baselines,
+            "max_examples": None,
+        },
+        run_dir / "config.json",
+    )
+
+
 def metric_payload() -> dict[str, object]:
     return {
         "bert": {
@@ -24,15 +49,18 @@ def metric_payload() -> dict[str, object]:
 
 
 def test_aggregate_final_model_scores(tmp_path: Path) -> None:
-    scores_path = tmp_path / "run_001" / "onestop" / "scores.json"
+    run_dir = tmp_path / "run_001"
+    write_training_run_config(run_dir, "onestop", "google/flan-t5-base")
+    scores_path = run_dir / "onestop" / "scores.json"
     write_score_file(scores_path, metric_payload())
 
-    rows = result_aggregation.aggregate_results([tmp_path / "run_001"])
+    rows = result_aggregation.aggregate_results([run_dir])
 
     assert rows == [
         {
             "run": "run_001",
             "pipeline": "onestop",
+            "model": "google/flan-t5-base",
             "checkpoint": "",
             "sari": 41.5,
             "fkgl": 4.2,
@@ -48,17 +76,81 @@ def test_aggregate_final_model_scores(tmp_path: Path) -> None:
 
 
 def test_aggregate_direct_scores_file_infers_pipeline_context(tmp_path: Path) -> None:
-    scores_path = tmp_path / "run_001" / "onestop" / "scores.json"
+    run_dir = tmp_path / "run_001"
+    write_training_run_config(run_dir, "onestop", "google/flan-t5-base")
+    scores_path = run_dir / "onestop" / "scores.json"
     write_score_file(scores_path, metric_payload())
 
     rows = result_aggregation.aggregate_results([scores_path])
 
     assert rows[0]["run"] == "run_001"
     assert rows[0]["pipeline"] == "onestop"
+    assert rows[0]["model"] == "google/flan-t5-base"
+
+
+def test_aggregate_baseline_direct_scores_file_resolves_copy_model(tmp_path: Path) -> None:
+    run_dir = tmp_path / "baselines_full"
+    write_baseline_run_config(
+        run_dir,
+        [
+            {"name": "copy", "description": "Copies the source sentence."},
+            {"name": "punctuation_split", "description": "Splits on punctuation."},
+        ],
+    )
+    scores_path = run_dir / "wikilarge_copy" / "scores.json"
+    write_score_file(scores_path, metric_payload())
+
+    rows = result_aggregation.aggregate_results([scores_path])
+
+    assert rows[0]["run"] == "wikilarge_copy"
+    assert rows[0]["pipeline"] == ""
+    assert rows[0]["model"] == "copy"
+
+
+def test_aggregate_baseline_run_directory_resolves_punctuation_split_model(tmp_path: Path) -> None:
+    run_dir = tmp_path / "baselines_full"
+    write_baseline_run_config(
+        run_dir,
+        [
+            {"name": "split", "description": "Generic split baseline."},
+            {"name": "punctuation_split", "description": "Splits on punctuation."},
+        ],
+    )
+    pipeline_dir = run_dir / "wikilarge_punctuation_split"
+    write_score_file(pipeline_dir / "scores.json", metric_payload())
+
+    rows = result_aggregation.aggregate_results([pipeline_dir])
+
+    assert rows[0]["run"] == "wikilarge_punctuation_split"
+    assert rows[0]["pipeline"] == ""
+    assert rows[0]["model"] == "punctuation_split"
+
+
+def test_aggregate_parent_directory_resolves_multiple_baseline_runs(tmp_path: Path) -> None:
+    run_dir = tmp_path / "baselines_full"
+    write_baseline_run_config(
+        run_dir,
+        [
+            {"name": "copy", "description": "Copies the source sentence."},
+            {"name": "punctuation_split", "description": "Splits on punctuation."},
+        ],
+    )
+    write_score_file(run_dir / "wikilarge_copy" / "scores.json", metric_payload())
+    write_score_file(run_dir / "wikilarge_punctuation_split" / "scores.json", metric_payload())
+
+    rows = result_aggregation.aggregate_results([run_dir])
+    models_by_pipeline = {str(row["pipeline"]): row["model"] for row in rows}
+
+    assert models_by_pipeline == {
+        "wikilarge_copy": "copy",
+        "wikilarge_punctuation_split": "punctuation_split",
+    }
 
 
 def test_aggregate_checkpoint_scores(tmp_path: Path) -> None:
-    scores_path = tmp_path / "run_002" / "wikilarge" / "scores.json"
+    run_dir = tmp_path / "run_002"
+    write_training_run_config(run_dir, "wikilarge", "facebook/bart-base")
+    scores_path = run_dir / "wikilarge" / "scores.json"
     write_score_file(
         scores_path,
         {
@@ -67,18 +159,34 @@ def test_aggregate_checkpoint_scores(tmp_path: Path) -> None:
         },
     )
 
-    rows = result_aggregation.aggregate_results([tmp_path / "run_002"])
+    rows = result_aggregation.aggregate_results([run_dir])
 
     assert [row["checkpoint"] for row in rows] == ["checkpoint-100", "checkpoint-200"]
     assert rows[0]["pipeline"] == "wikilarge"
+    assert rows[0]["model"] == "facebook/bart-base"
     assert rows[0]["sari"] == 41.5
     assert rows[1]["sari"] == 44.0
+    assert rows[1]["model"] == "facebook/bart-base"
     assert rows[1]["fkgl"] is None
     assert rows[1]["bleu"] == 0.4
 
 
+def test_invalid_baseline_configuration_keeps_empty_model(tmp_path: Path) -> None:
+    run_dir = tmp_path / "baselines_full"
+    write_baseline_run_config(run_dir, ["copy", {"description": "Missing baseline name."}])
+    scores_path = run_dir / "wikilarge_copy" / "scores.json"
+    write_score_file(scores_path, metric_payload())
+
+    rows = result_aggregation.aggregate_results([scores_path])
+
+    assert rows[0]["run"] == "wikilarge_copy"
+    assert rows[0]["model"] == ""
+
+
 def test_aggregate_flat_legacy_scores(tmp_path: Path) -> None:
-    scores_path = tmp_path / "run_003" / "scores.json"
+    run_dir = tmp_path / "run_003"
+    write_training_run_config(run_dir, "onestop", "google/flan-t5-base")
+    scores_path = run_dir / "scores.json"
     write_score_file(
         scores_path,
         {
@@ -94,10 +202,11 @@ def test_aggregate_flat_legacy_scores(tmp_path: Path) -> None:
         },
     )
 
-    rows = result_aggregation.aggregate_results([tmp_path / "run_003"])
+    rows = result_aggregation.aggregate_results([run_dir])
 
     assert rows[0]["run"] == "run_003"
     assert rows[0]["pipeline"] == ""
+    assert rows[0]["model"] == "google/flan-t5-base"
     assert rows[0]["sari"] == 39.5
     assert rows[0]["fkgl"] == 5.1
     assert rows[0]["bertscore_f1"] == 0.85
@@ -111,6 +220,7 @@ def test_markdown_uses_missing_value_placeholder() -> None:
             {
                 "run": "run_001",
                 "pipeline": "onestop",
+                "model": "google/flan-t5-base",
                 "checkpoint": "",
                 "sari": 41.5,
                 "fkgl": None,
@@ -125,8 +235,8 @@ def test_markdown_uses_missing_value_placeholder() -> None:
         ]
     )
 
-    assert "| run | pipeline | checkpoint | sari | fkgl |" in markdown
-    assert "| run_001 | onestop |  | 41.5000 | NA |" in markdown
+    assert "| run | pipeline | model | checkpoint | sari | fkgl |" in markdown
+    assert "| run_001 | onestop | google/flan-t5-base |  | 41.5000 | NA |" in markdown
 
 
 def test_format_csv_and_json_outputs() -> None:
@@ -134,6 +244,7 @@ def test_format_csv_and_json_outputs() -> None:
         {
             "run": "run_001",
             "pipeline": "onestop",
+            "model": "google/flan-t5-base",
             "checkpoint": "",
             "sari": 41.5,
             "fkgl": None,
@@ -150,7 +261,7 @@ def test_format_csv_and_json_outputs() -> None:
     csv_output = result_aggregation.format_csv(rows)
     json_output = result_aggregation.format_json(rows)
 
-    assert csv_output.splitlines()[0].startswith("run,pipeline,checkpoint,sari")
-    assert "run_001,onestop,,41.5000" in csv_output
+    assert csv_output.splitlines()[0].startswith("run,pipeline,model,checkpoint,sari")
+    assert "run_001,onestop,google/flan-t5-base,,41.5000" in csv_output
     assert '"sari": 41.5' in json_output
     assert '"fkgl": null' in json_output

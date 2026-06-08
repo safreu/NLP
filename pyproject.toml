@@ -37,6 +37,7 @@ dev = [
 aggregate-results = "evaluation.result_aggregation:main"
 evaluate-baselines = "pipeline.baseline_pipeline:main"
 src = "main:main"
+visualize-results = "evaluation.result_visualization:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
