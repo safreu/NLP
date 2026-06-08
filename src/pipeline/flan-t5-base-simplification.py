@@ -1,4 +1,3 @@
-# ruff: noqa: E402
 """Historical end-to-end FLAN-T5 simplification script.
 
 This is the original monolithic experiment used to fine-tune
