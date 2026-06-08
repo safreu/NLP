@@ -19,7 +19,6 @@ are:
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import torch
@@ -31,6 +30,14 @@ from transformers import (
     Seq2SeqTrainer,
     Seq2SeqTrainingArguments,
 )
+
+from evaluation.metrics_builder import compute_all_metrics
+from preprocessing.cleaner import clean_text
+from preprocessing.dataset_builder import split_pairs, to_dataset
+from preprocessing.filter import length_ratio, text_similarity
+from storage.json_store import write_json
+from storage.prediction_store import prediction_rows
+from storage.run_store import create_run_dir
 
 
 def _find_src() -> Path:
@@ -48,16 +55,6 @@ def _find_src() -> Path:
 
 SRC_DIR = _find_src()
 REPO_ROOT = SRC_DIR.parent
-if str(SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(SRC_DIR))
-
-from evaluation.metrics_builder import compute_all_metrics
-from preprocessing.cleaner import clean_text
-from preprocessing.dataset_builder import split_pairs, to_dataset
-from preprocessing.filter import length_ratio, text_similarity
-from storage.json_store import write_json
-from storage.prediction_store import prediction_rows
-from storage.run_store import create_run_dir
 
 MODEL_NAME = "google/flan-t5-base"
 TASK_PREFIX = "simplify: "

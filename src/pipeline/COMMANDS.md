@@ -263,3 +263,95 @@ The score file contains metadata like this:
 ```
 
 Why: use this file to report the exact model, dataset split, prompt style, and SARI score.
+
+---
+
+# Zero-Shot LLM Baseline (`llm_zero_shot_pipeline.py`)
+
+`llm_zero_shot_pipeline.py` runs a **local, open-weights** instruction-tuned
+Gemma model (no hosted API, no secrets) as a zero-shot simplification baseline on
+ASSET. It writes predictions in the same `{source, prediction, references}`
+format as `sari_asset_pipeline.py`, and SARI is computed on the *saved* outputs.
+
+The pipeline is split into two independent steps so that re-scoring never
+triggers a new (expensive) generation pass.
+
+## Prompt Template
+
+The single documented zero-shot prompt is `zero_shot_simplify_messages(text)` in
+`src/prompts.py`. It returns chat messages for `tokenizer.apply_chat_template`.
+Gemma chat templates support only the `user`/`model` roles (no `system` role), so
+the full instruction is one `user` turn:
+
+```text
+Rewrite the following English sentence so it is easier to read. Use simpler
+words and shorter sentences while keeping the original meaning. Reply with only
+the simplified sentence and nothing else.
+
+Sentence: <source>
+```
+
+## Hugging Face Token (gated download only)
+
+Gemma weights are license-gated. Accept the license on the model's Hub page,
+then copy `.env.example` to `.env` (gitignored) and set `HF_TOKEN`. The token is
+read from the environment for the download only and is never written to any
+output file. No inference API is used.
+
+## 1) Generate Predictions
+
+```bash
+uv run python -m pipeline.llm_zero_shot_pipeline generate \
+  --model-name google/gemma-4-12b-it \
+  --revision <pinned-commit-hash> \
+  --split test --max-examples 0 \
+  --predictions-path results/asset_llm_zero_shot_predictions.json
+```
+
+Why: loads ASSET, loads the model locally with `AutoModelForCausalLM` +
+`AutoTokenizer`, builds the prompt via `apply_chat_template`, generates
+deterministically (`do_sample=False`, fixed seed), decodes only the newly
+generated tokens, and writes predictions JSON.
+
+## 2) Score Saved Predictions
+
+```bash
+uv run python -m pipeline.llm_zero_shot_pipeline score \
+  --predictions-path results/asset_llm_zero_shot_predictions.json \
+  --score-path results/asset_llm_zero_shot_score.json \
+  --model-name google/gemma-4-12b-it --revision <pinned-commit-hash> \
+  --split test --max-examples 0
+```
+
+Why: reads the saved predictions JSON and computes SARI with
+`metrics.metric_sari.compute_sari()`, without reloading the model. `score.json`
+records `model_name`, `revision`, the prompt template, the seed, and the
+`generation_config`.
+
+The `llm-zero-shot` console script is equivalent, e.g.
+`uv run llm-zero-shot generate --help`.
+
+## Models
+
+| Setting | Value |
+| --- | --- |
+| Default model | `google/gemma-4-12b-it` (one A100, bfloat16, `device_map="auto"`) |
+| Lighter alternative | `google/gemma-4-e4b-it` (pass via `--model-name`) |
+| Reproducibility | pin `--revision <commit-hash>`; decoding is greedy with a fixed seed |
+
+## Supported Command Line Arguments
+
+| Step | Argument | Values | Purpose |
+| --- | --- | --- | --- |
+| both | `--model-name` | HF model id | Instruction-tuned, open-weights causal LM |
+| both | `--revision` | Commit hash or tag | Pinned model revision (recorded in score) |
+| both | `--split` | `validation`, `test` | ASSET split |
+| both | `--max-examples` | Integer, `0` for full split | Limits the number of examples |
+| generate | `--max-new-tokens` | Integer | Max newly generated tokens per example |
+| generate | `--device` | `cpu`, `cuda` | Torch device (auto-detected when omitted) |
+| generate | `--predictions-path` | File path | Where predictions JSON is written |
+| score | `--predictions-path` | File path | Predictions JSON written by `generate` |
+| score | `--score-path` | File path | Where SARI score metadata is written |
+
+On the bwUniCluster, `scripts/run_llm_zero_shot.slurm` runs both steps as a
+single GPU job (`sbatch scripts/run_llm_zero_shot.slurm`).
