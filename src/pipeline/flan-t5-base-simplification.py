@@ -11,9 +11,9 @@ are:
 
 * ``uv run python -m main``
   The experiment CLI (``src/main.py``). It wires dataset loaders,
-  training pipeline and config/run-directory handling together. 
+  training pipeline and config/run-directory handling together.
   Use this to train and evaluate.
-* ``uv run python -m pipeline.sari_asset_pipeline`` 
+* ``uv run python -m pipeline.sari_asset_pipeline``
   standalone ASSET SARI evaluation of an already-trained model (see ``pipeline/COMMANDS.md``).
 
 """

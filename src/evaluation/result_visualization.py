@@ -220,9 +220,7 @@ def summarize_bertscore_by_model(
         scores_by_model.setdefault(label, []).append(bertscore_f1)
 
     summary = [
-        (label, sum(scores) / len(scores))
-        for label, scores in scores_by_model.items()
-        if scores
+        (label, sum(scores) / len(scores)) for label, scores in scores_by_model.items() if scores
     ]
 
     return sorted(summary, key=lambda item: item[1], reverse=True)
