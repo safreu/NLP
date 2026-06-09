@@ -185,6 +185,69 @@ uv run aggregate-results runs/baselines_quick
 
 The baseline runner writes one pipeline directory per dataset and baseline, for example `runs/baselines_quick/wikilarge_copy/scores.json`. The `copy` baseline returns the source text unchanged after prompt removal. The `punctuation_split` baseline is a deliberately simple rule-based baseline that splits on semicolons, colons, dashes, and a few clause boundaries.
 
+## Zero-shot LLM baseline
+
+Run a **local, open-weights** instruction-tuned Gemma model as a
+zero-shot simplification baseline on ASSET.
+
+### Prompt template
+
+The single documented zero-shot prompt lives in `src/prompts.py` as
+`zero_shot_simplify_messages(text)`. It returns chat messages for
+`tokenizer.apply_chat_template`.
+
+```text
+Rewrite the following English sentence so it is easier to read. Use simpler
+words and shorter sentences while keeping the original meaning. Reply with only
+the simplified sentence and nothing else.
+
+Sentence: <sentence>
+```
+
+### Hugging Face token (gated download only)
+
+Gemma weights are license-gated. Accept the license on the model's Hub page,
+then provide a read token via the environment. Copy `.env.example` to `.env`
+(gitignored) and set `HF_TOKEN`:
+
+```bash
+cp .env.example .env
+# edit .env and set HF_TOKEN=hf_...
+```
+
+The token is used **only** to download the weights and is never written to any
+prediction or score file. No API secrets are stored in the repo.
+
+### Two independent steps
+
+Generation and scoring are separate subcommands so that re-scoring never
+re-runs generation:
+
+```bash
+# 1) GENERATE: load ASSET, run the local model on GPU, write predictions JSON
+uv run llm-zero-shot generate \
+  --model-name google/gemma-4-12b-it \
+  --revision <pinned-commit-hash> \
+  --split test --max-examples 0 \
+  --predictions-path results/asset_llm_zero_shot_predictions.json
+
+# 2) SCORE: compute ASSET SARI on the saved predictions
+uv run llm-zero-shot score \
+  --predictions-path results/asset_llm_zero_shot_predictions.json \
+  --score-path results/asset_llm_zero_shot_score.json \
+  --model-name google/gemma-4-12b-it --revision <pinned-commit-hash> \
+  --split test --max-examples 0
+```
+
+Decoding is deterministic (`do_sample=False`, greedy, fixed seed) and the
+`generation_config` is logged into `score.json` alongside `model_name`,
+`revision`, and the prompt template.
+
+- **Default model:** `google/gemma-4-12b-it`
+- **Lighter alternative:** `google/gemma-4-e4b-it` — pass it via
+  `--model-name google/gemma-4-e4b-it` for smaller GPUs.
+- Pin `--revision` to a commit hash for fully reproducible downloads.
+
 ## Aggregate experiment scores
 
 Create a Markdown table that can be copied into the report:
