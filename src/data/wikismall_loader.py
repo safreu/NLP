@@ -36,18 +36,12 @@ class WikiSmallLoader:
         test_split = dataset["test"] if "test" in dataset else dataset["validation"]
 
         if self.max_train_samples is not None:
-            train_split = train_split.select(
-                range(min(self.max_train_samples, len(train_split)))
-            )
+            train_split = train_split.select(range(min(self.max_train_samples, len(train_split))))
 
         if self.max_eval_samples is not None:
-            valid_split = valid_split.select(
-                range(min(self.max_eval_samples, len(valid_split)))
-            )
+            valid_split = valid_split.select(range(min(self.max_eval_samples, len(valid_split))))
 
-            test_split = test_split.select(
-                range(min(self.max_eval_samples, len(test_split)))
-            )
+            test_split = test_split.select(range(min(self.max_eval_samples, len(test_split))))
 
         train_pairs = self._to_pairs(train_split)
         valid_pairs = self._to_pairs(valid_split)
