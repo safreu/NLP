@@ -31,7 +31,7 @@ def test_compute_sari_returns_score_in_expected_range() -> None:
                 ]
             ],
         )
-    except Exception as error: 
+    except Exception as error:
         pytest.skip(f"SARI metric unavailable: {error}")
 
     assert 0.0 <= score <= 100.0
