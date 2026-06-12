@@ -1,36 +1,41 @@
-from collections import defaultdict
 import csv
 import os
 import pickle
+from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Self
+from typing import Self
+
 from cryptography.fernet import Fernet
+from dotenv import load_dotenv
 
 from config import MIN_LENGTH_RATIO, SIMILARITY_THRESHOLD
-from dotenv import load_dotenv
 from evaluation.datasetStats import DatasetStats
 from preprocessing.cleaner import clean_text, remove_prompt
 from preprocessing.filter import length_ratio, text_similarity
-from prompts import elementary_prompt, intermediate_prompt, simplify_prompt
- 
+from prompts import simplify_prompt
+
+
 def _get_cache_cipher() -> Fernet:
-        key = os.getenv("NEWSELA_CACHE_KEY")
-        if not key:
-            raise ValueError("Environment variable NEWSELA_CACHE_KEY is not set")
-        return Fernet(key)
+    key = os.getenv("NEWSELA_CACHE_KEY")
+    if not key:
+        raise ValueError("Environment variable NEWSELA_CACHE_KEY is not set")
+    return Fernet(key)
+
 
 def _save_encrypted_pickle(obj: object, path: Path) -> None:
-        cipher = _get_cache_cipher()
-        raw = pickle.dumps(obj)
-        encrypted = cipher.encrypt(raw)
-        path.write_bytes(encrypted)
+    cipher = _get_cache_cipher()
+    raw = pickle.dumps(obj)
+    encrypted = cipher.encrypt(raw)
+    path.write_bytes(encrypted)
+
 
 def _load_encrypted_pickle(path: Path) -> object:
-        cipher = _get_cache_cipher()
-        encrypted = path.read_bytes()
-        raw = cipher.decrypt(encrypted)
-        return pickle.loads(raw)
+    cipher = _get_cache_cipher()
+    encrypted = path.read_bytes()
+    raw = cipher.decrypt(encrypted)
+    return pickle.loads(raw)
+
 
 @dataclass
 class NewselaTarget:
@@ -38,7 +43,8 @@ class NewselaTarget:
     file_path: str
     grade_level: float | None = None
     version: int | None = None
-    
+
+
 @dataclass
 class NewselaEntry:
     slug: str
@@ -47,17 +53,19 @@ class NewselaEntry:
     file_path: str
     grade_level: float | None = None
 
+
 @dataclass
 class NewselaCorpus:
     entries: list[NewselaEntry]
     stats: DatasetStats = field(default_factory=DatasetStats)
-    
-   
+
     @classmethod
-    def load_from_disk(cls, path: str = "data/newsela/newsela_article_corpus_2016-01-29/articles_metadata.csv") -> Self:
-        
+    def load_from_disk(
+        cls, path: str = "data/newsela/newsela_article_corpus_2016-01-29/articles_metadata.csv"
+    ) -> Self:
+
         load_dotenv()
-        
+
         file = Path(path)
         stats = DatasetStats()
 
@@ -74,7 +82,7 @@ class NewselaCorpus:
 
         with open(file, newline="", encoding="utf-8") as csv_file:
             reader = csv.DictReader(csv_file)
-            
+
             for row in reader:
                 grouped[row["slug"]].append(row)
 
@@ -82,49 +90,49 @@ class NewselaCorpus:
 
         for slug, rows in grouped.items():
             rows.sort(key=lambda r: int(r["version"]))
-            
+
             source_row = rows[0]
-            
+
             source = clean_text(source_row["text"])
-            
+
             targets: list[NewselaTarget] = []
-            
+
             for row in rows[1:]:
                 target_text = clean_text(row["text"])
-                
+
                 if not target_text:
                     continue
-                
+
                 grade_level = float(row["grade_level"]) if row["grade_level"] else None
-                
-                targets.append(NewselaTarget(
-                    text=target_text,
-                    grade_level=grade_level,
-                    version=int(row["version"]),
-                    file_path=str(row["filename"])
-                ))
-                
-                stats_key = (
-                    f"grade_{grade_level:g}"
-                    if grade_level is not None
-                    else "grade_unknown"
+
+                targets.append(
+                    NewselaTarget(
+                        text=target_text,
+                        grade_level=grade_level,
+                        version=int(row["version"]),
+                        file_path=str(row["filename"]),
+                    )
                 )
-                
+
+                stats_key = f"grade_{grade_level:g}" if grade_level is not None else "grade_unknown"
+
                 stats.add_loaded(stats_key, 1)
 
             if not targets:
                 continue
-            
+
             entries.append(
                 NewselaEntry(
                     slug=slug,
                     source=source,
-                    grade_level=float(source_row["grade_level"]) if source_row["grade_level"] else None,
+                    grade_level=float(source_row["grade_level"])
+                    if source_row["grade_level"]
+                    else None,
                     targets=targets,
-                    file_path=str(source_row["filename"])
+                    file_path=str(source_row["filename"]),
                 )
             )
-            
+
         _save_encrypted_pickle(entries, cache_file)
 
         return cls(entries, stats)
@@ -136,7 +144,7 @@ class NewselaCorpus:
         for entry in self.entries:
             for target_entry in entry.targets:
                 source = simplify_prompt(entry.source)
-                
+
                 target = target_entry.text
                 cleaned_source = remove_prompt(source)
 

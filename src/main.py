@@ -5,6 +5,7 @@ from pathlib import Path
 
 from config import TrainingConfig
 from data.dataset_loader import DatasetLoader
+from data.newsela_loader import NewselaLoader
 from data.onestop_loader import OneStopLoader
 from data.wikilarge_loader import WikiLargeLoader
 from pipeline.training_pipeline import EvaluationMode, TrainingPipeline
@@ -15,7 +16,7 @@ from storage.run_store import create_run_dir
 DEFAULT_DATASET = "all"
 DEFAULT_WIKILARGE_MAX_TRAIN_SAMPLES = 10000
 DEFAULT_WIKILARGE_MAX_EVAL_SAMPLES = 2000
-DATASET_CHOICES = ("all", "onestop", "wikilarge")
+DATASET_CHOICES = ("all", "onestop", "wikilarge", "newsela")
 
 
 @dataclass(frozen=True)
@@ -108,7 +109,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def selected_dataset_names(dataset: str) -> list[str]:
     if dataset == "all":
-        return ["onestop", "wikilarge"]
+        return ["onestop", "wikilarge", "newsela"]
 
     return [dataset]
 
@@ -141,6 +142,17 @@ def build_experiments(args: argparse.Namespace) -> list[ExperimentSpec]:
                 ExperimentSpec(
                     name="onestop",
                     dataset_loader=OneStopLoader(),
+                    config=apply_training_overrides(TrainingConfig(), args),
+                    evaluation_mode=evaluation_mode,
+                )
+            )
+            continue
+
+        if dataset_name == "newsela":
+            experiments.append(
+                ExperimentSpec(
+                    name="newsela",
+                    dataset_loader=NewselaLoader(),
                     config=apply_training_overrides(TrainingConfig(), args),
                     evaluation_mode=evaluation_mode,
                 )

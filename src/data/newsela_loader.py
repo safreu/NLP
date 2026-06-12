@@ -1,6 +1,7 @@
 from data.dataset_loader import Pair
-from preprocessing.dataset_builder import split_pairs
 from data.newsela_corpus import NewselaCorpus
+from preprocessing.dataset_builder import split_pairs
+
 
 class NewselaLoader:
     name = "newsela"
