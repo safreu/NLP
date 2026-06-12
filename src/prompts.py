@@ -38,3 +38,4 @@ def elementary_prompt(text: str) -> str:
 
 def intermediate_prompt(text: str) -> str:
     return f"{INTERMEDIATE_TEXT}{text}"
+
