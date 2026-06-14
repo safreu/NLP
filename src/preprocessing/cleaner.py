@@ -10,6 +10,29 @@ PROMPT_PREFIX = [
     SIMPLIFY_TEXT,
 ]
 
+REPLACEMENTS = {
+    " n't": "n't",
+    " 're": "'re",
+    " 've": "'ve",
+    " 'll": "'ll",
+    " 'd": "'d",
+    " 'm": "'m",
+    " 's": "'s",
+    " ,": ",",
+    " .": ".",
+    " !": "!",
+    " ?": "?",
+    " ;": ";",
+    " :": ":",
+    "( ": "(",
+    " )": ")",
+    "[ ": "[",
+    " ]": "]",
+    "{ ": "{",
+    " }": "}",
+    "``": '"',
+    "''": '"',
+}
 
 def normalize_whitespace(text: str) -> str:
     return " ".join(text.split())
@@ -33,3 +56,12 @@ def remove_prompt(text: str) -> str:
 
 def normalize_text(text: str) -> str:
     return text.strip().lower()
+
+
+def detokenize_text(text: str) -> str:
+    for old, new in REPLACEMENTS.items():
+        text = text.replace(old, new) 
+        
+    text = re.sub(r'"\s+([A-Za-z])', r'"\1', text) 
+    
+    return text    

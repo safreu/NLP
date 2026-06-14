@@ -1,7 +1,5 @@
-import csv
 import os
 import pickle
-from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Self
@@ -11,7 +9,7 @@ from dotenv import load_dotenv
 
 from config import MIN_LENGTH_RATIO, SIMILARITY_THRESHOLD
 from evaluation.datasetStats import DatasetStats
-from preprocessing.cleaner import clean_text, remove_prompt
+from preprocessing.cleaner import clean_text, detokenize_text, remove_prompt
 from preprocessing.filter import length_ratio, text_similarity
 from prompts import simplify_prompt
 
@@ -20,7 +18,7 @@ def _get_cache_cipher() -> Fernet:
     key = os.getenv("NEWSELA_CACHE_KEY")
     if not key:
         raise ValueError("Environment variable NEWSELA_CACHE_KEY is not set")
-    return Fernet(key)
+    return Fernet(key.encode())
 
 
 def _save_encrypted_pickle(obj: object, path: Path) -> None:
@@ -38,21 +36,12 @@ def _load_encrypted_pickle(path: Path) -> object:
 
 
 @dataclass
-class NewselaTarget:
-    text: str
-    file_path: str
-    grade_level: float | None = None
-    version: int | None = None
-
-
-@dataclass
 class NewselaEntry:
-    slug: str
     source: str
-    targets: list[NewselaTarget]
-    file_path: str
-    grade_level: float | None = None
-
+    target: str
+    source_level: int | None = None
+    target_level: int | None = None
+    doc_id: str | None = None
 
 @dataclass
 class NewselaCorpus:
@@ -61,7 +50,8 @@ class NewselaCorpus:
 
     @classmethod
     def load_from_disk(
-        cls, path: str = "data/newsela/newsela_article_corpus_2016-01-29/articles_metadata.csv"
+        cls, 
+        path: str = "data/newsela/newsela_article_corpus_2016-01-29/newsela_data_share/newsela_data_share-20150302/newsela_articles_20150302.aligned.sents.txt"
     ) -> Self:
 
         load_dotenv()
@@ -69,113 +59,108 @@ class NewselaCorpus:
         file = Path(path)
         stats = DatasetStats()
 
-        cache_file = file.with_suffix(".pkl.enc")
+        cache_dir = Path("cache/newsela")
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        cache_file = cache_dir / f"{file.stem}.pkl.enc"
 
         if cache_file.exists():
             entries = _load_encrypted_pickle(cache_file)
-            return cls(entries)
+            return cls(entries, stats)
 
         if not file.exists():
             raise FileNotFoundError(f"File does not exist {file}")
 
-        grouped: dict[str, list[dict]] = defaultdict(list)
-
-        with open(file, newline="", encoding="utf-8") as csv_file:
-            reader = csv.DictReader(csv_file)
-
-            for row in reader:
-                grouped[row["slug"]].append(row)
-
         entries: list[NewselaEntry] = []
-
-        for slug, rows in grouped.items():
-            rows.sort(key=lambda r: int(r["version"]))
-
-            source_row = rows[0]
-
-            source = clean_text(source_row["text"])
-
-            targets: list[NewselaTarget] = []
-
-            for row in rows[1:]:
-                target_text = clean_text(row["text"])
-
-                if not target_text:
+        
+        with open(file, "r", encoding="utf-8") as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if not line:
                     continue
+                    
+                parts = line.split("\t")
 
-                grade_level = float(row["grade_level"]) if row["grade_level"] else None
-
-                targets.append(
-                    NewselaTarget(
-                        text=target_text,
-                        grade_level=grade_level,
-                        version=int(row["version"]),
-                        file_path=str(row["filename"]),
-                    )
+                if len(parts) != 5:
+                    print(f"Skipping malformed line: {line}")
+                    continue
+               
+                doc_id: str = clean_text(parts[0])
+                source_level: str = clean_text(parts[1])
+                target_level: str = clean_text(parts[2])
+                source: str = clean_text(parts[3])
+                target: str = clean_text(parts[4])
+               
+                try:
+                    source_level = int(source_level.removeprefix("V"))
+                    target_level = int(target_level.removeprefix("V"))
+                except ValueError:
+                    continue
+                
+                if target_level <= source_level:
+                    print(f"{target_level} <= {source_level} for {line}")
+                    continue
+                
+                 
+                entry = NewselaEntry(
+                    doc_id=doc_id,
+                    source_level=source_level,
+                    target_level=target_level,
+                    source=detokenize_text(source),
+                    target=detokenize_text(target),
                 )
+                
+                entries.append(entry) 
+                print(entry) 
+                stats.add_loaded(
+                    f"{source_level}_to_{target_level}",
+                    1,
+                ) 
 
-                stats_key = f"grade_{grade_level:g}" if grade_level is not None else "grade_unknown"
-
-                stats.add_loaded(stats_key, 1)
-
-            if not targets:
-                continue
-
-            entries.append(
-                NewselaEntry(
-                    slug=slug,
-                    source=source,
-                    grade_level=float(source_row["grade_level"])
-                    if source_row["grade_level"]
-                    else None,
-                    targets=targets,
-                    file_path=str(source_row["filename"]),
-                )
-            )
 
         _save_encrypted_pickle(entries, cache_file)
 
         return cls(entries, stats)
+    
 
     def as_training_pairs(self) -> list[tuple[str, str]]:
         pairs: list[tuple[str, str]] = []
         seen: set[tuple[str, str]] = set()
 
         for entry in self.entries:
-            for target_entry in entry.targets:
-                source = simplify_prompt(entry.source)
+            source = simplify_prompt(entry.source)
+            cleaned_source = remove_prompt(source)
 
-                target = target_entry.text
-                cleaned_source = remove_prompt(source)
+            target = entry.target
 
-                similarity = text_similarity(cleaned_source, target)
-                ratio_score = length_ratio(cleaned_source, target)
+            similarity = text_similarity(cleaned_source, target)
+            ratio_score = length_ratio(cleaned_source, target)
 
-                self.stats.similarity_scores.append(similarity)
-                self.stats.length_ratios.append(ratio_score)
+            self.stats.similarity_scores.append(similarity)
+            self.stats.length_ratios.append(ratio_score)
 
-                if similarity > SIMILARITY_THRESHOLD:
-                    self.stats.skipped_similar += 1
-                    continue
+            if similarity > SIMILARITY_THRESHOLD:
+                self.stats.skipped_similar += 1
+                continue
 
-                if ratio_score < MIN_LENGTH_RATIO:
-                    self.stats.skipped_length_ratio += 1
-                    continue
+            if ratio_score < MIN_LENGTH_RATIO:
+                self.stats.skipped_length_ratio += 1
+                continue
 
-                training_pair = (source, target)
+            training_pair = (source, target)
 
-                if training_pair in seen:
-                    self.stats.skipped_duplicate += 1
-                    continue
+            if training_pair in seen:
+                self.stats.skipped_duplicate += 1
+                continue
 
-                stats_key = (
-                    f"grade_{target_entry.grade_level}"
-                    if target_entry.grade_level is not None
-                    else "grade_unknown"
-                )
 
-                self.stats.add_kept(stats_key)
-                seen.add(training_pair)
-                pairs.append(training_pair)
+            stats_key = (
+                f"{entry.source_level}_to_{entry.target_level}"
+                if entry.source_level is not None and entry.target_level is not None
+                else "level_unknown"
+            )
+
+            self.stats.add_kept(stats_key)
+            seen.add(training_pair)
+            pairs.append(training_pair)
 
         return pairs
