@@ -71,7 +71,7 @@ class TrainingPipeline:
 
         analyze_predictions(
             predictions_path=predictions_path,
-            output_path=self.run_paths.information_loss_path,
+            output_path=self.run_paths,
         )
 
     def run(self) -> None:
