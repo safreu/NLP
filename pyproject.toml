@@ -23,6 +23,8 @@ dependencies = [
     "rouge-score>=0.1.2",
     "scikit-learn>=1.8.0",
     "accelerate>=1.13.0",
+    "cryptography>=48.0.1",
+    "python-dotenv>=1.2.2",
 ]
 [dependency-groups]
 dev = [

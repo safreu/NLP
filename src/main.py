@@ -5,17 +5,30 @@ from pathlib import Path
 
 from config import TrainingConfig
 from data.dataset_loader import DatasetLoader
+from data.newsela_loader import NewselaLoader
 from data.onestop_loader import OneStopLoader
 from data.wikilarge_loader import WikiLargeLoader
-from pipeline.training_pipeline import EvaluationMode, TrainingPipeline
+from evaluation.analyzers.copy_analyzer import CopyAnalyzer
+from evaluation.analyzers.diversity_analyzer import DiversityAnalyzer
+from evaluation.analyzers.error_case_analyser import ErrorCaseAnalyzer
+from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
+from evaluation.analyzers.length_analyzer import LengthAnalyzer
+from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
+from pipeline.evaluation_pipeline import EvaluationMode, EvaluationPipeline
+from pipeline.training_pipeline import TrainingPipeline
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.run_store import create_run_dir
 
 DEFAULT_DATASET = "all"
+
 DEFAULT_WIKILARGE_MAX_TRAIN_SAMPLES = 10000
 DEFAULT_WIKILARGE_MAX_EVAL_SAMPLES = 2000
-DATASET_CHOICES = ("all", "onestop", "wikilarge")
+
+DEFAULT_NEWSELA_MAX_TRAIN_SAMPLES = 10000
+DEFAULT_NEWSELA_MAX_EVAL_SAMPLES = 2000
+
+DATASET_CHOICES = ("all", "onestop", "wikilarge", "newsela")
 
 
 @dataclass(frozen=True)
@@ -98,7 +111,18 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="WikiLarge validation/test sample cap. Use 0 for the full splits.",
     )
-
+    parser.add_argument(
+        "--newsela-max-train-samples",
+        type=non_negative_int,
+        default=None,
+        help="Newsela train sample cap. Use 0 for the full split.",
+    )
+    parser.add_argument(
+        "--newsela-max-eval-samples",
+        type=non_negative_int,
+        default=None,
+        help="Newsela validation/test sample cap. Use 0 for the full splits.",
+    )
     return parser
 
 
@@ -108,7 +132,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def selected_dataset_names(dataset: str) -> list[str]:
     if dataset == "all":
-        return ["onestop", "wikilarge"]
+        return ["onestop", "wikilarge", "newsela"]
 
     return [dataset]
 
@@ -143,6 +167,32 @@ def build_experiments(args: argparse.Namespace) -> list[ExperimentSpec]:
                     dataset_loader=OneStopLoader(),
                     config=apply_training_overrides(TrainingConfig(), args),
                     evaluation_mode=evaluation_mode,
+                )
+            )
+            continue
+
+        if dataset_name == "newsela":
+            max_train_samples = resolve_sample_limit(
+                args.newsela_max_train_samples,
+                DEFAULT_NEWSELA_MAX_TRAIN_SAMPLES,
+            )
+
+            max_eval_samples = resolve_sample_limit(
+                args.newsela_max_eval_samples,
+                DEFAULT_NEWSELA_MAX_EVAL_SAMPLES,
+            )
+
+            experiments.append(
+                ExperimentSpec(
+                    name="newsela",
+                    dataset_loader=NewselaLoader(
+                        max_train_samples=max_train_samples,
+                        max_eval_samples=max_eval_samples,
+                    ),
+                    config=apply_training_overrides(TrainingConfig(), args),
+                    evaluation_mode=evaluation_mode,
+                    max_train_samples=max_train_samples,
+                    max_eval_samples=max_eval_samples,
                 )
             )
             continue
@@ -198,7 +248,7 @@ def experiment_config_data(experiment: ExperimentSpec) -> dict[str, object]:
         "training_config": training_config_data(experiment.config),
     }
 
-    if experiment.name == "wikilarge":
+    if experiment.max_train_samples is not None or experiment.max_eval_samples is not None:
         data["loader_config"] = {
             "max_train_samples": experiment.max_train_samples,
             "max_eval_samples": experiment.max_eval_samples,
@@ -239,7 +289,19 @@ def run_experiments(args: argparse.Namespace) -> RunPaths:
             dataset_loader=experiment.dataset_loader,
             config=experiment.config,
             run_paths=run_dir,
-            evaluation_mode=experiment.evaluation_mode,
+            evaluation_pipeline=EvaluationPipeline(
+                config=experiment.config,
+                run_paths=run_dir,
+                mode=experiment.evaluation_mode,
+                analyzers=[
+                    CopyAnalyzer(threshold=0.95),
+                    InformationLossAnalyzer(),
+                    LengthAnalyzer(),
+                    DiversityAnalyzer(),
+                    ErrorCaseAnalyzer(),
+                    ReadabilityAnalyzer(),
+                ],
+            ),
         ).run()
 
     return run_dir
