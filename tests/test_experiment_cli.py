@@ -2,14 +2,14 @@ from pathlib import Path
 
 import main
 from config import TrainingConfig
-from pipeline.training_pipeline import EvaluationMode
+from pipeline.evaluation_pipeline import EvaluationMode
 from storage.json_store import read_json
 
 
 def test_default_experiments_match_previous_main_behavior() -> None:
     experiments = main.build_experiments(main.parse_args([]))
 
-    assert [experiment.name for experiment in experiments] == ["onestop", "wikilarge"]
+    assert [experiment.name for experiment in experiments] == ["onestop", "wikilarge", "newsela"]
     assert experiments[0].config == TrainingConfig()
     assert experiments[0].evaluation_mode is EvaluationMode.CHECKPOINTS
     assert experiments[1].config == TrainingConfig(epochs=3, max_target_length=128)
@@ -17,6 +17,10 @@ def test_default_experiments_match_previous_main_behavior() -> None:
     assert experiments[1].max_train_samples == 10000
     assert experiments[1].max_eval_samples == 2000
 
+    assert experiments[2].config == TrainingConfig()
+    assert experiments[2].evaluation_mode is EvaluationMode.CHECKPOINTS
+    assert experiments[2].max_train_samples == 10000
+    assert experiments[2].max_eval_samples == 2000
 
 def test_cli_overrides_selected_experiment() -> None:
     experiments = main.build_experiments(
@@ -81,7 +85,7 @@ def test_run_experiments_writes_config_and_runs_selected_pipeline(
             dataset_loader,
             config,
             run_paths,
-            evaluation_mode,
+            evaluation_pipeline,
         ):
             self.name = name
             self.config = config
