@@ -4,6 +4,7 @@ from config import TrainingConfig
 from data.dataset_loader import DatasetLoader
 from evaluation.checkpoint_compare import compare_best_checkpoints
 from evaluation.evaluate import evaluate_checkpoints, evaluate_model
+from evaluation.information_loss import analyze_predictions
 from evaluation.prediction_analysis import analyze_prediction_copies
 from preprocessing.dataset_builder import to_dataset
 from storage.json_store import write_json
@@ -66,6 +67,11 @@ class TrainingPipeline:
             predictions_path=predictions_path,
             output_path=self.run_paths.copy_analysis_path,
             copy_tresshold=0.95,
+        )
+        
+        analyze_predictions(
+            predictions_path=predictions_path,
+            output_path=self.run_paths.information_loss_path,
         )
 
     def run(self) -> None:
