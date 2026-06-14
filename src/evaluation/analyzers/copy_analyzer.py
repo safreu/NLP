@@ -25,6 +25,7 @@ class CopyAnalyzer(PredictionAnalyzer):
     The generated summary additionally reports dataset-level copy ratios
     and overall copy statistics.
     """
+
     def __init__(self, threshold):
         self.threshold = threshold
 

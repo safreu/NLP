@@ -28,7 +28,7 @@ class LengthAnalyzer(PredictionAnalyzer):
     The generated summary reports average sentence lengths and average
     compression ratios across the entire dataset.
     """
-    
+
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
         rows = []
 

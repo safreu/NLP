@@ -1,5 +1,5 @@
-from data.dataset_loader import Pair
 from data.corpus.one_stop_english_corpus import OneStopEnglish
+from data.dataset_loader import Pair
 from preprocessing.dataset_builder import split_pairs
 
 

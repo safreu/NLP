@@ -27,12 +27,15 @@ def create_summary_counter() -> dict[str, Counter[str]]:
 def count_losses(loss: dict[str, list[str]]) -> dict[str, int]:
     return {category: len(items) for category, items in loss.items()}
 
+
 def extract_negations(doc) -> set[str]:
     return {
         token.text.lower()
         for token in doc
         if token.text.lower() in NEGATIONS or token.dep_ == "neg"
     }
+
+
 def build_summary(counter: dict[str, Counter[str]], num_predictions: int) -> dict[str, object]:
     totals = {category: sum(values.values()) for category, values in counter.items()}
 
@@ -82,7 +85,6 @@ def calculate_information_loss(reference: str, prediction: str) -> InformationLo
 
 
 class InformationLossAnalyzer(PredictionAnalyzer):
-    
     """
     Analyzes information loss in generated simplifications.
 
@@ -105,7 +107,7 @@ class InformationLossAnalyzer(PredictionAnalyzer):
     prediction, and the most frequently removed information across the
     entire dataset.
     """
-    
+
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
 
         results = []

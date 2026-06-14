@@ -28,7 +28,8 @@ class ErrorCaseAnalyzer(PredictionAnalyzer):
 
     The generated summary reports overall error frequencies and dataset-level
     error ratios.
-    """ 
+    """
+
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
         cases = []
 

@@ -5,7 +5,8 @@ from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.prediction_store import PredictionRow
 
-''''''
+""""""
+
 
 class DiversityAnalyzer(PredictionAnalyzer):
     """
