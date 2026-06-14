@@ -13,6 +13,7 @@ from evaluation.analyzers.diversity_analyzer import DiversityAnalyzer
 from evaluation.analyzers.error_case_analyser import ErrorCaseAnalyzer
 from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
 from evaluation.analyzers.length_analyzer import LengthAnalyzer
+from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
 from pipeline.evaluation_pipeline import EvaluationMode, EvaluationPipeline
 from pipeline.training_pipeline import TrainingPipeline
 from storage.json_store import write_json
@@ -298,6 +299,7 @@ def run_experiments(args: argparse.Namespace) -> RunPaths:
                     LengthAnalyzer(),
                     DiversityAnalyzer(),
                     ErrorCaseAnalyzer(),
+                    ReadabilityAnalyzer(),
                 ],
             ),
         ).run()
