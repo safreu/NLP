@@ -41,7 +41,7 @@ def tokenize_dataset(dataset, tokenizer, config: TrainingConfig):
 
 def create_training_args(path: Path | str, config: TrainingConfig):
     return Seq2SeqTrainingArguments(
-        output_dir=path,
+        output_dir=str(path),
         eval_strategy="epoch",
         save_strategy="epoch",
         learning_rate=config.learning_rate,

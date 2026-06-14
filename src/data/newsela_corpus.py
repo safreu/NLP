@@ -93,8 +93,8 @@ class NewselaCorpus:
                     continue
 
                 doc_id: str = clean_text(parts[0])
-                source_level: str = clean_text(parts[1])
-                target_level: str = clean_text(parts[2])
+                source_level = clean_text(parts[1])
+                target_level = clean_text(parts[2])
                 source: str = clean_text(parts[3])
                 target: str = clean_text(parts[4])
 

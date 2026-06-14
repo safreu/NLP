@@ -2,7 +2,6 @@ from config import TrainingConfig
 from data.dataset_loader import DatasetLoader
 from pipeline.evaluation_pipeline import EvaluationPipeline
 from preprocessing.dataset_builder import to_dataset
-from storage.json_store import write_json
 from storage.paths import RunPaths
 from training.trainer import train_model
 
@@ -14,7 +13,7 @@ class TrainingPipeline:
         dataset_loader: DatasetLoader,
         config: TrainingConfig,
         run_paths: RunPaths,
-        evaluation_pipeline: EvaluationPipeline
+        evaluation_pipeline: EvaluationPipeline,
     ):
         self.name = name
         self.dataset_loader = dataset_loader

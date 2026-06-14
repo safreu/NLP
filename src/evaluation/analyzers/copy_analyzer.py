@@ -1,16 +1,15 @@
+from evaluation.analyzers.prediction_analyzer import PredictionAnalyzer
 from preprocessing import filter
 from preprocessing.cleaner import normalize_text
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.prediction_store import PredictionRow
 
-from evaluation.analyzers.prediction_analyzer import PredictionAnalyzer
 
 class CopyAnalyzer(PredictionAnalyzer):
-    
-    def __init__(self, threshold):
+    def __init__(self, threshold: float = 0.95):
         self.threshold = threshold
-        
+
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
         exact_copies = []
         near_copies = []

@@ -60,8 +60,16 @@ class RunPaths:
         return self.output_dir / "information_loss.json"
 
     @property
-    def information_loss_summary_path(self) -> Path:
-        return self.output_dir / "information_loss_summary.json"
+    def length_analysis_path(self) -> Path:
+        return self.output_dir / "length_analysis.json"
+
+    @property
+    def diversity_analysis_path(self) -> Path:
+        return self.output_dir / "diversity_analysis.json"
+
+    @property
+    def error_case_analysis_path(self) -> Path:
+        return self.output_dir / "error_case_analysis.json"
 
     @property
     def config_path(self) -> Path:

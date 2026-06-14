@@ -1,4 +1,3 @@
-
 from enum import Enum
 
 from config import TrainingConfig
@@ -15,26 +14,23 @@ class EvaluationMode(Enum):
     FINAL_MODEL = "final_model"
     CHECKPOINTS = "checkpoints"
 
+
 class EvaluationPipeline:
     def __init__(
-        self, 
-        config: TrainingConfig, 
+        self,
+        config: TrainingConfig,
         run_paths: RunPaths,
         mode: EvaluationMode = EvaluationMode.FINAL_MODEL,
-        analyzers: list | None = None
+        analyzers: list | None = None,
     ):
         self.config = config
         self.run_paths = run_paths
         self.mode = mode
-        self.analyzers = analyzers or [
-            CopyAnalyzer(),
-            InformationLossAnalyzer()
-        ]
-       
-        
+        self.analyzers = analyzers or [CopyAnalyzer(), InformationLossAnalyzer()]
+
     def _evaluate_checkpoints(self, test_pairs):
         results = evaluate_checkpoints(test_pairs, self.run_paths, self.config)
-        
+
         write_json(results, self.run_paths.scores_path)
 
         compare_best_checkpoints(
@@ -44,10 +40,9 @@ class EvaluationPipeline:
             metric_path="sari",
             k=5,
             higher_is_better=True,
-            copy_tresshold=self.copy_treshold,
+            copy_tresshold=0.95,
         )
 
-        
     def _evaluate_final_model(self, test_pairs):
         results = evaluate_model(
             test_pairs=test_pairs,
@@ -57,15 +52,14 @@ class EvaluationPipeline:
         )
 
         write_json(results, self.run_paths.scores_path)
-        
+
         predictions: list[PredictionRow] = read_predictions(self.run_paths.predictions_path)
-        
+
         for analyzer in self.analyzers:
-            analyzer.run(predictions, self.run_paths) 
-        
+            analyzer.run(predictions, self.run_paths)
+
     def run(self, test_pairs):
         if self.mode == EvaluationMode.CHECKPOINTS:
             self._evaluate_checkpoints(test_pairs)
-        else: 
+        else:
             self._evaluate_final_model(test_pairs)
-        
