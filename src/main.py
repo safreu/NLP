@@ -8,7 +8,10 @@ from data.dataset_loader import DatasetLoader
 from data.newsela_loader import NewselaLoader
 from data.onestop_loader import OneStopLoader
 from data.wikilarge_loader import WikiLargeLoader
-from pipeline.training_pipeline import EvaluationMode, TrainingPipeline
+from evaluation.analyzers.copy_analyzer import CopyAnalyzer
+from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
+from pipeline.evaluation_pipeline import EvaluationPipeline, EvaluationMode
+from pipeline.training_pipeline import TrainingPipeline
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.run_store import create_run_dir
@@ -171,7 +174,7 @@ def build_experiments(args: argparse.Namespace) -> list[ExperimentSpec]:
             )
 
             max_eval_samples = resolve_sample_limit(
-                args.newsela_max_train_samples,
+                args.newsela_max_eval_samples,
                 DEFAULT_NEWSELA_MAX_EVAL_SAMPLES,
             )
 
@@ -240,12 +243,12 @@ def experiment_config_data(experiment: ExperimentSpec) -> dict[str, object]:
         "evaluation_mode": experiment.evaluation_mode.value,
         "training_config": training_config_data(experiment.config),
     }
-
-    if experiment.name == "wikilarge":
+    
+    if experiment.max_train_samples is not None or experiment.max_eval_samples is not None:
         data["loader_config"] = {
-            "max_train_samples": experiment.max_train_samples,
-            "max_eval_samples": experiment.max_eval_samples,
-        }
+        "max_train_samples": experiment.max_train_samples,
+        "max_eval_samples": experiment.max_eval_samples,
+        } 
 
     return data
 
@@ -282,7 +285,15 @@ def run_experiments(args: argparse.Namespace) -> RunPaths:
             dataset_loader=experiment.dataset_loader,
             config=experiment.config,
             run_paths=run_dir,
-            evaluation_mode=experiment.evaluation_mode,
+            evaluation_pipeline=EvaluationPipeline(
+                config=experiment.config,
+                run_paths=run_dir,
+                mode=experiment.evaluation_mode,
+                analyzers=[
+                    CopyAnalyzer(threshold=0.95),
+                    InformationLossAnalyzer(),
+                ] 
+            ),
         ).run()
 
     return run_dir

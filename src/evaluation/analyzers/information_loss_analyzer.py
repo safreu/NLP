@@ -1,11 +1,11 @@
-import json
+from storage.json_store import write_json
+from storage.paths import RunPaths
+from storage.prediction_store import PredictionRow
 from collections import Counter
 from dataclasses import asdict, dataclass
-from pathlib import Path
-
 import spacy
-
 from storage.paths import RunPaths
+from evaluation.analyzers.prediction_analyzer import PredictionAnalyzer
 
 NEGATIONS = {"not", "no", "never", "n't", "none", "without"}
 
@@ -32,7 +32,7 @@ def build_summary(counter: dict[str, Counter[str]]) -> dict[str, object]:
         },
     }
 
-
+   
 @dataclass
 class InformationLossResult:
     entities: list[str]
@@ -70,50 +70,47 @@ def calculate_information_loss(reference: str, prediction: str) -> InformationLo
     return InformationLossResult(**lost)
 
 
-def analyze_predictions(predictions_path: Path, run_paths: RunPaths) -> None:
-    with predictions_path.open("r", encoding="utf-8") as file:
-        predictions = json.load(file)
+class InformationLossAnalyzer(PredictionAnalyzer):
+    
+    def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
 
-    results = []
+        results = []
 
-    reference_summary_counter: dict[str, Counter[str]] = create_summary_counter()
-    source_summary_counter: dict[str, Counter[str]] = create_summary_counter()
+        reference_summary_counter = create_summary_counter()
+        source_summary_counter = create_summary_counter()
 
-    for item in predictions:
-        source = item.get("source", "")
-        reference = item["reference"]
-        prediction = item["candidate"]
+        for item in predictions:
+            source = item["source"]
+            reference = item["reference"]
+            prediction = item["candidate"]
 
-        source_loss = calculate_information_loss(source, prediction)
-        reference_loss = calculate_information_loss(reference, prediction)
+            source_loss = calculate_information_loss(source, prediction)
+            reference_loss = calculate_information_loss(reference, prediction)
 
-        source_loss_dict = asdict(source_loss)
-        reference_loss_dict = asdict(reference_loss)
+            source_loss_dict = asdict(source_loss)
+            reference_loss_dict = asdict(reference_loss)
 
-        for category, items in source_loss_dict.items():
-            source_summary_counter[category].update(items)
+            for category, items in source_loss_dict.items():
+                source_summary_counter[category].update(items)
 
-        for category, items in reference_loss_dict.items():
-            reference_summary_counter[category].update(items)
+            for category, items in reference_loss_dict.items():
+                reference_summary_counter[category].update(items)
 
-        results.append(
-            {
-                "source": source,
-                "reference": reference,
-                "candidate": prediction,
-                "source_loss": source_loss_dict,
-                "reference_loss": reference_loss_dict,
-            }
-        )
+            results.append(
+                {
+                    "source": source,
+                    "reference": reference,
+                    "candidate": prediction,
+                    "source_loss": source_loss_dict,
+                    "reference_loss": reference_loss_dict,
+                }
+            )
 
-    summary = {
-        "num_predictions": len(predictions),
-        "source_loss": build_summary(source_summary_counter),
-        "reference_loss": build_summary(reference_summary_counter),
-    }
+        summary = {
+            "num_predictions": len(predictions),
+            "source_loss": build_summary(source_summary_counter),
+            "reference_loss": build_summary(reference_summary_counter),
+        }
 
-    with run_paths.information_loss_path.open("w", encoding="utf-8") as file:
-        json.dump(results, file, indent=2, ensure_ascii=False)
-
-    with run_paths.information_loss_summary_path.open("w", encoding="utf-8") as file:
-        json.dump(summary, file, indent=2, ensure_ascii=False)
+        write_json(results, run_paths.information_loss_path)
+        write_json(summary, run_paths.information_loss_summary_path)
