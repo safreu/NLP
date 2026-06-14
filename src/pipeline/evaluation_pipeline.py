@@ -8,7 +8,7 @@ from evaluation.checkpoint_compare import compare_best_checkpoints
 from evaluation.evaluate import evaluate_checkpoints, evaluate_model
 from storage.json_store import write_json
 from storage.paths import RunPaths
-from storage.prediction_store import read_predictions
+from storage.prediction_store import PredictionRow, read_predictions
 
 
 class EvaluationMode(Enum):
@@ -58,7 +58,7 @@ class EvaluationPipeline:
 
         write_json(results, self.run_paths.scores_path)
         
-        predictions = read_predictions(self.run_paths.predictions_path)
+        predictions: list[PredictionRow] = read_predictions(self.run_paths.predictions_path)
         
         for analyzer in self.analyzers:
             analyzer.run(predictions, self.run_paths) 

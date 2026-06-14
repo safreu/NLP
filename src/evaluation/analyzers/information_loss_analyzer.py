@@ -1,10 +1,11 @@
+from unicodedata import category
+
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.prediction_store import PredictionRow
 from collections import Counter
 from dataclasses import asdict, dataclass
 import spacy
-from storage.paths import RunPaths
 from evaluation.analyzers.prediction_analyzer import PredictionAnalyzer
 
 NEGATIONS = {"not", "no", "never", "n't", "none", "without"}
@@ -22,11 +23,28 @@ def create_summary_counter() -> dict[str, Counter[str]]:
         "verbs": Counter(),
         "content_words": Counter(),
     }
-
-
-def build_summary(counter: dict[str, Counter[str]]) -> dict[str, object]:
+    
+def count_losses(loss: dict[str, list[str]]) -> dict[str, int]:
     return {
-        "loss_counts": {category: sum(values.values()) for category, values in counter.items()},
+        category: len(items)
+        for category, items in loss.items()
+    }
+
+
+def build_summary(counter: dict[str, Counter[str]], num_predictions: int) -> dict[str, object]:
+    totals = {
+        category: sum(values.values())
+        for category, values in counter.items()
+    }
+    
+    averages = {
+        category: total / num_predictions if num_predictions else 0.0
+        for total in totals.items()
+    }
+    
+    return {
+        "loss_totals": totals,
+        "loss_average_per_prediction": averages,
         "most_common_losses": {
             category: values.most_common(25) for category, values in counter.items()
         },
@@ -79,7 +97,7 @@ class InformationLossAnalyzer(PredictionAnalyzer):
         reference_summary_counter = create_summary_counter()
         source_summary_counter = create_summary_counter()
 
-        for item in predictions:
+        for index, item in predictions:
             source = item["source"]
             reference = item["reference"]
             prediction = item["candidate"]
@@ -89,6 +107,9 @@ class InformationLossAnalyzer(PredictionAnalyzer):
 
             source_loss_dict = asdict(source_loss)
             reference_loss_dict = asdict(reference_loss)
+            
+            source_loss_counts = count_losses(source_loss_dict)
+            reference_loss_counts = count_losses(reference_loss_dict)
 
             for category, items in source_loss_dict.items():
                 source_summary_counter[category].update(items)
@@ -98,18 +119,21 @@ class InformationLossAnalyzer(PredictionAnalyzer):
 
             results.append(
                 {
+                    "index": index,
                     "source": source,
                     "reference": reference,
                     "candidate": prediction,
                     "source_loss": source_loss_dict,
                     "reference_loss": reference_loss_dict,
+                    "source_loss_counts": source_loss_counts,
+                    "reference_loss_counts": reference_loss_counts, 
                 }
             )
 
         summary = {
             "num_predictions": len(predictions),
-            "source_loss": build_summary(source_summary_counter),
-            "reference_loss": build_summary(reference_summary_counter),
+            "source_loss": build_summary(source_summary_counter, len(predictions)),
+            "reference_loss": build_summary(reference_summary_counter, len(predictions)),
         }
 
         write_json(results, run_paths.information_loss_path)

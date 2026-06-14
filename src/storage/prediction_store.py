@@ -22,5 +22,5 @@ def prediction_rows(sources, candidates, references) -> list[PredictionRow]:
 def write_predictions(sources, candidates, references, path: Path) -> None:
     write_json(prediction_rows(sources, candidates, references), path)
     
-def read_predictions(path: Path) -> list[PredictionRow]:
+def read_predictions(path: Path | str) -> list[PredictionRow]:
     read_json(path)
