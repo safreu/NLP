@@ -70,7 +70,7 @@ class RunPaths:
     @property
     def error_case_analysis_path(self) -> Path:
         return self.output_dir / "error_case_analysis.json"
-    
+
     @property
     def readability_analysis_path(self) -> Path:
         return self.output_dir / "readability_analysis.json"

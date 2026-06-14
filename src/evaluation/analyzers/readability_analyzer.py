@@ -1,10 +1,11 @@
 from statistics import mean
 
 from evaluation.analyzers.base import PredictionAnalyzer
-from storage.json_store import write_json
 from metrics.flesch_kincaid import compute_flesch_kincaid_score
+from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.prediction_store import PredictionRow
+
 
 class ReadabilityAnalyzer(PredictionAnalyzer):
     """
@@ -26,16 +27,16 @@ class ReadabilityAnalyzer(PredictionAnalyzer):
 
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
         rows = []
-        
+
         for index, row in enumerate(predictions):
             source = row["source"]
             candidate = row["candidate"]
             reference = row["reference"]
-            
+
             source_score = compute_flesch_kincaid_score(source)
             candidate_score = compute_flesch_kincaid_score(candidate)
             reference_score = compute_flesch_kincaid_score(reference)
-            
+
             rows.append(
                 {
                     "index": index,
@@ -50,33 +51,32 @@ class ReadabilityAnalyzer(PredictionAnalyzer):
                     "candidate_reference_delta": candidate_score - reference_score,
                 }
             )
-            
+
         summary = {
             "num_predictions": len(rows),
-            "avg_source_flesch_kincaid": mean(
-                [row["source_flesch_kincaid"] for row in rows]
-            ) if rows else 0.0,
-            "avg_candidate_flesch_kincaid": mean(
-                [row["candidate_flesch_kincaid"] for row in rows]
-            ) if rows else 0.0,
-            "avg_reference_flesch_kincaid": mean(
-                [row["reference_flesch_kincaid"] for row in rows]
-            ) if rows else 0.0,
-            "avg_candidate_source_delta": mean(
-                [row["candidate_source_delta"] for row in rows]
-            ) if rows else 0.0,
-            "avg_reference_source_delta": mean(
-                [row["reference_source_delta"] for row in rows]
-            ) if rows else 0.0,
+            "avg_source_flesch_kincaid": mean([row["source_flesch_kincaid"] for row in rows])
+            if rows
+            else 0.0,
+            "avg_candidate_flesch_kincaid": mean([row["candidate_flesch_kincaid"] for row in rows])
+            if rows
+            else 0.0,
+            "avg_reference_flesch_kincaid": mean([row["reference_flesch_kincaid"] for row in rows])
+            if rows
+            else 0.0,
+            "avg_candidate_source_delta": mean([row["candidate_source_delta"] for row in rows])
+            if rows
+            else 0.0,
+            "avg_reference_source_delta": mean([row["reference_source_delta"] for row in rows])
+            if rows
+            else 0.0,
             "avg_candidate_reference_delta": mean(
                 [row["candidate_reference_delta"] for row in rows]
-            ) if rows else 0.0,
+            )
+            if rows
+            else 0.0,
         }
-        
-        write_json(
-            {
-                "summary": summary,
-                "data": rows
-            }, run_paths.readability_analysis_path,
-        )
 
+        write_json(
+            {"summary": summary, "data": rows},
+            run_paths.readability_analysis_path,
+        )
