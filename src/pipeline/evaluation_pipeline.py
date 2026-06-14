@@ -1,4 +1,5 @@
 from enum import Enum
+from pathlib import Path
 
 from config import TrainingConfig
 from evaluation.analyzers.copy_analyzer import CopyAnalyzer
@@ -28,10 +29,26 @@ class EvaluationPipeline:
         self.mode = mode
         self.analyzers = analyzers or [CopyAnalyzer(), InformationLossAnalyzer()]
 
+    def _run_analyzers(self, predictions_path: Path, run_paths: RunPaths) -> None:
+        predictions: list[PredictionRow] = read_predictions(predictions_path)
+
+        for analyzer in self.analyzers:
+            analyzer.run(predictions, run_paths)
+
     def _evaluate_checkpoints(self, test_pairs):
         results = evaluate_checkpoints(test_pairs, self.run_paths, self.config)
 
         write_json(results, self.run_paths.scores_path)
+
+        for checkpoint_name in results:
+            predictions_path = self.run_paths.checkpoint_predictions_path(checkpoint_name)
+
+            if not predictions_path.exists():
+                continue
+
+            checkpoint_run_paths = RunPaths(predictions_path.parent)
+
+            self._run_analyzers(predictions_path, checkpoint_run_paths)
 
         compare_best_checkpoints(
             scores_path=self.run_paths.scores_path,
@@ -53,10 +70,7 @@ class EvaluationPipeline:
 
         write_json(results, self.run_paths.scores_path)
 
-        predictions: list[PredictionRow] = read_predictions(self.run_paths.predictions_path)
-
-        for analyzer in self.analyzers:
-            analyzer.run(predictions, self.run_paths)
+        self._run_analyzers(self.run_paths.predictions_path, self.run_paths)
 
     def run(self, test_pairs):
         if self.mode == EvaluationMode.CHECKPOINTS:
