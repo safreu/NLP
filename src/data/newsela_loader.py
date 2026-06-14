@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from data.dataset_loader import Pair
-from data.newsela_corpus import NewselaCorpus
+from data.corpus.newsela_corpus import NewselaCorpus
 from preprocessing.dataset_builder import split_pairs
 
 

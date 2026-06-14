@@ -1,4 +1,4 @@
-from evaluation.analyzers.prediction_analyzer import PredictionAnalyzer
+from evaluation.analyzers.base import PredictionAnalyzer
 from preprocessing import filter
 from preprocessing.cleaner import normalize_text
 from storage.json_store import write_json
@@ -7,7 +7,25 @@ from storage.prediction_store import PredictionRow
 
 
 class CopyAnalyzer(PredictionAnalyzer):
-    def __init__(self, threshold: float = 0.95):
+    """
+    Analyzes copy behavior between source sentences and generated candidates.
+
+    Each JSON row represents a single prediction and contains:
+    - the original source sentence,
+    - the generated candidate,
+    - the human reference simplification,
+    - the similarity score between source and candidate,
+    - and the assigned copy category.
+
+    Predictions are classified as:
+    - exact copies: candidate equals source after normalization,
+    - near copies: candidate similarity exceeds the configured threshold,
+    - different predictions: candidate sufficiently differs from the source.
+
+    The generated summary additionally reports dataset-level copy ratios
+    and overall copy statistics.
+    """
+    def __init__(self, threshold):
         self.threshold = threshold
 
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:

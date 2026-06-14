@@ -1,6 +1,6 @@
 from statistics import mean
 
-from evaluation.analyzers.prediction_analyzer import PredictionAnalyzer
+from evaluation.analyzers.base import PredictionAnalyzer
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.prediction_store import PredictionRow
@@ -15,6 +15,20 @@ def safe_ratio(a: int, b: int) -> float:
 
 
 class LengthAnalyzer(PredictionAnalyzer):
+    """
+    Analyzes length and compression behavior of generated simplifications.
+
+    Each JSON row represents a single prediction and contains:
+    - source sentence word count,
+    - candidate sentence word count,
+    - reference sentence word count,
+    - candidate-to-source length ratio,
+    - and candidate-to-reference length ratio.
+
+    The generated summary reports average sentence lengths and average
+    compression ratios across the entire dataset.
+    """
+    
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
         rows = []
 

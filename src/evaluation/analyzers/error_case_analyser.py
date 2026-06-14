@@ -1,4 +1,4 @@
-from evaluation.analyzers.prediction_analyzer import PredictionAnalyzer
+from evaluation.analyzers.base import PredictionAnalyzer
 from preprocessing.cleaner import normalize_text
 from storage.json_store import write_json
 from storage.paths import RunPaths
@@ -10,6 +10,25 @@ def word_count(text: str) -> int:
 
 
 class ErrorCaseAnalyzer(PredictionAnalyzer):
+    """
+    Analyzes problematic or unusual model generations.
+
+    Each JSON row represents a detected error case and contains:
+    - the source sentence,
+    - the generated candidate,
+    - the human reference simplification,
+    - assigned error labels,
+    - and sentence length statistics.
+
+    Tracked error categories include:
+    - empty candidates,
+    - exact source copies,
+    - candidates longer than the source,
+    - and excessively short candidates.
+
+    The generated summary reports overall error frequencies and dataset-level
+    error ratios.
+    """ 
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
         cases = []
 

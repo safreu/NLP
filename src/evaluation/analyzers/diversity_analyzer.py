@@ -1,12 +1,29 @@
 from collections import Counter
 
-from evaluation.analyzers.prediction_analyzer import PredictionAnalyzer
+from evaluation.analyzers.base import PredictionAnalyzer
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.prediction_store import PredictionRow
 
+''''''
 
 class DiversityAnalyzer(PredictionAnalyzer):
+    """
+    Analyzes output diversity across generated simplifications.
+
+    Each JSON row represents repeated or problematic candidate generations
+    and contains:
+    - the generated candidate text,
+    - and the number of occurrences within the dataset.
+
+    The analyzer additionally tracks:
+    - repeated outputs,
+    - empty generations,
+    - the number of unique candidates,
+    - and overall diversity ratios.
+
+    """
+
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths):
         candidates = [row["candidate"].strip() for row in predictions]
         candidate_counter = Counter(candidates)

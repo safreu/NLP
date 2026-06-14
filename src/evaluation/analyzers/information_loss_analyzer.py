@@ -3,7 +3,7 @@ from dataclasses import asdict, dataclass
 
 import spacy
 
-from evaluation.analyzers.prediction_analyzer import PredictionAnalyzer
+from evaluation.analyzers.base import PredictionAnalyzer
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.prediction_store import PredictionRow
@@ -21,14 +21,18 @@ def create_summary_counter() -> dict[str, Counter[str]]:
         "proper_nouns": Counter(),
         "noun_chunks": Counter(),
         "verbs": Counter(),
-        "content_words": Counter(),
     }
 
 
 def count_losses(loss: dict[str, list[str]]) -> dict[str, int]:
     return {category: len(items) for category, items in loss.items()}
 
-
+def extract_negations(doc) -> set[str]:
+    return {
+        token.text.lower()
+        for token in doc
+        if token.text.lower() in NEGATIONS or token.dep_ == "neg"
+    }
 def build_summary(counter: dict[str, Counter[str]], num_predictions: int) -> dict[str, object]:
     totals = {category: sum(values.values()) for category, values in counter.items()}
 
@@ -54,7 +58,6 @@ class InformationLossResult:
     proper_nouns: list[str]
     noun_chunks: list[str]
     verbs: list[str]
-    content_words: list[str]
 
 
 def extract_information(text: str) -> dict[str, set[str]]:
@@ -62,15 +65,10 @@ def extract_information(text: str) -> dict[str, set[str]]:
     return {
         "entities": {ent.text.lower() for ent in doc.ents},
         "numbers": {token.text.lower() for token in doc if token.like_num},
-        "negations": {token.text.lower() for token in doc if token.text.lower() in NEGATIONS},
+        "negations": extract_negations(doc),
         "proper_nouns": {token.text.lower() for token in doc if token.pos_ == "PROPN"},
         "noun_chunks": {chunk.text.lower() for chunk in doc.noun_chunks},
         "verbs": {token.lemma_.lower() for token in doc if token.pos_ == "VERB"},
-        "content_words": {
-            token.lemma_.lower()
-            for token in doc
-            if not token.is_stop and not token.is_punct and not token.is_space
-        },
     }
 
 
@@ -84,6 +82,30 @@ def calculate_information_loss(reference: str, prediction: str) -> InformationLo
 
 
 class InformationLossAnalyzer(PredictionAnalyzer):
+    
+    """
+    Analyzes information loss in generated simplifications.
+
+    Each JSON row represents a single prediction and contains:
+    - the source sentence,
+    - the human reference simplification,
+    - the generated candidate,
+    - detailed information removed from the source,
+    - and detailed information removed compared to the reference.
+
+    Tracked information categories include:
+    - named entities,
+    - numbers,
+    - negations,
+    - proper nouns,
+    - noun chunks,
+    - and verbs,
+
+    The generated summary aggregates total losses, average losses per
+    prediction, and the most frequently removed information across the
+    entire dataset.
+    """
+    
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
 
         results = []
