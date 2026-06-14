@@ -165,17 +165,16 @@ def build_experiments(args: argparse.Namespace) -> list[ExperimentSpec]:
             continue
 
         if dataset_name == "newsela":
-            
             max_train_samples = resolve_sample_limit(
                 args.newsela_max_train_samples,
                 DEFAULT_NEWSELA_MAX_TRAIN_SAMPLES,
             )
-            
+
             max_eval_samples = resolve_sample_limit(
                 args.newsela_max_train_samples,
                 DEFAULT_NEWSELA_MAX_EVAL_SAMPLES,
             )
-            
+
             experiments.append(
                 ExperimentSpec(
                     name="newsela",

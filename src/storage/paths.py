@@ -54,11 +54,15 @@ class RunPaths:
     @property
     def copy_analysis_path(self) -> Path:
         return self.output_dir / "copy_analysis.json"
-    
+
     @property
     def information_loss_path(self) -> Path:
         return self.output_dir / "information_loss.json"
-    
+
+    @property
+    def information_loss_summary_path(self) -> Path:
+        return self.output_dir / "information_loss_summary.json"
+
     @property
     def config_path(self) -> Path:
         return self.root / "config.json"

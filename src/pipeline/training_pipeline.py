@@ -68,7 +68,7 @@ class TrainingPipeline:
             output_path=self.run_paths.copy_analysis_path,
             copy_tresshold=0.95,
         )
-        
+
         analyze_predictions(
             predictions_path=predictions_path,
             output_path=self.run_paths.information_loss_path,
