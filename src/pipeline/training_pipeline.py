@@ -55,8 +55,9 @@ class TrainingPipeline:
 
         results = evaluate_model(
             test_pairs=test,
-            run_paths=self.run_paths,
             config=self.config,
+            model_path=self.run_paths.model_path,
+            predictions_path=self.run_paths.predictions_path,
         )
 
         write_json(results, scores_path)

@@ -77,18 +77,14 @@ def extract_sources(test_pairs):
     return [remove_prompt(input_text) for input_text, _ in test_pairs]
 
 
-def evaluate_model(
-    test_pairs,
-    config: TrainingConfig,
-    run_paths: RunPaths,
-):
-    model, tokenizer, device = load_model(run_paths.model_path)
+def evaluate_model(test_pairs, config: TrainingConfig, model_path: Path, predictions_path: Path):
+    model, tokenizer, device = load_model(str(model_path))
 
     candidates, references = generate_predictions(test_pairs, model, tokenizer, device, config)
 
     sources = extract_sources(test_pairs)
 
-    write_json(prediction_rows(sources, candidates, references), run_paths.predictions_path)
+    write_json(prediction_rows(sources, candidates, references), predictions_path)
 
     return compute_all_metrics(sources, candidates, references)
 
@@ -103,12 +99,11 @@ def evaluate_checkpoints(test_pairs, run_paths: RunPaths, config: TrainingConfig
     for checkpoint in checkpoints:
         print(f"Evaluating {checkpoint}")
 
-        prediction_path = checkpoint / "predictions.json"
-
         results = evaluate_model(
             test_pairs=test_pairs,
-            run_paths=RunPaths(model_path=str(checkpoint), predictions_path=str(prediction_path)),
             config=config,
+            model_path=checkpoint,
+            predictions_path=checkpoint / "predictions.json",
         )
 
         all_results[checkpoint.name] = results

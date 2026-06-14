@@ -43,6 +43,14 @@ class NewselaEntry:
     target_level: int | None = None
     doc_id: str | None = None
 
+
+DEFAULT_NEWSELA_PATH = Path(
+    "data/newsela/newsela_article_corpus_2016-01-29"
+    "/newsela_data_share/newsela_data_share-20150302"
+    "/newsela_articles_20150302.aligned.sents.txt"
+)
+
+
 @dataclass
 class NewselaCorpus:
     entries: list[NewselaEntry]
@@ -50,8 +58,8 @@ class NewselaCorpus:
 
     @classmethod
     def load_from_disk(
-        cls, 
-        path: str = "data/newsela/newsela_article_corpus_2016-01-29/newsela_data_share/newsela_data_share-20150302/newsela_articles_20150302.aligned.sents.txt"
+        cls,
+        path: str = DEFAULT_NEWSELA_PATH,
     ) -> Self:
 
         load_dotenv()
@@ -71,36 +79,35 @@ class NewselaCorpus:
             raise FileNotFoundError(f"File does not exist {file}")
 
         entries: list[NewselaEntry] = []
-        
-        with open(file, "r", encoding="utf-8") as f:
+
+        with open(file, encoding="utf-8") as f:
             for raw_line in f:
                 line = raw_line.strip()
                 if not line:
                     continue
-                    
+
                 parts = line.split("\t")
 
                 if len(parts) != 5:
                     print(f"Skipping malformed line: {line}")
                     continue
-               
+
                 doc_id: str = clean_text(parts[0])
                 source_level: str = clean_text(parts[1])
                 target_level: str = clean_text(parts[2])
                 source: str = clean_text(parts[3])
                 target: str = clean_text(parts[4])
-               
+
                 try:
                     source_level = int(source_level.removeprefix("V"))
                     target_level = int(target_level.removeprefix("V"))
                 except ValueError:
                     continue
-                
+
                 if target_level <= source_level:
                     print(f"{target_level} <= {source_level} for {line}")
                     continue
-                
-                 
+
                 entry = NewselaEntry(
                     doc_id=doc_id,
                     source_level=source_level,
@@ -108,19 +115,17 @@ class NewselaCorpus:
                     source=detokenize_text(source),
                     target=detokenize_text(target),
                 )
-                
-                entries.append(entry) 
-                print(entry) 
+
+                entries.append(entry)
+                print(entry)
                 stats.add_loaded(
                     f"{source_level}_to_{target_level}",
                     1,
-                ) 
-
+                )
 
         _save_encrypted_pickle(entries, cache_file)
 
         return cls(entries, stats)
-    
 
     def as_training_pairs(self) -> list[tuple[str, str]]:
         pairs: list[tuple[str, str]] = []
@@ -151,7 +156,6 @@ class NewselaCorpus:
             if training_pair in seen:
                 self.stats.skipped_duplicate += 1
                 continue
-
 
             stats_key = (
                 f"{entry.source_level}_to_{entry.target_level}"
