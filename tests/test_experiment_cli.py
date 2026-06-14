@@ -22,6 +22,7 @@ def test_default_experiments_match_previous_main_behavior() -> None:
     assert experiments[2].max_train_samples == 10000
     assert experiments[2].max_eval_samples == 2000
 
+
 def test_cli_overrides_selected_experiment() -> None:
     experiments = main.build_experiments(
         main.parse_args(
