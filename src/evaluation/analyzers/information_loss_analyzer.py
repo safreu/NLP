@@ -91,7 +91,7 @@ class InformationLossAnalyzer(PredictionAnalyzer):
         reference_summary_counter = create_summary_counter()
         source_summary_counter = create_summary_counter()
 
-        for index, item in predictions:
+        for index, item in enumerate(predictions):
             source = item["source"]
             reference = item["reference"]
             prediction = item["candidate"]
