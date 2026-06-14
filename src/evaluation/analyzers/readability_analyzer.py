@@ -77,6 +77,6 @@ class ReadabilityAnalyzer(PredictionAnalyzer):
             {
                 "summary": summary,
                 "data": rows
-            }
-        ), run_paths.readability_analysis_path
+            }, run_paths.readability_analysis_path,
+        )
 
