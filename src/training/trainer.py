@@ -42,18 +42,7 @@ def tokenize_dataset(dataset, tokenizer, config: TrainingConfig):
 def create_training_args(path: Path | str, config: TrainingConfig):
     return Seq2SeqTrainingArguments(
         output_dir=str(path),
-        eval_strategy="epoch",
-        save_strategy="epoch",
-        learning_rate=config.learning_rate,
-        per_device_train_batch_size=config.batch_size,
-        per_device_eval_batch_size=config.batch_size,
-        num_train_epochs=config.epochs,
-        predict_with_generate=True,
-        logging_steps=10,
-        save_total_limit=config.save_total_limit,
-        dataloader_num_workers=8,
-        weight_decay=0.01,
-        seed=config.seed,
+        **config.to_dict(),
     )
 
 

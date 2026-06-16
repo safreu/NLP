@@ -11,13 +11,13 @@ class TrainingPipeline:
         self,
         name: str,
         dataset_loader: DatasetLoader,
-        config: TrainingConfig,
+        training_config: TrainingConfig,
         run_paths: RunPaths,
         evaluation_pipeline: EvaluationPipeline,
     ):
         self.name = name
         self.dataset_loader = dataset_loader
-        self.config = config
+        self.config = training_config
         self.run_paths = run_paths
         self.evaluation_pipeline = evaluation_pipeline
 
