@@ -185,6 +185,30 @@ uv run aggregate-results runs/baselines_quick
 
 The baseline runner writes one pipeline directory per dataset and baseline, for example `runs/baselines_quick/wikilarge_copy/scores.json`. The `copy` baseline returns the source text unchanged after prompt removal. The `punctuation_split` baseline is a deliberately simple rule-based baseline that splits on semicolons, colons, dashes, and a few clause boundaries.
 
+## Preservation and neural replacement analysis
+
+Run the reusable preservation analyses against saved prediction files:
+
+```bash
+uv run number-preservation
+uv run entity-preservation
+```
+
+The commands write generated reports under `results/`, which is local output and should normally stay out of Git.
+
+The neural replacement filter debug pipeline is exposed as project commands:
+
+```bash
+uv run neural-filter-build-candidates --mode debug
+uv run neural-filter-train --mode debug
+uv run neural-filter-apply --mode debug
+uv run neural-filter-generate-outputs --mode debug
+uv run neural-filter-evaluate --mode debug
+uv run neural-filter-evaluate-final --mode debug
+```
+
+Generated neural outputs, model artifacts, and logs are written under `results/neural_replacement_filter/`.
+
 ## Zero-shot LLM baseline
 
 Run a **local, open-weights** instruction-tuned Gemma model as a
