@@ -37,6 +37,7 @@ NUMBER_RE = re.compile(r"(?<!\w)[-+]?(?:\d{1,3}(?:,\s*\d{3})+|\d+)(?:\s*\.\s*\d+
 OUTPUT_COLUMN_CANDIDATES = [
     "original_logistic_regression_output",
     "model_output_sentence",
+    "candidate",
     "logistic_regression_output",
     "original_output",
 ]
@@ -217,10 +218,12 @@ def threshold_slug(threshold: float) -> str:
     return f"{int(round(threshold * 100)):03d}"
 
 
-def select_function_word_threshold(requested: str, log: EvaluationLog) -> float:
+def select_function_word_threshold(
+    requested: str, function_word_dir: Path, log: EvaluationLog
+) -> float:
     if requested != "auto":
         return float(requested)
-    summary_path = FUNCTION_WORD_DIR / "neural_filter_threshold_summary.csv"
+    summary_path = function_word_dir / "neural_filter_threshold_summary.csv"
     summary = pd.read_csv(summary_path)
     best = summary.sort_values(["f1", "threshold"], ascending=[False, False]).iloc[0]
     threshold = float(best["threshold"])
@@ -244,12 +247,16 @@ def load_filtered(path: Path, log: EvaluationLog) -> pd.DataFrame:
 def build_system_frames(
     args: argparse.Namespace, log: EvaluationLog
 ) -> tuple[pd.DataFrame, dict[str, str]]:
-    selected_function_threshold = select_function_word_threshold(args.function_word_threshold, log)
-    function_path = FUNCTION_WORD_DIR / (
+    function_word_dir = args.function_word_dir
+    content_quality_dir = args.content_quality_dir
+    selected_function_threshold = select_function_word_threshold(
+        args.function_word_threshold, function_word_dir, log
+    )
+    function_path = function_word_dir / (
         f"filtered_outputs_threshold_{threshold_slug(selected_function_threshold)}.csv"
     )
-    content_070_path = CONTENT_QUALITY_DIR / "filtered_outputs_threshold_070.csv"
-    content_080_path = CONTENT_QUALITY_DIR / "filtered_outputs_threshold_080.csv"
+    content_070_path = content_quality_dir / "filtered_outputs_threshold_070.csv"
+    content_080_path = content_quality_dir / "filtered_outputs_threshold_080.csv"
 
     function_data = load_filtered(function_path, log)
     content_070 = load_filtered(content_070_path, log)
@@ -497,6 +504,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--mode", choices=["debug"], default="debug")
     parser.add_argument("--content_quality_thresholds", nargs="+", type=float, default=[0.70, 0.80])
     parser.add_argument("--function_word_threshold", default="auto")
+    parser.add_argument("--function_word_dir", type=Path, default=FUNCTION_WORD_DIR)
+    parser.add_argument("--content_quality_dir", type=Path, default=CONTENT_QUALITY_DIR)
     parser.add_argument("--output_dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--log_dir", type=Path, default=DEFAULT_LOG_DIR)
     return parser.parse_args()

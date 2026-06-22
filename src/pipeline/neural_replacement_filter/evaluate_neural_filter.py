@@ -10,10 +10,10 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from apply_neural_filter import threshold_slug
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from tqdm import tqdm
 
+from pipeline.neural_replacement_filter.apply_neural_filter import threshold_slug
 from pipeline.neural_replacement_filter.config import OUTPUT_DIR, THRESHOLDS, TRAINING_METRICS_PATH
 
 LOGGER = logging.getLogger(__name__)

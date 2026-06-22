@@ -3,6 +3,7 @@ from collections import Counter
 from evaluation.entity_preservation import (
     counter_lost_items,
     counter_preserved_items,
+    detect_columns,
     entity_key,
     normalize_entity_text,
     overlap_count,
@@ -26,3 +27,7 @@ def test_counter_helpers_track_preserved_and_lost_duplicates() -> None:
     assert overlap_count(original, output) == 1
     assert counter_preserved_items(original, output) == [("ulm", "GPE")]
     assert counter_lost_items(original, output) == [("monday", "DATE"), ("ulm", "GPE")]
+
+
+def test_detect_columns_accepts_standard_candidate_alias() -> None:
+    assert detect_columns(["source", "candidate", "reference"]) == ("source", "candidate")

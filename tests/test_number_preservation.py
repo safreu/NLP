@@ -38,3 +38,7 @@ def test_detect_columns_accepts_project_prediction_aliases() -> None:
         "source_sentence",
         "predicted_sentence",
     )
+
+
+def test_detect_columns_accepts_standard_candidate_alias() -> None:
+    assert detect_columns(["source", "candidate", "reference"]) == ("source", "candidate")
