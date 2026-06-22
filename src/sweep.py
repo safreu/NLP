@@ -34,8 +34,8 @@ def main():
     ]
     
     dataset_loaders: list[DatasetLoader] = [
-        NewselaLoader(),
-        WikiLargeLoader(),
+        NewselaLoader(max_train_samples=10000, max_eval_samples=2000),
+        WikiLargeLoader(max_train_samples=10000, max_eval_samples=2000),
         OneStopLoader(),       
     ]
    
