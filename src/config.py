@@ -73,7 +73,8 @@ generation_config_1 = GenerationConfig(
 training_config_2 = TrainingConfig(
     # Page 4, Section 4 The Training Procedure
     # https://www.researchgate.net/profile/Ramazan_Mengi/publication/
-    # 376232167_Fine-tuning_T5_and_RoBERTa_Models_for_Enhanced_Text_Summarization_and_Sentiment_Analysis/
+    # 376232167_Fine-tuning_T5_and_RoBERTa_Models_for_Enhanced_Text_
+    # Summarization_and_Sentiment_Analysis/
     # links/656f7463fd4c91437ba4df31/
     # Fine-tuning-T5-and-RoBERTa-Models-for-Enhanced-Text-Summarization-and-Sentiment-Analysis.pdf
     model_name="t5-base",
@@ -82,12 +83,13 @@ training_config_2 = TrainingConfig(
     learning_rate=2e-5,
 )
 
+
 @dataclass
 class ZeroShotLLMConfig:
     model_name: str = "google/gemma-4-12b-it"
     revision: str | None = None
-    device: str | None = None    
-            
+    device: str | None = None
+
 
 @dataclass(frozen=True)
 class ClassicalMLConfig:

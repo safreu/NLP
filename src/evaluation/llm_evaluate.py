@@ -1,14 +1,16 @@
-
 import os
 from collections.abc import Sequence
-from typing import Any
 from pathlib import Path
+from typing import Any
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from prompts import zero_shot_simplify_messages
+
 from evaluation.metrics_builder import compute_all_metrics
+from prompts import zero_shot_simplify_messages
 from storage.json_store import write_json
 from storage.prediction_store import prediction_rows
+
 torch.set_num_threads(16)
 
 
@@ -93,27 +95,28 @@ def generate_predictions(
         generate_prediction(source, model, tokenizer, device, generation_config)
         for source in sources
     ]
-    
+
+
 def evaluate_llm(
     test_pairs,
     model_name: str,
     revision: str | None,
     generation_config: dict[str, Any],
     predictions_path: Path,
-    device: str | None = None
+    device: str | None = None,
 ):
     resolved_device = select_device(device)
-    
+
     model, tokenizer = load_causal_model(
         model_name=model_name,
         revision=revision,
         device=resolved_device,
         hf_token=get_hf_token(),
     )
-    
+
     sources = [input_text for input_text, _ in test_pairs]
     references = [ref for _, ref in test_pairs]
-    
+
     candidates = generate_predictions(
         sources=sources,
         model=model,
@@ -121,10 +124,7 @@ def evaluate_llm(
         device=resolved_device,
         generation_config=generation_config,
     )
-    
-    write_json(
-        prediction_rows(sources, candidates, references),
-        predictions_path
-    )
-    
+
+    write_json(prediction_rows(sources, candidates, references), predictions_path)
+
     return compute_all_metrics(sources, candidates, references)

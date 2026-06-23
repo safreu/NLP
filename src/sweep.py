@@ -40,18 +40,18 @@ def run_finetuning(traingings_configs, generation_configs, dataset_loaders, run_
                         DiversityAnalyzer(),
                         ErrorCaseAnalyzer(),
                         ReadabilityAnalyzer(),
-                    ]
-                )
+                    ],
+                ),
             ).run()
 
+
 def run_llm(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
-    
+
     for i, dataset_loader in enumerate(dataset_loaders):
-    
         _, _, test = dataset_loader.load_pairs()
-    
+
         run_dir.pipeline_dir = f"LLM_Zeroshot_{i}"
-    
+
         ZeroShotLLMEvaluationPipeline(
             model_config=ZeroShotLLMConfig(),
             generation_config=GenerationConfig(
@@ -69,35 +69,33 @@ def run_llm(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
                 ReadabilityAnalyzer(),
             ],
         ).run(test)
-    
+
+
 def main():
     traingings_configs: list[TrainingConfig] = [
-        training_config_1, 
-        training_config_2, 
+        training_config_1,
+        training_config_2,
         TrainingConfig(),
     ]
-    
+
     generation_configs: list[GenerationConfig] = [
         generation_config_1,
         GenerationConfig(),
-        GenerationConfig(
-            length_penalty=0.9, 
-            no_repeat_ngram_size=3, 
-            repetition_penalty=1.1
-        ),
+        GenerationConfig(length_penalty=0.9, no_repeat_ngram_size=3, repetition_penalty=1.1),
     ]
-    
+
     dataset_loaders: list[DatasetLoader] = [
         NewselaLoader(max_train_samples=10000, max_eval_samples=2000),
         WikiLargeLoader(max_train_samples=10000, max_eval_samples=2000),
         OneStopLoader(),
     ]
-   
+
     run_dir = RunPaths.for_runs_root()
-    
-    #run_finetuning(traingings_configs, generation_configs, dataset_loaders, run_dir)    
+
+    run_finetuning(traingings_configs, generation_configs, dataset_loaders, run_dir)
 
     run_llm(dataset_loaders, run_dir)
+
 
 if __name__ == "__main__":
     main()
