@@ -16,21 +16,21 @@ from evaluation.analyzers.error_case_analyser import ErrorCaseAnalyzer
 from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
 from evaluation.analyzers.length_analyzer import LengthAnalyzer
 from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
-from pipeline.evaluation_pipeline import EvaluationPipeline
+from pipeline.seq2seq_evaluation_pipeline import Seq2SeqEvaluationPipeline
 from pipeline.llm_evalution_pipeline import LLMEvaluationPipeline
-from pipeline.training_pipeline import TrainingPipeline
+from pipeline.seq2seq_training_pipeline import Seq2SeqTrainingPipeline
 from storage.paths import RunPaths
 
 
 def run_finetuning(traingings_configs, generation_configs, dataset_loaders, run_dir):
     for i in range(3):
         for j in range(3):
-            TrainingPipeline(
+            Seq2SeqTrainingPipeline(
                 name=f"Config_{i}{j}",
                 dataset_loader=dataset_loaders[j],
                 training_config=traingings_configs[i],
                 run_paths=run_dir,
-                evaluation_pipeline=EvaluationPipeline(
+                evaluation_pipeline=Seq2SeqEvaluationPipeline(
                     generation_config=generation_configs[i],
                     run_paths=run_dir,
                     analyzers=[

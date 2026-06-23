@@ -16,7 +16,7 @@ class EvaluationMode(Enum):
     CHECKPOINTS = "checkpoints"
 
 
-class EvaluationPipeline:
+class Seq2SeqEvaluationPipeline:
     def __init__(
         self,
         generation_config: GenerationConfig,
