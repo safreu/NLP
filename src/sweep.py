@@ -1,5 +1,6 @@
 from configuration.llm_config import (
     LLMTrainingConfig,
+    LLMGenerationConfig,
     llm_generation_config_1_beam,
     llm_generation_config_1_contrastive,
     llm_generation_config_1_greedy,
@@ -137,7 +138,7 @@ def main():
         llm_training_config_2,
     ]
 
-    generation_configs: list[GenerationConfig] = [
+    generation_configs: list[LLMGenerationConfig] = [
         llm_generation_config_1_greedy,
         llm_generation_config_1_beam,
         llm_generation_config_1_sampling,

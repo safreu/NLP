@@ -1,7 +1,5 @@
 from dataclasses import asdict, dataclass
 
-from configuration.seq2seq_config import GenerationConfig
-
 
 @dataclass
 class LLMTrainingConfig:
@@ -48,6 +46,31 @@ class LLMTrainingConfig:
         }
 
         return {k: v for k, v in asdict(self).items() if v is not None and k not in ignored}
+    
+    
+@dataclass
+class LLMGenerationConfig:
+    max_new_tokens: int | None = None
+    do_sample: bool | None = None
+    num_beams: int | None = None
+    no_repeat_ngram_size: int | None = None
+
+    early_stopping: bool | None = None
+
+    top_p: float | None = None
+    top_k: int | None = None
+    temperature: float | None = None
+
+    penalty_alpha: float | None = None
+
+    repetition_penalty: float | None = None
+
+    def to_dict(self):
+        return {
+            key: value
+            for key, value in asdict(self).items()
+            if value is not None
+        }
 
 
 llm_training_config_1 = LLMTrainingConfig(
@@ -57,20 +80,20 @@ llm_training_config_1 = LLMTrainingConfig(
     num_train_epochs=3,
 )
 
-llm_generation_config_1_greedy = GenerationConfig(
+llm_generation_config_1_greedy = LLMGenerationConfig(
     no_repeat_ngram_size=5,
     max_new_tokens=1024,
     do_sample=False,
 )
 
-llm_generation_config_1_beam = GenerationConfig(
+llm_generation_config_1_beam = LLMGenerationConfig(
     no_repeat_ngram_size=5,
     max_new_tokens=1024,
     num_beams=5,
     early_stopping=True,
 )
 
-llm_generation_config_1_sampling = GenerationConfig(
+llm_generation_config_1_sampling = LLMGenerationConfig(
     no_repeat_ngram_size=5,
     max_new_tokens=1024,
     do_sample=True,
@@ -79,7 +102,7 @@ llm_generation_config_1_sampling = GenerationConfig(
     temperature=0.5,
 )
 
-llm_generation_config_1_contrastive = GenerationConfig(
+llm_generation_config_1_contrastive = LLMGenerationConfig(
     no_repeat_ngram_size=5,
     max_new_tokens=1024,
     penalty_alpha=0.05,
