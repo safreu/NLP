@@ -5,7 +5,7 @@ import pytest
 import torch
 from transformers import BatchEncoding
 
-from pipeline import llm_zero_shot_pipeline
+from unused import llm_zero_shot_pipeline
 from prompts import zero_shot_simplify_messages
 
 

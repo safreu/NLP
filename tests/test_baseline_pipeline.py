@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from evaluation.result_aggregation import aggregate_results
-from pipeline import baseline_pipeline
+from unused import baseline_pipeline
 from prompts import simplify_prompt
 from storage.json_store import read_json
 
