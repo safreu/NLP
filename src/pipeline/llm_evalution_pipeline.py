@@ -27,8 +27,7 @@ class LLMEvaluationPipeline:
             analyzer.run(predictions, self.run_paths)
 
     def run(self, test_pairs):
-        
-        
+
         results = evaluate_llm(
             test_pairs=test_pairs,
             model_name=self.model_config.model_name,

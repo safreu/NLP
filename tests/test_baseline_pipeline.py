@@ -1,9 +1,9 @@
 from pathlib import Path
 
 from evaluation.result_aggregation import aggregate_results
-from unused import baseline_pipeline
 from prompts import simplify_prompt
 from storage.json_store import read_json
+from unused import baseline_pipeline
 
 
 def test_copy_baseline_removes_prompt_and_normalizes_whitespace() -> None:

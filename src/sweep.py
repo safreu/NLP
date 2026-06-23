@@ -16,8 +16,8 @@ from evaluation.analyzers.error_case_analyser import ErrorCaseAnalyzer
 from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
 from evaluation.analyzers.length_analyzer import LengthAnalyzer
 from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
-from pipeline.seq2seq_evaluation_pipeline import Seq2SeqEvaluationPipeline
 from pipeline.llm_evalution_pipeline import LLMEvaluationPipeline
+from pipeline.seq2seq_evaluation_pipeline import Seq2SeqEvaluationPipeline
 from pipeline.seq2seq_training_pipeline import Seq2SeqTrainingPipeline
 from storage.paths import RunPaths
 
