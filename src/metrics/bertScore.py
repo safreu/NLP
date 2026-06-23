@@ -25,7 +25,7 @@ def compute_bertscore(
     rescale_with_baseline: bool = False,
     verbose: bool = False,
 ) -> BERTScoreResult:
-    
+
     if len(standard) != len(simple):
         raise ValueError(
             f"Standard length ({len(standard)}) and simple length ({len(simple)}) doesn't match."

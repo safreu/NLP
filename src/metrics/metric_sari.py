@@ -1,8 +1,18 @@
 from collections.abc import Sequence
+from typing import Any
 
 from evaluate import load
 
-sari = load("sari")
+_sari_metric: Any | None = None
+
+
+def get_sari_metric() -> Any:
+    global _sari_metric
+
+    if _sari_metric is None:
+        _sari_metric = load("sari")
+
+    return _sari_metric
 
 
 def format_references(references: Sequence[str | Sequence[str]]) -> list[list[str]]:
@@ -22,7 +32,7 @@ def compute_sari(
     predictions: Sequence[str],
     references: Sequence[str | Sequence[str]],
 ) -> float:
-    result = sari.compute(
+    result = get_sari_metric().compute(
         sources=list(sources),
         predictions=list(predictions),
         references=format_references(references),
@@ -32,9 +42,6 @@ def compute_sari(
 
 
 def main() -> None:
-    # Load SARI metric
-    sari = load("sari")
-
     # Original complex sentence
     sources = ["The physician administered medication to the patient."]
 
@@ -50,7 +57,11 @@ def main() -> None:
         ]
     ]
 
-    result = sari.compute(sources=sources, predictions=predictions, references=references)
+    result = get_sari_metric().compute(
+        sources=sources,
+        predictions=predictions,
+        references=references,
+    )
 
     print(result)
     print(f"SARI score: {result['sari']:.2f}")

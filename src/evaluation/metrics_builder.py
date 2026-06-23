@@ -13,5 +13,5 @@ def compute_all_metrics(sources, candidates, references):
         "f1": compute_f1(candidates, references),
         "flesch": compute_flesch_kincaid(candidates, references),
         "sari": compute_sari(sources, candidates, references),
-        "rouge-l": compute_rougescore(candidates, references)
+        "rouge-l": compute_rougescore(candidates, references),
     }

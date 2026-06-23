@@ -17,64 +17,58 @@ class OneStopEnglishEntry:
     level: str
     source_file: str
 
+
 @dataclass
 class OneStopEnglish:
     entries: list[OneStopEnglishEntry]
     stats: DatasetStats = field(default_factory=DatasetStats)
-    
+
     @staticmethod
     def _load_pair_file(file: Path, level: str) -> list[OneStopEnglishEntry]:
         text = file.read_text(encoding="utf-8", errors="replace")
-        
+
         blocks = text.split("*******")
-        
+
         pairs: list[OneStopEnglishEntry] = []
-        
+
         for block in blocks:
-            lines = [
-                clean_text(line)
-                for line in block.splitlines()
-                if clean_text(line)
-            ]
-            
+            lines = [clean_text(line) for line in block.splitlines() if clean_text(line)]
+
             if len(lines) < 2:
                 continue
-            
+
             if file.name == "ELE-INT.txt":
                 source = lines[1]
                 target = lines[0]
             else:
                 source = lines[0]
                 target = lines[1]
-            
+
             if not source or not target:
                 continue
-            
+
             pairs.append(
                 OneStopEnglishEntry(
-                    source=source,
-                    target=target,
-                    level=level,
-                    source_file=file.name
+                    source=source, target=target, level=level, source_file=file.name
                 )
             )
-            
+
         return pairs
-        
+
     @classmethod
-    def load_from_disk(cls, path: str="data/OneStopEnglishCorpus/Sentence-Aligned") -> Self:
+    def load_from_disk(cls, path: str = "data/OneStopEnglishCorpus/Sentence-Aligned") -> Self:
         folder = Path(path)
         stats = DatasetStats()
 
         cache_file = folder.with_suffix(".pkl")
-        
-        '''
+
+        """
         if cache_file.exists():
             with open(cache_file, "rb") as cached_file:
                 entries = pickle.load(cached_file)
 
             return cls(entries)
-        '''
+        """
 
         if not folder.exists():
             raise FileNotFoundError(f"Folder does not exists {folder}")
@@ -82,37 +76,33 @@ class OneStopEnglish:
         files = {
             "ADV-ELE.txt": "elementary",
             "ADV-INT.txt": "intermediate",
-            "ELE-INT.txt": "elementary"
+            "ELE-INT.txt": "elementary",
         }
-
 
         entries: list[OneStopEnglishEntry] = []
 
         for filename, level in files.items():
             file = folder / filename
-            
+
             if not file.exists():
                 raise FileNotFoundError(f"No {filename} in {folder}")
-            
+
             loaded = cls._load_pair_file(file, level)
-            
+
             stats.add_loaded(level, len(loaded))
-            
-                        
+
             entries.extend(loaded)
 
         with open(cache_file, "wb") as cached_file:
             pickle.dump(entries, cached_file)
 
         return cls(entries, stats)
-    
-    
+
     def as_training_pairs(self) -> list[tuple[str, str]]:
         pairs: list[tuple[str, str]] = []
 
-        
         seen: set[tuple[str, str]] = set()
-        
+
         for entry in self.entries:
             if entry.level == "elementary":
                 source = elementary_prompt(entry.source)
@@ -120,26 +110,26 @@ class OneStopEnglish:
                 source = intermediate_prompt(entry.source)
             else:
                 raise RuntimeError(f"Unknown level: {entry.level}")
-            
+
             target = entry.target
             cleaned_source = remove_prompt(source)
 
             similarity = text_similarity(cleaned_source, target)
             ratio_score = length_ratio(cleaned_source, target)
-            
+
             self.stats.similarity_scores.append(similarity)
             self.stats.length_ratios.append(ratio_score)
-            
+
             if similarity > SIMILARITY_THRESHOLD:
                 self.stats.skipped_similar += 1
                 continue
-                
+
             if ratio_score < MIN_LENGTH_RATIO:
                 self.stats.skipped_length_ratio += 1
                 continue
-                
+
             training_pair = (source, target)
-            
+
             if training_pair in seen:
                 self.stats.skipped_duplicate += 1
                 continue
@@ -147,5 +137,5 @@ class OneStopEnglish:
             self.stats.add_kept(entry.level)
             seen.add(training_pair)
             pairs.append(training_pair)
-        
+
         return pairs
