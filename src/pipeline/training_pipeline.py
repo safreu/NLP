@@ -1,4 +1,4 @@
-from config import TrainingConfig
+from configuration.seq2seq_config import TrainingConfig
 from data.dataset_loader import DatasetLoader
 from pipeline.evaluation_pipeline import EvaluationPipeline
 from preprocessing.dataset_builder import to_dataset

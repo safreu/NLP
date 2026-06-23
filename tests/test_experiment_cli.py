@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import main
-from config import TrainingConfig
+from configuration.config import TrainingConfig
 from pipeline.evaluation_pipeline import EvaluationMode
 from storage.json_store import read_json
 

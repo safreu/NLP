@@ -10,7 +10,7 @@ import torch
 from datasets import load_dataset
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from config import TrainingConfig
+from configuration.seq2seq_config import TrainingConfig
 from prompts import elementary_prompt, intermediate_prompt
 from storage.paths import RunPaths
 

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from config import TrainingConfig
+from configuration.config import TrainingConfig
 from pipeline import sari_asset_pipeline
 from storage.paths import RunPaths
 

@@ -7,7 +7,7 @@ from storage.json_store import write_json
 from storage.prediction_store import PredictionRow, read_predictions
 
 
-class ZeroShotLLMEvaluationPipeline:
+class LLMEvaluationPipeline:
     def __init__(
         self,
         model_config,
@@ -27,6 +27,8 @@ class ZeroShotLLMEvaluationPipeline:
             analyzer.run(predictions, self.run_paths)
 
     def run(self, test_pairs):
+        
+        
         results = evaluate_llm(
             test_pairs=test_pairs,
             model_name=self.model_config.model_name,

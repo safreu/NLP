@@ -9,7 +9,7 @@ from transformers import (
     Seq2SeqTrainingArguments,
 )
 
-from config import TrainingConfig
+from configuration.seq2seq_config import TrainingConfig
 
 torch.set_num_threads(16)
 

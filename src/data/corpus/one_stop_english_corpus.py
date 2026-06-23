@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Self
 
-from config import MIN_LENGTH_RATIO, SIMILARITY_THRESHOLD
+from configuration.config import MIN_LENGTH_RATIO, SIMILARITY_THRESHOLD
 from evaluation.datasetStats import DatasetStats
 from preprocessing.cleaner import clean_text, remove_prompt
 from preprocessing.filter import length_ratio, text_similarity

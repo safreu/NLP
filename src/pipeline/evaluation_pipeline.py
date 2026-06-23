@@ -1,7 +1,7 @@
 from enum import Enum
 from pathlib import Path
 
-from config import GenerationConfig
+from configuration.seq2seq_config import GenerationConfig
 from evaluation.analyzers.copy_analyzer import CopyAnalyzer
 from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
 from evaluation.checkpoint_compare import compare_best_checkpoints

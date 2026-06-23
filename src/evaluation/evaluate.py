@@ -3,7 +3,7 @@ from pathlib import Path
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from config import GenerationConfig
+from configuration.seq2seq_config import GenerationConfig
 from evaluation.metrics_builder import compute_all_metrics
 from preprocessing.cleaner import remove_prompt
 from storage.json_store import write_json

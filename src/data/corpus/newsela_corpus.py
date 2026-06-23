@@ -7,7 +7,7 @@ from typing import Self
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 
-from config import MIN_LENGTH_RATIO, SIMILARITY_THRESHOLD
+from configuration.config import MIN_LENGTH_RATIO, SIMILARITY_THRESHOLD
 from evaluation.datasetStats import DatasetStats
 from preprocessing.cleaner import clean_text, detokenize_text, remove_prompt
 from preprocessing.filter import length_ratio, text_similarity

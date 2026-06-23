@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
-from config import GenerationConfig, TrainingConfig
+from configuration.seq2seq_config import GenerationConfig, TrainingConfig
 from data.dataset_loader import DatasetLoader
 from data.newsela_loader import NewselaLoader
 from data.onestop_loader import OneStopLoader

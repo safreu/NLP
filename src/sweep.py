@@ -1,7 +1,7 @@
-from config import (
+from configuration.llm_config import ZeroShotLLMConfig
+from configuration.seq2seq_config import (
     GenerationConfig,
     TrainingConfig,
-    ZeroShotLLMConfig,
     generation_config_1,
     training_config_1,
     training_config_2,
@@ -17,7 +17,7 @@ from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyz
 from evaluation.analyzers.length_analyzer import LengthAnalyzer
 from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
 from pipeline.evaluation_pipeline import EvaluationPipeline
-from pipeline.llm_evalution_pipeline import ZeroShotLLMEvaluationPipeline
+from pipeline.llm_evalution_pipeline import LLMEvaluationPipeline
 from pipeline.training_pipeline import TrainingPipeline
 from storage.paths import RunPaths
 
@@ -52,7 +52,7 @@ def run_llm(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
 
         run_dir.pipeline_dir = f"LLM_Zeroshot_{i}"
 
-        ZeroShotLLMEvaluationPipeline(
+        LLMEvaluationPipeline(
             model_config=ZeroShotLLMConfig(),
             generation_config=GenerationConfig(
                 max_new_tokens=256,
