@@ -1,4 +1,12 @@
-from configuration.llm_config import LLMTrainingConfig
+from configuration.llm_config import (
+    LLMTrainingConfig,
+    llm_generation_config_1_beam,
+    llm_generation_config_1_contrastive,
+    llm_generation_config_1_greedy,
+    llm_generation_config_1_sampling,
+    llm_training_config_1,
+    llm_training_config_2,
+)
 from configuration.seq2seq_config import (
     GenerationConfig,
     TrainingConfig,
@@ -46,31 +54,31 @@ def run_finetuning(trainings_configs, generation_configs, dataset_loaders, run_d
             ).run()
 
 
-def run_llm_finetune(trainings_configs, dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
+def run_llm_finetune(
+    trainings_configs, generation_configs, dataset_loaders: list[DatasetLoader], run_dir: RunPaths
+):
     for i, dataset_loader in enumerate(dataset_loaders):
-        LLMTrainingPipeline(
-            name=f"LLM_Config{i}",
-            dataset_loader=dataset_loader,
-            training_config=trainings_configs[i],
-            run_paths=run_dir,
-            evaluation_pipeline=LLMEvaluationPipeline(
-                model_config=trainings_configs[i],
-                generation_config=GenerationConfig(
-                    max_new_tokens=256,
-                    do_sample=False,
-                    num_beams=1,
-                ),
-                run_paths=run_dir,
-                analyzers=[
-                    CopyAnalyzer(threshold=0.95),
-                    InformationLossAnalyzer(),
-                    LengthAnalyzer(),
-                    DiversityAnalyzer(),
-                    ErrorCaseAnalyzer(),
-                    ReadabilityAnalyzer(),
-                ],
-            ),
-        ).run()
+        for j, train_conf in trainings_configs:
+            for k, gen_conf in generation_configs:
+                LLMTrainingPipeline(
+                    name=f"LLM_Config{i}{j}{k}",
+                    dataset_loader=dataset_loader,
+                    training_config=train_conf,
+                    run_paths=run_dir,
+                    evaluation_pipeline=LLMEvaluationPipeline(
+                        model_config=train_conf,
+                        generation_config=gen_conf,
+                        run_paths=run_dir,
+                        analyzers=[
+                            CopyAnalyzer(threshold=0.95),
+                            InformationLossAnalyzer(),
+                            LengthAnalyzer(),
+                            DiversityAnalyzer(),
+                            ErrorCaseAnalyzer(),
+                            ReadabilityAnalyzer(),
+                        ],
+                    ),
+                ).run()
 
 
 def run_llm_zeroshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
@@ -120,17 +128,23 @@ def main():
 
     run_dir = RunPaths.for_runs_root()
 
-    #run_finetuning(trainings_configs, generation_configs, dataset_loaders, run_dir)
+    # run_finetuning(trainings_configs, generation_configs, dataset_loaders, run_dir)
 
-    #run_llm_zeroshot(dataset_loaders, run_dir)
+    # run_llm_zeroshot(dataset_loaders, run_dir)
 
     trainings_configs: list[LLMTrainingConfig] = [
-        LLMTrainingConfig(),
-        LLMTrainingConfig(),
-        LLMTrainingConfig(),
+        llm_training_config_1,
+        llm_training_config_2,
     ]
 
-    run_llm_finetune(trainings_configs, dataset_loaders, run_dir)
+    generation_configs: list[GenerationConfig] = [
+        llm_generation_config_1_greedy,
+        llm_generation_config_1_beam,
+        llm_generation_config_1_sampling,
+        llm_generation_config_1_contrastive,
+    ]
+
+    run_llm_finetune(trainings_configs, generation_configs, dataset_loaders, run_dir)
 
 
 if __name__ == "__main__":

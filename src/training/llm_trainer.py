@@ -48,7 +48,7 @@ def format_template(text, tokenizer):
     messages = [
         {
             "role": "user",
-            "content": text["input"],
+            "content": f"Simplify this text:\n\n{text['input']}",
         },
         {
             "role": "assistant",

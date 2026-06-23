@@ -1,5 +1,7 @@
 from dataclasses import asdict, dataclass
 
+from configuration.seq2seq_config import GenerationConfig
+
 
 @dataclass
 class LLMTrainingConfig:
@@ -20,6 +22,12 @@ class LLMTrainingConfig:
     gradient_accumulation_steps: int | None = None
     learning_rate: float | None = None
     num_train_epochs: int | None = None
+
+    warmup_steps: int | None = None
+    weight_decay: float | None = None
+    save_steps: int | None = None
+    optim: str | None = None
+    gradient_checkpointing: bool | None = None
 
     logging_steps: int = 10
     save_strategy: str = "epoch"
@@ -42,8 +50,55 @@ class LLMTrainingConfig:
         return {k: v for k, v in asdict(self).items() if v is not None and k not in ignored}
 
 
-@dataclass
-class ZeroShotLLMConfig:
-    model_name: str = "google/gemma-4-12b-it"
-    revision: str | None = None
-    device: str | None = None
+llm_training_config_1 = LLMTrainingConfig(
+    learning_rate=2e-5,
+    weight_decay=0.05,
+    per_device_train_batch_size=2,
+    num_train_epochs=3,
+)
+
+llm_generation_config_1_greedy = GenerationConfig(
+    no_repeat_ngram_size=5,
+    max_new_tokens=1024,
+    do_sample=False,
+)
+
+llm_generation_config_1_beam = GenerationConfig(
+    no_repeat_ngram_size=5,
+    max_new_tokens=1024,
+    num_beams=5,
+    early_stopping=True,
+)
+
+llm_generation_config_1_sampling = GenerationConfig(
+    no_repeat_ngram_size=5,
+    max_new_tokens=1024,
+    do_sample=True,
+    top_p=0.95,
+    top_k=5,
+    temperature=0.5,
+)
+
+llm_generation_config_1_contrastive = GenerationConfig(
+    no_repeat_ngram_size=5,
+    max_new_tokens=1024,
+    penalty_alpha=0.05,
+    top_k=5,
+)
+
+llm_training_config_2 = LLMTrainingConfig(
+    model_name="google/gemma-3-12b-it",
+    use_qlora=True,
+    learning_rate=2e-4,
+    weight_decay=0.01,
+    num_train_epochs=3,
+    per_device_train_batch_size=1,
+    gradient_accumulation_steps=16,
+    warmup_steps=500,
+    bf16=True,
+    save_steps=500,
+    lora_r=16,
+    lora_alpha=32,
+    lora_dropout=0.05,
+    gradient_checkpointing=True,
+)
