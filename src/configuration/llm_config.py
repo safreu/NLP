@@ -113,17 +113,24 @@ llm_generation_config_1_contrastive = LLMGenerationConfig(
 
 llm_training_config_2 = LLMTrainingConfig(
     model_name="google/gemma-4-E4B-it",
+    
     use_qlora=True,
-    learning_rate=2e-4,
-    weight_decay=0.01,
-    num_train_epochs=3,
-    per_device_train_batch_size=1,
-    gradient_accumulation_steps=16,
-    warmup_steps=500,
-    bf16=True,
-    save_steps=500,
     lora_r=16,
     lora_alpha=32,
     lora_dropout=0.05,
+    
+    learning_rate=2e-4,
+    weight_decay=0.01,
+    num_train_epochs=3,
+    
+    per_device_train_batch_size=1,
+    gradient_accumulation_steps=16,
+    
+    max_seq_length=512,
+    
+    warmup_steps=500,
+    bf16=True,
+    save_steps=500,
     gradient_checkpointing=True,
+    optim="paged_adamw_8bit"
 )

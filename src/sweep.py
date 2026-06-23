@@ -134,7 +134,7 @@ def main():
     # run_llm_zeroshot(dataset_loaders, run_dir)
 
     trainings_configs: list[LLMTrainingConfig] = [
-        llm_training_config_1,
+        #llm_training_config_1,
         llm_training_config_2,
     ]
 
