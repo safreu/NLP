@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
-from config import TrainingConfig
+from config import GenerationConfig, TrainingConfig
 from data.dataset_loader import DatasetLoader
 from data.newsela_loader import NewselaLoader
 from data.onestop_loader import OneStopLoader
@@ -139,10 +139,18 @@ def selected_dataset_names(dataset: str) -> list[str]:
 
 def apply_training_overrides(config: TrainingConfig, args: argparse.Namespace) -> TrainingConfig:
     model_name = args.model_name if args.model_name is not None else config.model_name
-    epochs = args.epochs if args.epochs is not None else config.epochs
-    batch_size = args.batch_size if args.batch_size is not None else config.batch_size
+    epochs = args.epochs if args.epochs is not None else config.num_train_epochs
+    batch_size = (
+        args.batch_size if args.batch_size is not None else config.per_device_train_batch_size
+    )
 
-    return replace(config, model_name=model_name, epochs=epochs, batch_size=batch_size)
+    return replace(
+        config,
+        model_name=model_name,
+        num_train_epochs=epochs,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size,
+    )
 
 
 def resolve_sample_limit(value: int | None, default: int) -> int | None:
@@ -213,7 +221,7 @@ def build_experiments(args: argparse.Namespace) -> list[ExperimentSpec]:
                     max_eval_samples=max_eval_samples,
                 ),
                 config=apply_training_overrides(
-                    TrainingConfig(epochs=3, max_target_length=128),
+                    TrainingConfig(num_train_epochs=3, max_target_length=128),
                     args,
                 ),
                 evaluation_mode=evaluation_mode,
@@ -237,7 +245,6 @@ def resolve_run_dir(output_path: Path | None) -> RunPaths:
 
 def training_config_data(config: TrainingConfig) -> dict[str, object]:
     data = asdict(config)
-    data["generation_config"] = config.generation_config
     return data
 
 
@@ -287,10 +294,10 @@ def run_experiments(args: argparse.Namespace) -> RunPaths:
         TrainingPipeline(
             name=experiment.name,
             dataset_loader=experiment.dataset_loader,
-            config=experiment.config,
+            training_config=experiment.config,
             run_paths=run_dir,
             evaluation_pipeline=EvaluationPipeline(
-                config=experiment.config,
+                generation_config=GenerationConfig(),
                 run_paths=run_dir,
                 mode=experiment.evaluation_mode,
                 analyzers=[

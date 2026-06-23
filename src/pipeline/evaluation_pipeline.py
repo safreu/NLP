@@ -1,7 +1,7 @@
 from enum import Enum
 from pathlib import Path
 
-from config import TrainingConfig
+from config import GenerationConfig
 from evaluation.analyzers.copy_analyzer import CopyAnalyzer
 from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
 from evaluation.checkpoint_compare import compare_best_checkpoints
@@ -19,12 +19,12 @@ class EvaluationMode(Enum):
 class EvaluationPipeline:
     def __init__(
         self,
-        config: TrainingConfig,
+        generation_config: GenerationConfig,
         run_paths: RunPaths,
         mode: EvaluationMode = EvaluationMode.FINAL_MODEL,
         analyzers: list | None = None,
     ):
-        self.config = config
+        self.config = generation_config
         self.run_paths = run_paths
         self.mode = mode
         self.analyzers = analyzers or [CopyAnalyzer(), InformationLossAnalyzer()]
