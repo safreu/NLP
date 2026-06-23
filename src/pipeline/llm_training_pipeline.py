@@ -1,9 +1,9 @@
-from configuration.seq2seq_config import TrainingConfig
+from configuration.llm_config import LLMTrainingConfig
 from data.dataset_loader import DatasetLoader
 from pipeline.llm_evalution_pipeline import LLMEvaluationPipeline
 from preprocessing.dataset_builder import to_dataset
 from storage.paths import RunPaths
-from training.trainer import train_model
+from training.llm_trainer import train_model
 
 
 class LLMTrainingPipeline:
@@ -11,7 +11,7 @@ class LLMTrainingPipeline:
         self,
         name: str,
         dataset_loader: DatasetLoader,
-        training_config: TrainingConfig,
+        training_config: LLMTrainingConfig,
         run_paths: RunPaths,
         evaluation_pipeline: LLMEvaluationPipeline,
     ):
