@@ -1,6 +1,6 @@
 from configuration.llm_config import (
-    LLMTrainingConfig,
     LLMGenerationConfig,
+    LLMTrainingConfig,
     llm_generation_config_1_beam,
     llm_generation_config_1_contrastive,
     llm_generation_config_1_greedy,
@@ -59,8 +59,8 @@ def run_llm_finetune(
     trainings_configs, generation_configs, dataset_loaders: list[DatasetLoader], run_dir: RunPaths
 ):
     for i, dataset_loader in enumerate(dataset_loaders):
-        for j, train_conf in trainings_configs:
-            for k, gen_conf in generation_configs:
+        for j, train_conf in enumerate(trainings_configs):
+            for k, gen_conf in enumerate(generation_configs):
                 LLMTrainingPipeline(
                     name=f"LLM_Config{i}{j}{k}",
                     dataset_loader=dataset_loader,

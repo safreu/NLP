@@ -11,6 +11,8 @@ from trl import SFTConfig, SFTTrainer
 
 from configuration.llm_config import LLMTrainingConfig
 
+torch.set_num_threads(16)
+
 
 def load_model(config: LLMTrainingConfig):
     tokenizer = AutoTokenizer.from_pretrained(

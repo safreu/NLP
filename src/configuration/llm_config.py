@@ -74,6 +74,8 @@ class LLMGenerationConfig:
 
 
 llm_training_config_1 = LLMTrainingConfig(
+    model_name="google/gemma-4-E4B-it",
+    use_qlora=True,
     learning_rate=2e-5,
     weight_decay=0.05,
     per_device_train_batch_size=2,
@@ -110,7 +112,7 @@ llm_generation_config_1_contrastive = LLMGenerationConfig(
 )
 
 llm_training_config_2 = LLMTrainingConfig(
-    model_name="google/gemma-3-12b-it",
+    model_name="google/gemma-4-E4B-it",
     use_qlora=True,
     learning_rate=2e-4,
     weight_decay=0.01,
