@@ -112,7 +112,7 @@ llm_generation_config_1_contrastive = LLMGenerationConfig(
 )
 
 llm_training_config_2 = LLMTrainingConfig(
-    model_name="google/gemma-4-E4B-it",
+    model_name="google/gemma-4-E2B-it",
     
     use_qlora=True,
     lora_r=16,
