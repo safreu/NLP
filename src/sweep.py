@@ -5,7 +5,6 @@ from configuration.llm_config import (
     llm_generation_config_1_contrastive,
     llm_generation_config_1_greedy,
     llm_generation_config_1_sampling,
-    llm_training_config_1,
     llm_training_config_2,
 )
 from configuration.seq2seq_config import (
@@ -32,27 +31,37 @@ from pipeline.seq2seq_training_pipeline import Seq2SeqTrainingPipeline
 from storage.paths import RunPaths
 
 
-def run_finetuning(trainings_configs, generation_configs, dataset_loaders, run_dir):
-    for i in range(3):
-        for j in range(3):
-            Seq2SeqTrainingPipeline(
-                name=f"Config_{i}{j}",
-                dataset_loader=dataset_loaders[j],
-                training_config=trainings_configs[i],
-                run_paths=run_dir,
-                evaluation_pipeline=Seq2SeqEvaluationPipeline(
-                    generation_config=generation_configs[i],
+def run_finetuning_seq2seq(
+    trainings_configs: list[TrainingConfig],
+    generation_configs: list[GenerationConfig],
+    dataset_loaders: list[DatasetLoader],
+    run_dir: RunPaths,  
+):
+    for dataset_loader in dataset_loaders:
+        dataset_name = dataset_loader.__class__.__name__.replace("Loader", "")
+        
+        for train_idx, train_conf in enumerate(trainings_configs):
+            
+                run_name = f"{dataset_name}_train{train_idx}"
+                
+                Seq2SeqTrainingPipeline(
+                    name=run_name,
+                    dataset_loader=dataset_loader,
+                    training_config=train_conf,
                     run_paths=run_dir,
-                    analyzers=[
-                        CopyAnalyzer(threshold=0.95),
-                        InformationLossAnalyzer(),
-                        LengthAnalyzer(),
-                        DiversityAnalyzer(),
-                        ErrorCaseAnalyzer(),
-                        ReadabilityAnalyzer(),
-                    ],
-                ),
-            ).run()
+                    evaluation_pipeline=Seq2SeqEvaluationPipeline(
+                        generation_configs=generation_configs,
+                        run_paths=run_dir,
+                        analyzers=[
+                            CopyAnalyzer(threshold=0.95),
+                            InformationLossAnalyzer(),
+                            LengthAnalyzer(),
+                            DiversityAnalyzer(),
+                            ErrorCaseAnalyzer(),
+                            ReadabilityAnalyzer(),
+                        ],
+                    ),
+                ).run()
 
 
 def run_llm_finetune(
@@ -109,17 +118,88 @@ def run_llm_zeroshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
 
 
 def main():
-    trainings_configs: list[TrainingConfig] = [
-        training_config_1,
-        training_config_2,
-        TrainingConfig(),
+    
+    training_configs: list[TrainingConfig] = [
+        TrainingConfig(
+            num_train_epochs=3,
+            learning_rate=5e-5,
+            weight_decay=0.01,
+            warmup_steps=500,
+        ),
+        TrainingConfig(
+            num_train_epochs=5,
+            learning_rate=5e-5,
+            weight_decay=0.01,
+            warmup_steps=500,
+        ),
+        TrainingConfig(
+            num_train_epochs=3,
+            learning_rate=1e-4,
+            weight_decay=0.01,
+            warmup_steps=500,
+        ),
+        TrainingConfig(
+            num_train_epochs=5,
+            learning_rate=1e-4,
+            weight_decay=0.01,
+            warmup_steps=500,
+        ),
+        TrainingConfig(
+            num_train_epochs=3,
+            learning_rate=2e-4,
+            weight_decay=0.01,
+            warmup_steps=500,
+        ),
+        TrainingConfig(
+            num_train_epochs=5,
+            learning_rate=2e-4,
+            weight_decay=0.01,
+            warmup_steps=500,
+        ),
     ]
-
+    
     generation_configs: list[GenerationConfig] = [
-        generation_config_1,
-        GenerationConfig(),
-        GenerationConfig(length_penalty=0.9, no_repeat_ngram_size=3, repetition_penalty=1.1),
+        GenerationConfig(
+            max_new_tokens=256,
+            do_sample=False,
+            num_beams=1,
+        ),
+        GenerationConfig(
+            max_new_tokens=256,
+            do_sample=False,
+            num_beams=4,
+            length_penalty=1.0,
+            no_repeat_ngram_size=3,
+        ),
+        GenerationConfig(
+            max_new_tokens=256,
+            do_sample=False,
+            num_beams=4,
+            length_penalty=0.9,
+            no_repeat_ngram_size=3,
+            repetition_penalty=1.1,
+        ),
+        GenerationConfig(
+            max_new_tokens=256,
+            do_sample=False,
+            num_beams=6,
+            length_penalty=0.9,
+            no_repeat_ngram_size=3,
+            repetition_penalty=1.1,
+        ),
     ]
+    
+    #trainings_configs: list[TrainingConfig] = [
+    #    training_config_1,
+    #    training_config_2,
+    #    TrainingConfig(),
+    #]
+
+    #generation_configs: list[GenerationConfig] = [
+    #    generation_config_1,
+    #    GenerationConfig(),
+    #    GenerationConfig(length_penalty=0.9, no_repeat_ngram_size=3, repetition_penalty=1.1),
+    #]
 
     dataset_loaders: list[DatasetLoader] = [
         NewselaLoader(max_train_samples=1000, max_eval_samples=200),
@@ -133,19 +213,21 @@ def main():
 
     # run_llm_zeroshot(dataset_loaders, run_dir)
 
-    trainings_configs: list[LLMTrainingConfig] = [
-        #llm_training_config_1,
-        llm_training_config_2,
-    ]
+    #trainings_configs: list[LLMTrainingConfig] = [
+    #    #llm_training_config_1,
+    #    llm_training_config_2,
+    #]
 
-    generation_configs: list[LLMGenerationConfig] = [
-        llm_generation_config_1_greedy,
-        llm_generation_config_1_beam,
-        llm_generation_config_1_sampling,
-        llm_generation_config_1_contrastive,
-    ]
+    #generation_configs: list[LLMGenerationConfig] = [
+    #    llm_generation_config_1_greedy,
+    #    llm_generation_config_1_beam,
+    #    llm_generation_config_1_sampling,
+    #    llm_generation_config_1_contrastive,
+    #]
 
-    run_llm_finetune(trainings_configs, generation_configs, dataset_loaders, run_dir)
+    #run_llm_finetune(trainings_configs, generation_configs, dataset_loaders, run_dir)
+
+    run_finetuning_seq2seq(training_configs, generation_configs, dataset_loaders, run_dir)
 
 
 if __name__ == "__main__":

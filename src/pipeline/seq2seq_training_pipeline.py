@@ -36,5 +36,7 @@ class Seq2SeqTrainingPipeline:
         )
 
         self.evaluation_pipeline.run(test)
+        
+        self.config.save(self.run_paths.pipeline_dir)
 
         print(f"Finished Pipeline {self.name}")

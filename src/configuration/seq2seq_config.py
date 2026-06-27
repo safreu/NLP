@@ -1,4 +1,6 @@
+import json
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any
 
 from configuration.config import SEED
@@ -32,6 +34,12 @@ class TrainingConfig:
     def to_dict(self) -> dict[str, Any]:
         ignored = {"model_name", "max_input_length", "max_target_length"}
         return {k: v for k, v in asdict(self).items() if v is not None and k not in ignored}
+    
+    def save(self, directory: Path) -> None:
+        (directory / "training_config.json").write_text(
+            json.dumps(self.to_dict(), indent=4),
+            encoding="utf-8",
+        )
 
 
 @dataclass
@@ -46,6 +54,13 @@ class GenerationConfig:
 
     def to_dict(self) -> dict[str, Any]:
         return {k: v for k, v in asdict(self).items() if v is not None}
+    
+    
+    def save(self, directory: Path) -> None:
+        (directory / "generation_config.json").write_text(
+            json.dumps(self.to_dict(), indent=4),
+            encoding="utf-8",
+        )
 
 
 generation_config_1 = GenerationConfig(

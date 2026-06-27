@@ -19,12 +19,12 @@ class EvaluationMode(Enum):
 class Seq2SeqEvaluationPipeline:
     def __init__(
         self,
-        generation_config: GenerationConfig,
+        generation_configs: list[GenerationConfig],
         run_paths: RunPaths,
         mode: EvaluationMode = EvaluationMode.FINAL_MODEL,
         analyzers: list | None = None,
     ):
-        self.config = generation_config
+        self.generation_configs = generation_configs
         self.run_paths = run_paths
         self.mode = mode
         self.analyzers = analyzers or [CopyAnalyzer(), InformationLossAnalyzer()]
@@ -36,7 +36,7 @@ class Seq2SeqEvaluationPipeline:
             analyzer.run(predictions, run_paths)
 
     def _evaluate_checkpoints(self, test_pairs):
-        results = evaluate_checkpoints(test_pairs, self.run_paths, self.config)
+        results = evaluate_checkpoints(test_pairs, self.run_paths, self.generation_configs)
 
         write_json(results, self.run_paths.scores_path)
 
@@ -61,18 +61,35 @@ class Seq2SeqEvaluationPipeline:
         )
 
     def _evaluate_final_model(self, test_pairs):
-        results = evaluate_model(
-            test_pairs=test_pairs,
-            config=self.config,
-            model_path=self.run_paths.model_path,
-            predictions_path=self.run_paths.predictions_path,
-        )
+        all_results = {}
+        
+        for gen_idx, gen_conf in enumerate(self.generation_configs):
+            gen_dir = self.run_paths.pipeline_dir / f"gen{gen_idx}"
+            gen_dir.mkdir(parents=True, exist_ok=True)
+            
+            gen_run_paths = RunPaths(gen_dir)
+            
+            gen_conf.save(gen_dir)
+        
+            results = evaluate_model(
+                test_pairs=test_pairs,
+                config=gen_conf,
+                model_path=self.run_paths.model_path,
+                predictions_path=gen_run_paths.predictions_path,
+            )
 
-        write_json(results, self.run_paths.scores_path)
+            write_json(results, gen_run_paths.scores_path)
 
-        self._run_analyzers(self.run_paths.predictions_path, self.run_paths)
+            self._run_analyzers(gen_run_paths.predictions_path, gen_run_paths)
+            
+            all_results[f"gen{gen_idx}"] =  results
+            
+        write_json(all_results, self.run_paths.scores_path)
+        
+        
 
     def run(self, test_pairs):
+        
         if self.mode == EvaluationMode.CHECKPOINTS:
             self._evaluate_checkpoints(test_pairs)
         else:
