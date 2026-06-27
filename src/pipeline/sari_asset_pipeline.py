@@ -57,7 +57,12 @@ def load_generation_config(model_path: str, training_config: TrainingConfig) -> 
         return GenerationConfig(max_new_tokens=training_config.max_target_length)
     
     data = json.loads(path.read_text(encoding="utf-8"))
-    return GenerationConfig(**data)
+    gen_conf = GenerationConfig(**data)
+    
+    if gen_conf.max_new_tokens is None:
+        gen_conf.max_new_tokens = training_config.max_target_length
+        
+    return gen_conf
 
 
 def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
