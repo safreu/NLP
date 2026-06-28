@@ -119,51 +119,91 @@ def run_llm_zeroshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
 
 def main():
     
+    #training_configs: list[TrainingConfig] = [
+        #TrainingConfig(
+            #num_train_epochs=3,
+            #learning_rate=5e-5,
+            #weight_decay=0.01,
+            #warmup_steps=500,
+        #),
+        #TrainingConfig(
+            #num_train_epochs=5,
+            #learning_rate=5e-5,
+            #weight_decay=0.01,
+            #warmup_steps=500,
+        #),
+        #TrainingConfig(
+            #num_train_epochs=3,
+            #learning_rate=1e-4,
+            #weight_decay=0.01,
+            #warmup_steps=500,
+        #),
+        #TrainingConfig(
+            #num_train_epochs=5,
+            #learning_rate=1e-4,
+            #weight_decay=0.01,
+            #warmup_steps=500,
+        #),
+        #TrainingConfig(
+            #num_train_epochs=3,
+            #learning_rate=2e-4,
+            #weight_decay=0.01,
+            #warmup_steps=500,
+        #),
+        #TrainingConfig(
+            #num_train_epochs=5,
+            #learning_rate=2e-4,
+            #weight_decay=0.01,
+            #warmup_steps=500,
+        #),
+    #]
+    
+    #generation_configs: list[GenerationConfig] = [
+        #GenerationConfig(
+            #max_new_tokens=256,
+            #do_sample=False,
+            #num_beams=1,
+        #),
+        #GenerationConfig(
+            #max_new_tokens=256,
+            #do_sample=False,
+            #num_beams=4,
+            #length_penalty=1.0,
+            #no_repeat_ngram_size=3,
+        #),
+        #GenerationConfig(
+            #max_new_tokens=256,
+            #do_sample=False,
+            #num_beams=4,
+            #length_penalty=0.9,
+            #no_repeat_ngram_size=3,
+            #repetition_penalty=1.1,
+        #),
+        #GenerationConfig(
+            #max_new_tokens=256,
+            #do_sample=False,
+            #num_beams=6,
+            #length_penalty=0.9,
+            #no_repeat_ngram_size=3,
+            #repetition_penalty=1.1,
+        #),
+    #]
+   
+    EPOCHS = [5, 8, 10, 12, 15, 18, 20]
+    LEARNING_RATES = [5e-5, 1e-4, 2e-4]
+
     training_configs: list[TrainingConfig] = [
         TrainingConfig(
-            num_train_epochs=3,
-            learning_rate=5e-5,
+            num_train_epochs=epochs,
+            learning_rate=lr,
             weight_decay=0.01,
             warmup_steps=500,
-        ),
-        TrainingConfig(
-            num_train_epochs=5,
-            learning_rate=5e-5,
-            weight_decay=0.01,
-            warmup_steps=500,
-        ),
-        TrainingConfig(
-            num_train_epochs=3,
-            learning_rate=1e-4,
-            weight_decay=0.01,
-            warmup_steps=500,
-        ),
-        TrainingConfig(
-            num_train_epochs=5,
-            learning_rate=1e-4,
-            weight_decay=0.01,
-            warmup_steps=500,
-        ),
-        TrainingConfig(
-            num_train_epochs=3,
-            learning_rate=2e-4,
-            weight_decay=0.01,
-            warmup_steps=500,
-        ),
-        TrainingConfig(
-            num_train_epochs=5,
-            learning_rate=2e-4,
-            weight_decay=0.01,
-            warmup_steps=500,
-        ),
+        )
+        for lr in LEARNING_RATES
+        for epochs in EPOCHS
     ]
     
     generation_configs: list[GenerationConfig] = [
-        GenerationConfig(
-            max_new_tokens=256,
-            do_sample=False,
-            num_beams=1,
-        ),
         GenerationConfig(
             max_new_tokens=256,
             do_sample=False,
