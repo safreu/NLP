@@ -4,7 +4,9 @@ from dataclasses import asdict, dataclass
 @dataclass
 class LLMTrainingConfig:
     model_name: str = "google/gemma-4-12b-it"
-
+    revision: str | None = None
+    device: str | None = None
+        
     max_seq_length: int | None = None
     num_proc: int | None = None
 
@@ -36,6 +38,8 @@ class LLMTrainingConfig:
     def to_dict(self):
         ignored = {
             "model_name",
+            "revision",
+            "device"
             "max_seq_length",
             "num_proc",
             "use_qlora",
@@ -70,7 +74,7 @@ class LLMGenerationConfig:
 
 
 llm_training_config_1 = LLMTrainingConfig(
-    model_name="google/gemma-4-E4B-it",
+    model_name="google/gemma-4-E2B-it",
     use_qlora=True,
     learning_rate=2e-5,
     weight_decay=0.05,
