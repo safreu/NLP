@@ -57,28 +57,29 @@ def run_finetuning_seq2seq(
 def run_llm_finetune(
     trainings_configs, generation_configs, dataset_loaders: list[DatasetLoader], run_dir: RunPaths
 ):
-    for i, dataset_loader in enumerate(dataset_loaders):
-        for j, train_conf in enumerate(trainings_configs):
-            for k, gen_conf in enumerate(generation_configs):
-                LLMTrainingPipeline(
-                    name=f"LLM_Config{i}{j}{k}",
-                    dataset_loader=dataset_loader,
-                    training_config=train_conf,
+    for dataset_idx, dataset_loader in enumerate(dataset_loaders):
+        dataset_name = dataset_loader.__class__.__name__.replace("Loader", "")
+        
+        for train_idx, train_conf in enumerate(trainings_configs):
+            LLMTrainingPipeline(
+                name=f"LLM_{dataset_name}_train{train_idx}",
+                dataset_loader=dataset_loader,
+                training_config=train_conf,
+                run_paths=run_dir,
+                evaluation_pipeline=LLMEvaluationPipeline(
+                    model_config=train_conf,
+                    generation_config=generation_configs,
                     run_paths=run_dir,
-                    evaluation_pipeline=LLMEvaluationPipeline(
-                        model_config=train_conf,
-                        generation_config=gen_conf,
-                        run_paths=run_dir,
-                        analyzers=[
-                            CopyAnalyzer(threshold=0.95),
-                            InformationLossAnalyzer(),
-                            LengthAnalyzer(),
-                            DiversityAnalyzer(),
-                            ErrorCaseAnalyzer(),
-                            ReadabilityAnalyzer(),
-                        ],
-                    ),
-                ).run()
+                    analyzers=[
+                        CopyAnalyzer(threshold=0.95),
+                        InformationLossAnalyzer(),
+                        LengthAnalyzer(),
+                        DiversityAnalyzer(),
+                        ErrorCaseAnalyzer(),
+                        ReadabilityAnalyzer(),
+                    ],
+                ),
+            ).run()
 
 
 def run_llm_zeroshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
