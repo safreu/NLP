@@ -1,9 +1,18 @@
 from configuration.llm_config import (
     LLMTrainingConfig,
+    llm_training_config_1,
+    llm_training_config_2,
+    llm_generation_config_1_sampling,
+    llm_generation_config_1_beam,
+    llm_generation_config_1_contrastive,
+    llm_generation_config_1_greedy
 )
 from configuration.seq2seq_config import (
     GenerationConfig,
     TrainingConfig,
+    training_config_1,
+    training_config_2,
+    generation_config_1
 )
 from data.dataset_loader import DatasetLoader
 from data.newsela_loader import NewselaLoader
@@ -245,7 +254,7 @@ def main():
     # run_llm_zeroshot(dataset_loaders, run_dir)
 
     # trainings_configs: list[LLMTrainingConfig] = [
-    #    #llm_training_config_1,
+    #    llm_training_config_1,
     #    llm_training_config_2,
     # ]
 
