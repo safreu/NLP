@@ -62,15 +62,15 @@ class Seq2SeqEvaluationPipeline:
 
     def _evaluate_final_model(self, test_pairs):
         all_results = {}
-        
+
         for gen_idx, gen_conf in enumerate(self.generation_configs):
             gen_dir = self.run_paths.pipeline_dir / f"gen{gen_idx}"
             gen_dir.mkdir(parents=True, exist_ok=True)
-            
+
             gen_run_paths = RunPaths(gen_dir)
-            
+
             gen_conf.save(gen_dir)
-        
+
             results = evaluate_model(
                 test_pairs=test_pairs,
                 config=gen_conf,
@@ -81,15 +81,13 @@ class Seq2SeqEvaluationPipeline:
             write_json(results, gen_run_paths.scores_path)
 
             self._run_analyzers(gen_run_paths.predictions_path, gen_run_paths)
-            
-            all_results[f"gen{gen_idx}"] =  results
-            
+
+            all_results[f"gen{gen_idx}"] = results
+
         write_json(all_results, self.run_paths.scores_path)
-        
-        
 
     def run(self, test_pairs):
-        
+
         if self.mode == EvaluationMode.CHECKPOINTS:
             self._evaluate_checkpoints(test_pairs)
         else:

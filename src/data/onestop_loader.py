@@ -6,7 +6,7 @@ from preprocessing.dataset_builder import split_pairs
 class OneStopLoader:
     name = "onestop"
 
-    def load_pairs(self) -> tuple[list[Pair], list[Pair], list[Pair]]:
+    def load_pairs(self, add_prompt: bool = True) -> tuple[list[Pair], list[Pair], list[Pair]]:
         corpus = OneStopEnglish.load_from_disk()
-        pairs = corpus.as_training_pairs()
+        pairs = corpus.as_training_pairs(add_prompt)
         return split_pairs(pairs)

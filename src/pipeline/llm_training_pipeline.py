@@ -26,7 +26,7 @@ class LLMTrainingPipeline:
 
         print(f"Running Pipeline {self.name}")
 
-        train, valid, test = self.dataset_loader.load_pairs()
+        train, valid, test = self.dataset_loader.load_pairs(add_prompt=False)
 
         train_model(
             train=to_dataset(train),

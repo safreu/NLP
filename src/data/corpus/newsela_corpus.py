@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from configuration.config import MIN_LENGTH_RATIO, SIMILARITY_THRESHOLD
 from evaluation.datasetStats import DatasetStats
-from preprocessing.cleaner import clean_text, detokenize_text, remove_prompt
+from preprocessing.cleaner import clean_text, detokenize_text
 from preprocessing.filter import length_ratio, text_similarity
 from prompts import simplify_prompt
 
@@ -127,18 +127,16 @@ class NewselaCorpus:
 
         return cls(entries, stats)
 
-    def as_training_pairs(self) -> list[tuple[str, str]]:
+    def as_training_pairs(self, add_prompt: bool = True) -> list[tuple[str, str]]:
         pairs: list[tuple[str, str]] = []
         seen: set[tuple[str, str]] = set()
 
         for entry in self.entries:
-            source = simplify_prompt(entry.source)
-            cleaned_source = remove_prompt(source)
-
+            raw_source = entry.source
             target = entry.target
 
-            similarity = text_similarity(cleaned_source, target)
-            ratio_score = length_ratio(cleaned_source, target)
+            similarity = text_similarity(raw_source, target)
+            ratio_score = length_ratio(raw_source, target)
 
             self.stats.similarity_scores.append(similarity)
             self.stats.length_ratios.append(ratio_score)
@@ -151,6 +149,7 @@ class NewselaCorpus:
                 self.stats.skipped_length_ratio += 1
                 continue
 
+            source = simplify_prompt(raw_source) if add_prompt else raw_source
             training_pair = (source, target)
 
             if training_pair in seen:
