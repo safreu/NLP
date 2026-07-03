@@ -33,9 +33,11 @@ PREDICTION_COLUMN_ALIASES = {
     ],
     "model_output_sentence": [
         "model_output_sentence",
+        "candidate",
         "predicted_sentence",
         "prediction",
         "model_output",
+        "output",
         "output_sentence",
     ],
 }

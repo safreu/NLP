@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import re
@@ -38,6 +39,7 @@ SOURCE_COLUMN_CANDIDATES = (
 OUTPUT_COLUMN_CANDIDATES = (
     "simplified",
     "simplified_sentence",
+    "candidate",
     "prediction",
     "predicted_sentence",
     "output",
@@ -772,11 +774,32 @@ def save_workbook(
             archive.writestr(f"xl/worksheets/sheet{index}.xml", worksheet_xml(rows, widths))
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input", type=Path, help="Evaluate one prediction CSV/JSON/JSONL/TSV file.")
+    parser.add_argument("--model-name", default="Model", help="Label used when --input is provided.")
+    parser.add_argument("--dataset-name", default="Dataset", help="Dataset label used when --input is provided.")
+    return parser.parse_args()
+
+
 def main() -> None:
+    args = parse_args()
     print("Starting number preservation analysis")
 
     results: list[dict[str, Any]] = []
     all_checked: dict[str, list[Path]] = {}
+
+    if args.input is not None:
+        rows, source_column, output_column, _ = load_rows(args.input)
+        if not rows:
+            raise ValueError(f"No rows found in prediction file: {args.input}")
+        results.append(
+            evaluate_model(args.model_name, args.dataset_name, rows, source_column, output_column)
+        )
+        print("Saving results")
+        save_results(results)
+        print("Analysis complete")
+        return
 
     for model_name, dataset_name in RUN_CANDIDATES:
         run_label = f"{model_name} {dataset_name}"

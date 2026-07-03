@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GroupShuffleSplit, train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from tqdm import tqdm
 
@@ -108,6 +108,37 @@ def evaluate_predictions(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str, fl
     }
 
 
+def split_training_data(
+    data: pd.DataFrame,
+    validation_size: float,
+    seed: int,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    if "sentence_id" not in data.columns:
+        return train_test_split(
+            data,
+            test_size=validation_size,
+            random_state=seed,
+            stratify=data["label"],
+        )
+
+    splitter = GroupShuffleSplit(n_splits=1, test_size=validation_size, random_state=seed)
+    train_index, val_index = next(splitter.split(data, groups=data["sentence_id"]))
+    train_df = data.iloc[train_index].copy()
+    val_df = data.iloc[val_index].copy()
+
+    if train_df["label"].nunique() < 2 or val_df["label"].nunique() < 2:
+        LOGGER.warning(
+            "Grouped validation split has a single class in train or validation; "
+            "metrics may be unstable."
+        )
+
+    overlap = set(train_df["sentence_id"]) & set(val_df["sentence_id"])
+    if overlap:
+        raise ValueError(f"Grouped split leaked sentence IDs across splits: {sorted(overlap)[:5]}")
+
+    return train_df, val_df
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=["debug"], default="debug")
@@ -143,12 +174,7 @@ def main() -> int:
         LOGGER.error("%s", exc)
         return 1
 
-    train_df, val_df = train_test_split(
-        data,
-        test_size=args.validation_size,
-        random_state=args.seed,
-        stratify=data["label"],
-    )
+    train_df, val_df = split_training_data(data, args.validation_size, args.seed)
 
     preprocessor = build_preprocessor()
     x_train = preprocessor.fit_transform(train_df[FEATURE_COLUMNS]).astype(np.float32)
@@ -238,6 +264,13 @@ def main() -> int:
         "model_dir": str(args.model_dir),
         "train_rows": int(len(train_df)),
         "validation_rows": int(len(val_df)),
+        "split_unit": "sentence_id" if "sentence_id" in data.columns else "candidate_row",
+        "train_sentence_ids": int(train_df["sentence_id"].nunique())
+        if "sentence_id" in train_df.columns
+        else None,
+        "validation_sentence_ids": int(val_df["sentence_id"].nunique())
+        if "sentence_id" in val_df.columns
+        else None,
         "label_distribution": {
             "label_0": int((data["label"] == 0).sum()),
             "label_1": int((data["label"] == 1).sum()),

@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import random
@@ -42,6 +43,7 @@ OUTPUT_COLUMN_CANDIDATES = (
     "predicted_sentence",
     "simplified",
     "simplified_sentence",
+    "candidate",
     "prediction",
     "output",
     "model_output",
@@ -944,11 +946,30 @@ def select_random_examples(
     return random.Random(42).sample(example_candidates, count)
 
 
-def evaluate_all() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+def evaluate_all(
+    input_path: Path | None = None,
+    dataset_name: str = "Dataset",
+    model_name: str = "Model",
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     nlp = load_ner_model()
     summary_rows = []
     type_rows = []
     example_candidates = []
+
+    if input_path is not None:
+        rows, source_column, output_column, reference_column = load_rows(input_path)
+        if not rows:
+            raise ValueError(f"No rows found in prediction file: {input_path}")
+        summary, run_type_rows, run_example_candidates = evaluate_run(
+            dataset_name,
+            model_name,
+            rows,
+            source_column,
+            output_column,
+            reference_column,
+            nlp,
+        )
+        return [summary], run_type_rows, select_random_examples(run_example_candidates)
 
     for dataset_name, model_name in RUN_CANDIDATES:
         prediction_file = find_prediction_file(dataset_name, model_name)
@@ -973,11 +994,27 @@ def evaluate_all() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dic
         type_rows.extend(run_type_rows)
         example_candidates.extend(run_example_candidates)
 
+    if not summary_rows:
+        raise FileNotFoundError("No usable prediction files were found.")
+
     return summary_rows, type_rows, select_random_examples(example_candidates)
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input", type=Path, help="Evaluate one prediction CSV/JSON/JSONL/TSV file.")
+    parser.add_argument("--dataset-name", default="Dataset", help="Dataset label used when --input is provided.")
+    parser.add_argument("--model-name", default="Model", help="Model label used when --input is provided.")
+    return parser.parse_args()
+
+
 def main() -> None:
-    summary_rows, type_rows, example_rows = evaluate_all()
+    args = parse_args()
+    summary_rows, type_rows, example_rows = evaluate_all(
+        input_path=args.input,
+        dataset_name=args.dataset_name,
+        model_name=args.model_name,
+    )
     save_results(summary_rows, type_rows, example_rows)
 
     print(f"\nSaved entity preservation results to {RESULTS_DIR.relative_to(PROJECT_ROOT)}")
