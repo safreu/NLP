@@ -131,6 +131,7 @@ This creates the next `runs/run_XXX` directory, writes `config.json`, and reprod
 | --- | --- |
 | `onestop` | `TrainingConfig()` with checkpoint evaluation |
 | `wikilarge` | `epochs=3`, `max_target_length=128`, `max_train_samples=10000`, `max_eval_samples=2000`, checkpoint evaluation |
+| `wikismall` | available with `--dataset wikismall`; uses checked-in de-anonymized WikiSmall `.ori` parallel files |
 
 The command is configured in `pyproject.toml`:
 
@@ -161,16 +162,32 @@ uv run src --dataset wikilarge --wikilarge-max-train-samples 0 --wikilarge-max-e
 
 Why: `0` disables the WikiLarge sample cap and uses the full train, validation, and test splits.
 
+## Run a WikiSmall experiment
+
+```bash
+uv run src --dataset wikismall --epochs 1 --batch-size 4 --wikismall-max-train-samples 100 --wikismall-max-eval-samples 20 --output-path runs/quick_wikismall
+```
+
+Why: WikiSmall is loaded from `data/wikismall/PWKP_108016.tag.80.aner.ori.*`, which stores line-aligned complex `.src` and simplified `.dst` files in the repository.
+
+For the full WikiSmall split, use `0` to disable the sample caps:
+
+```bash
+uv run src --dataset wikismall --wikismall-max-train-samples 0 --wikismall-max-eval-samples 0 --output-path runs/full_wikismall
+```
+
 ## Common experiment flags
 
 | Flag | Purpose |
 | --- | --- |
-| `--dataset all\|onestop\|wikilarge` | Selects which pipeline to run |
+| `--dataset all\|onestop\|wikilarge\|wikismall` | Selects which pipeline to run |
 | `--model-name MODEL` | Overrides `TrainingConfig.model_name` |
 | `--epochs N` | Overrides the selected dataset defaults |
 | `--batch-size N` | Overrides train and evaluation batch size |
 | `--evaluation-mode final_model\|checkpoints` | Selects final-model or checkpoint evaluation |
 | `--output-path PATH` | Writes the run to a specific directory instead of the next `runs/run_XXX` |
+| `--wikismall-max-train-samples N` | Caps WikiSmall training rows; use `0` for the full train split |
+| `--wikismall-max-eval-samples N` | Caps WikiSmall validation/test rows; use `0` for full eval splits |
 
 Every run writes the resolved configuration to `config.json` in the run directory.
 

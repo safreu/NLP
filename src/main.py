@@ -7,6 +7,7 @@ from config import TrainingConfig
 from data.dataset_loader import DatasetLoader
 from data.onestop_loader import OneStopLoader
 from data.wikilarge_loader import WikiLargeLoader
+from data.wikismall_loader import WikiSmallLoader
 from pipeline.training_pipeline import EvaluationMode, TrainingPipeline
 from storage.json_store import write_json
 from storage.paths import RunPaths
@@ -15,7 +16,9 @@ from storage.run_store import create_run_dir
 DEFAULT_DATASET = "all"
 DEFAULT_WIKILARGE_MAX_TRAIN_SAMPLES = 10000
 DEFAULT_WIKILARGE_MAX_EVAL_SAMPLES = 2000
-DATASET_CHOICES = ("all", "onestop", "wikilarge")
+DEFAULT_WIKISMALL_MAX_TRAIN_SAMPLES = 10000
+DEFAULT_WIKISMALL_MAX_EVAL_SAMPLES = 2000
+DATASET_CHOICES = ("all", "onestop", "wikilarge", "wikismall")
 
 
 @dataclass(frozen=True)
@@ -98,6 +101,18 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="WikiLarge validation/test sample cap. Use 0 for the full splits.",
     )
+    parser.add_argument(
+        "--wikismall-max-train-samples",
+        type=non_negative_int,
+        default=None,
+        help="WikiSmall train sample cap. Use 0 for the full split.",
+    )
+    parser.add_argument(
+        "--wikismall-max-eval-samples",
+        type=non_negative_int,
+        default=None,
+        help="WikiSmall validation/test sample cap. Use 0 for the full splits.",
+    )
 
     return parser
 
@@ -147,18 +162,45 @@ def build_experiments(args: argparse.Namespace) -> list[ExperimentSpec]:
             )
             continue
 
+        if dataset_name == "wikilarge":
+            max_train_samples = resolve_sample_limit(
+                args.wikilarge_max_train_samples,
+                DEFAULT_WIKILARGE_MAX_TRAIN_SAMPLES,
+            )
+            max_eval_samples = resolve_sample_limit(
+                args.wikilarge_max_eval_samples,
+                DEFAULT_WIKILARGE_MAX_EVAL_SAMPLES,
+            )
+            experiments.append(
+                ExperimentSpec(
+                    name="wikilarge",
+                    dataset_loader=WikiLargeLoader(
+                        max_train_samples=max_train_samples,
+                        max_eval_samples=max_eval_samples,
+                    ),
+                    config=apply_training_overrides(
+                        TrainingConfig(epochs=3, max_target_length=128),
+                        args,
+                    ),
+                    evaluation_mode=evaluation_mode,
+                    max_train_samples=max_train_samples,
+                    max_eval_samples=max_eval_samples,
+                )
+            )
+            continue
+
         max_train_samples = resolve_sample_limit(
-            args.wikilarge_max_train_samples,
-            DEFAULT_WIKILARGE_MAX_TRAIN_SAMPLES,
+            args.wikismall_max_train_samples,
+            DEFAULT_WIKISMALL_MAX_TRAIN_SAMPLES,
         )
         max_eval_samples = resolve_sample_limit(
-            args.wikilarge_max_eval_samples,
-            DEFAULT_WIKILARGE_MAX_EVAL_SAMPLES,
+            args.wikismall_max_eval_samples,
+            DEFAULT_WIKISMALL_MAX_EVAL_SAMPLES,
         )
         experiments.append(
             ExperimentSpec(
-                name="wikilarge",
-                dataset_loader=WikiLargeLoader(
+                name="wikismall",
+                dataset_loader=WikiSmallLoader(
                     max_train_samples=max_train_samples,
                     max_eval_samples=max_eval_samples,
                 ),
@@ -198,7 +240,7 @@ def experiment_config_data(experiment: ExperimentSpec) -> dict[str, object]:
         "training_config": training_config_data(experiment.config),
     }
 
-    if experiment.name == "wikilarge":
+    if experiment.name in {"wikilarge", "wikismall"}:
         data["loader_config"] = {
             "max_train_samples": experiment.max_train_samples,
             "max_eval_samples": experiment.max_eval_samples,
