@@ -11,6 +11,7 @@ from preprocessing.classical_training_data import (
     collect_replacements,
     extract_features_for_examples,
 )
+from preprocessing.simpleppdb import collect_simpleppdb_replacements
 from storage.json_store import write_json
 from training.classical_model import SimplificationModel
 
@@ -32,11 +33,33 @@ def train_classical_model(
     path.mkdir(parents=True, exist_ok=True)
 
     token_frequencies = build_token_frequencies(train_pairs, lowercase=config.lowercase)
-    replacement_dictionary = collect_replacements(
-        train_pairs,
-        lowercase=config.lowercase,
-        min_count=config.min_replacement_count,
-    )
+    replacement_metadata: dict[str, object] = {"replacement_source": config.replacement_source}
+    if config.replacement_source == "wikilarge":
+        replacement_dictionary = collect_replacements(
+            train_pairs,
+            lowercase=config.lowercase,
+            min_count=config.min_replacement_count,
+        )
+    elif config.replacement_source == "simpleppdb":
+        if config.external_replacement_path is None:
+            raise ValueError(
+                "external_replacement_path is required when replacement_source='simpleppdb'."
+            )
+        replacement_dictionary, simpleppdb_metadata = collect_simpleppdb_replacements(
+            Path(config.external_replacement_path),
+            source_vocabulary=set(token_frequencies),
+            lowercase=config.lowercase,
+            min_count=config.min_replacement_count,
+            min_score=config.simpleppdb_min_score,
+            max_candidates_per_source=config.simpleppdb_max_candidates_per_source,
+            rule_limit=config.simpleppdb_rule_limit,
+        )
+        replacement_metadata.update(simpleppdb_metadata.__dict__)
+    else:
+        raise ValueError(
+            "Unknown replacement_source "
+            f"{config.replacement_source!r}. Expected 'wikilarge' or 'simpleppdb'."
+        )
     feature_extractor = FeatureExtractor(
         token_frequencies=token_frequencies,
         replacement_dictionary=replacement_dictionary,
@@ -76,6 +99,7 @@ def train_classical_model(
     replacement_dictionary.save(path / "replacement_dictionary.json")
     write_json(dict(token_frequencies), path / "token_frequencies.json")
     write_json(config_payload(config), path / "config.json")
+    write_json(replacement_metadata, path / "replacement_metadata.json")
 
     return ClassicalTrainingArtifacts(
         model=model,
@@ -91,6 +115,11 @@ def config_payload(config: ClassicalMLConfig) -> dict[str, object]:
         "random_state": config.random_state,
         "lowercase": config.lowercase,
         "min_replacement_count": config.min_replacement_count,
+        "replacement_source": config.replacement_source,
+        "external_replacement_path": config.external_replacement_path,
+        "simpleppdb_min_score": config.simpleppdb_min_score,
+        "simpleppdb_max_candidates_per_source": config.simpleppdb_max_candidates_per_source,
+        "simpleppdb_rule_limit": config.simpleppdb_rule_limit,
         "max_train_samples": config.max_train_samples,
         "max_eval_samples": config.max_eval_samples,
         "classifier_parameters": config.classifier_parameters or {},

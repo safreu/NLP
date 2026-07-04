@@ -97,6 +97,11 @@ class ClassicalMLConfig:
     random_state: int = 42
     lowercase: bool = True
     min_replacement_count: int = 1
+    replacement_source: str = "wikilarge"
+    external_replacement_path: str | None = None
+    simpleppdb_min_score: float = 0.0
+    simpleppdb_max_candidates_per_source: int = 5
+    simpleppdb_rule_limit: int | None = None
     max_train_samples: int | None = None
     max_eval_samples: int | None = None
     classifier_parameters: dict[str, Any] | None = None

@@ -11,6 +11,7 @@ import pytest
         "evaluation.result_aggregation",
         "evaluation.result_visualization",
         "pipeline.baseline_pipeline",
+        "pipeline.simpleppdb_ablation_pipeline",
         "pipeline.training_pipeline",
         "pipeline.sari_asset_pipeline",
         "metrics.metric_sari",
@@ -33,6 +34,7 @@ def test_core_modules_import_without_side_effects(module_name: str) -> None:
     [
         ("aggregate-results", "evaluation.result_aggregation:main"),
         ("evaluate-baselines", "pipeline.baseline_pipeline:main"),
+        ("simpleppdb-ablation", "pipeline.simpleppdb_ablation_pipeline:main"),
         ("src", "main:main"),
         ("visualize-results", "evaluation.result_visualization:main"),
     ],

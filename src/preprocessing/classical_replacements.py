@@ -25,6 +25,12 @@ class ReplacementDictionary:
         if source and target and source != target:
             self.counts[source][target] += 1
 
+    def add_count(self, complex_word: str, simple_word: str, count: int) -> None:
+        source = normalize_token(complex_word, self.lowercase)
+        target = normalize_token(simple_word, self.lowercase)
+        if source and target and source != target and count > 0:
+            self.counts[source][target] += count
+
     def best_replacement(self, complex_word: str) -> str | None:
         source = normalize_token(complex_word, self.lowercase)
         candidates = self.counts.get(source)
