@@ -1,10 +1,20 @@
+from pathlib import Path
+
 import torch
 import torch.nn as nn
+from torch.nn.utils.rnn import pad_sequence
+from torch.optim import optim
+from torch.utils.data import DataLoader, Dataset
+
+from configuration.config import SEED
 from data.wikilarge_loader import WikiLargeLoader
+from evaluation.metrics_builder import compute_all_metrics
+from storage.json_store import write_json
+
 
 class SelfAttention(nn.Module):
     def __init__(self, embed_size, heads):
-        super(SelfAttention, self).__init__()
+        super().__init__()
         self.embed_size = embed_size
         self.heads = heads
         self.head_dim = embed_size // heads
@@ -52,7 +62,7 @@ class SelfAttention(nn.Module):
     
 class TransformerBlock(nn.Module):
     def __init__(self, embed_size, heads, dropout, forward_expansion):
-        super(TransformerBlock, self).__init__()
+        super().__init__()
         self.attention = SelfAttention(embed_size, heads)
         self.norm1 = nn.LayerNorm(embed_size)
         self.norm2 = nn.LayerNorm(embed_size)
@@ -85,7 +95,7 @@ class Encoder(nn.Module):
         dropout,
         max_length
     ):
-        super(Encoder, self).__init__()
+        super().__init__()
         self.embed_size = embed_size
         self.device = device
         self.word_embedding = nn.Embedding(src_vocab_size, embed_size)
@@ -116,7 +126,7 @@ class Encoder(nn.Module):
         
 class DecoderBlock(nn.Module):
     def __init__(self, embed_size, heads, dropout, forward_expansion,device):
-        super(DecoderBlock, self).__init__()
+        super().__init__()
         self.attention = SelfAttention(embed_size, heads)
         self.norm = nn.LayerNorm(embed_size)
         self.transformer_block = TransformerBlock(
@@ -142,7 +152,7 @@ class Decoder(nn.Module):
         device,
         max_length
     ):
-        super(Decoder, self).__init__()
+        super().__init__()
         self.device = device
         self.word_embedding = nn.Embedding(trg_vocab_size, embed_size)
         self.position_embedding = nn.Embedding(max_length, embed_size)
@@ -159,7 +169,7 @@ class Decoder(nn.Module):
     def forward(self, x, enc_out, src_mask, trg_mask):
         N, seq_length = x.shape
         positions = torch.arange(0, seq_length).expand(N, seq_length).to(self.device)
-        x = self.dropout((self.word_embedding(x) + self.position_embedding(positions)))
+        x = self.dropout(self.word_embedding(x) + self.position_embedding(positions))
 
         for layer in self.layers:
             x = layer(x, enc_out, enc_out, src_mask, trg_mask)
@@ -183,7 +193,7 @@ class Transformer(nn.Module):
         device="cuda",
         max_length=100
     ):
-        super(Transformer, self).__init__()
+        super().__init__()
 
         self.encoder = Encoder(
             src_vocab_size,
@@ -230,50 +240,80 @@ class Transformer(nn.Module):
         enc_src = self.encoder(src, src_mask)
         out = self.decoder(trg, enc_src, src_mask, trg_mask)
         return out
+    
+    
+class TransformerDataset(Dataset):
+    def __init__(self, pairs, vocabulary):
+        self.pairs = pairs
+        self.vocab = vocabulary
         
-
-if __name__ == "__main__":
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
-
-    train, valid, test = WikiLargeLoader(
-        max_train_samples=100, 
-        max_eval_samples=20
-    ).load_pairs(False)
+    def tokenize(self, text):
+        return [self.vocab["<sos>"]] +[ 
+                    self.vocab.get(token, self.vocab["<unk>"]) 
+                    for token in text.split()
+                ] + [self.vocab["<eos>"]]
+        
+    def __len__(self):
+        return len(self.pairs)
     
-    vocabulary = {"<pad>": 0, "<sos>": 1, "<eos>": 2}
-    for src, target in train:
-        for token in src.split() + target.split():
-            if token not in vocabulary:
-                vocabulary[token] = len(vocabulary)
+    def __getitem__(self, index):
+        source, target = self.pairs[index]
+        return torch.tensor(self.tokenize(source)), torch.tensor(self.tokenize(target))
     
-    inv_vocab = {v: k for k, v in vocabulary.items()}
 
-    source, target = train[0]
+vocabulary = {"<pad>": 0, "<sos>": 1, "<eos>": 2, "<unk>": 3}
+
+
+def collate_fn(batch):
+    source_batch, target_batch = zip(*batch)
+    source_batch = pad_sequence(
+        source_batch,
+        batch_first=True,
+        padding_value=vocabulary["<pad>"]
+    )
     
-    src_sentence = ["<sos>"] + source.split() + ["<eos>"]
-    trg_sentence = ["<sos>"] + target.split() + ["<eos>"]
+    target_batch = pad_sequence(
+        target_batch,
+        batch_first=True,
+        padding_value=vocabulary["<pad>"]
+    )
+    return source_batch, target_batch
 
-    src_indices = [vocabulary[token] for token in src_sentence]
-    trg_indices = [vocabulary[token] for token in trg_sentence]
 
-    src_tensor = torch.tensor([src_indices]).to(device)
-    trg_tensor = torch.tensor([trg_indices]).to(device)
+def train_model(model, train_loader, optimizer, criterion, device, num_epochs):
+    for epoch in range(num_epochs):
+        model.train()
+        total_loss = 0
+        
+        for source_batch, target_batch in train_loader:
+            source_batch = source_batch.to(device)
+            target_batch = target_batch.to(device)
+            
+            decoder_input = target_batch[:, :-1]
+            targets =  target_batch[:, 1:]
+            
+            output = model(source_batch, decoder_input)
+            
+            output = output.reshape(-1, output.shape[-1])
+            targets = targets.reshape(-1)
+            
+            loss = criterion(output, targets)
+            
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            
+            total_loss += loss.item()
+            
+        avg_loss = total_loss / len(train_loader)
+        print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {avg_loss:.4f}")
 
-    model = Transformer(
-        src_vocab_size=len(vocabulary), 
-        trg_vocab_size=len(vocabulary), 
-        src_pad_idx=vocabulary["<pad>"], 
-        trg_pad_idx=vocabulary["<pad>"],
-        device=device
-    ).to(device)
-    
+
+def generate_prediction(model, src_tensor, vocabulary, inv_vocab, device, max_length=30):
     model.eval()
 
     outputs = [vocabulary["<sos>"]]
-    max_length = 30
 
-    print("\nTranslating...")
     with torch.no_grad():
         for _ in range(max_length):
             trg_input = torch.tensor([outputs]).to(device)
@@ -287,9 +327,124 @@ if __name__ == "__main__":
             if best_next_item == vocabulary["<eos>"]:
                 break
 
-    translated_sentence = [inv_vocab[idx] for idx in outputs]
+    return [inv_vocab[idx] for idx in outputs]
+
+
+def eval_model(model, data_loader, vocabulary, inv_vocab, device, max_length, output_path):
+    model.eval()
     
-    print("\n--- RESULTS ---")
-    print(f"Source English: {' '.join(src_sentence[1:-1])}")
-    print(f"Target English: {' '.join(trg_sentence[1:-1])}")
-    print(f"Model Raw Output Tokens: {translated_sentence}")
+    sources = []
+    candidates = []
+    references = []
+    
+    dataset = data_loader.dataset
+    
+    
+    for source, reference in dataset.pairs:
+        src_indices = dataset.tokenize(source)
+        src_tensor = torch.tensor([src_indices]).to(device)
+
+        prediction_tokens = generate_prediction(
+            model=model,
+            src_tensor=src_tensor,
+            vocabulary=vocabulary,
+            inv_vocab=inv_vocab,
+            device=device,
+            max_length=max_length,
+        )
+        
+        prediction = " ".join(
+            token for token in prediction_tokens
+            if token not in {"<sos>", "<eos>", "<pad>"}
+        )
+        
+        sources.append(source)
+        candidates.append(prediction)
+        references.append(reference)
+        
+    scores = compute_all_metrics(
+        sources=sources,
+        candidates=candidates,
+        references=references,
+    )
+    
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    write_json(scores, output_path)
+    
+    return scores 
+        
+        
+    
+
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    train, valid, test = WikiLargeLoader(
+        max_train_samples=10000, 
+        max_eval_samples=2000
+    ).load_pairs(False)
+    
+    for src, target in train:
+        for token in src.split() + target.split():
+            if token not in vocabulary:
+                vocabulary[token] = len(vocabulary)
+    
+    inv_vocab = {v: k for k, v in vocabulary.items()}
+
+    train_dataset = TransformerDataset(train, vocabulary)
+    
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=16,
+        shuffle=True,
+        collate_fn=collate_fn,
+        generator=torch.Generator().manual_seed(SEED),
+    )
+
+    model = Transformer(
+        src_vocab_size=len(vocabulary), 
+        trg_vocab_size=len(vocabulary), 
+        src_pad_idx=vocabulary["<pad>"], 
+        trg_pad_idx=vocabulary["<pad>"],
+        device=device,
+        max_length=256,
+    ).to(device)
+    
+    optimizer = optim.Adam(model.parameters(), lr=3e-4)
+    
+    criterion = nn.CrossEntropyLoss(ignore_index=vocabulary["<pad>"])
+    
+    train_model(
+        model=model,
+        train_loader=train_loader,
+        optimizer=optimizer,
+        criterion=criterion,
+        device=device,
+        num_epochs=10
+    ) 
+   
+    test_dataset = TransformerDataset(test, vocabulary)
+    
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=16,
+        shuffle=False,
+        collate_fn=collate_fn
+    )
+   
+    scores = eval_model(
+        model=model,
+        data_loader=test_loader,
+        vocabulary=vocabulary,
+        inv_vocab=inv_vocab,
+        device=device,
+        max_length=30,
+        output_path="runs/custom_transformer/wikilarge/base/scores.json",
+    ) 
+    
+    print("Evaluation finished")
+    print(scores["sari"]) 
