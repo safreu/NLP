@@ -1,9 +1,11 @@
-from configuration.llm_config import (
-    LLMTrainingConfig,
-)
+from pathlib import Path
+
 from configuration.seq2seq_config import (
     GenerationConfig,
     TrainingConfig,
+    training_config_1,
+    training_config_2,
+    generation_config_1,
 )
 from data.dataset_loader import DatasetLoader
 from data.newsela_loader import NewselaLoader
@@ -15,12 +17,9 @@ from evaluation.analyzers.error_case_analyser import ErrorCaseAnalyzer
 from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
 from evaluation.analyzers.length_analyzer import LengthAnalyzer
 from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
-from pipeline.llm_evalution_pipeline import LLMEvaluationPipeline
-from pipeline.llm_training_pipeline import LLMTrainingPipeline
 from pipeline.seq2seq_evaluation_pipeline import Seq2SeqEvaluationPipeline
 from pipeline.seq2seq_training_pipeline import Seq2SeqTrainingPipeline
 from storage.paths import RunPaths
-from pathlib import Path
 
 
 def run_finetuning_seq2seq(
@@ -53,60 +52,6 @@ def run_finetuning_seq2seq(
                     ],
                 ),
             ).run()
-
-
-def run_llm_finetune(
-    trainings_configs, generation_configs, dataset_loaders: list[DatasetLoader], run_dir: RunPaths
-):
-    for i, dataset_loader in enumerate(dataset_loaders):
-        for j, train_conf in enumerate(trainings_configs):
-            for k, gen_conf in enumerate(generation_configs):
-                LLMTrainingPipeline(
-                    name=f"LLM_Config{i}{j}{k}",
-                    dataset_loader=dataset_loader,
-                    training_config=train_conf,
-                    run_paths=run_dir,
-                    evaluation_pipeline=LLMEvaluationPipeline(
-                        model_config=train_conf,
-                        generation_config=gen_conf,
-                        run_paths=run_dir,
-                        analyzers=[
-                            CopyAnalyzer(threshold=0.95),
-                            InformationLossAnalyzer(),
-                            LengthAnalyzer(),
-                            DiversityAnalyzer(),
-                            ErrorCaseAnalyzer(),
-                            ReadabilityAnalyzer(),
-                        ],
-                    ),
-                ).run()
-
-
-def run_llm_zeroshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
-
-    for i, dataset_loader in enumerate(dataset_loaders):
-        _, _, test = dataset_loader.load_pairs(add_prompt=False)
-
-        run_dir.pipeline_dir = f"LLM_Zeroshot_{i}"
-
-        LLMEvaluationPipeline(
-            model_config=LLMTrainingConfig(),
-            generation_config=GenerationConfig(
-                max_new_tokens=256,
-                do_sample=False,
-                num_beams=1,
-            ),
-            run_paths=run_dir,
-            analyzers=[
-                CopyAnalyzer(threshold=0.95),
-                InformationLossAnalyzer(),
-                LengthAnalyzer(),
-                DiversityAnalyzer(),
-                ErrorCaseAnalyzer(),
-                ReadabilityAnalyzer(),
-            ],
-        ).run(test)
-
 
 def main():
 
@@ -180,7 +125,7 @@ def main():
     # ),
     # ]
 
-    EPOCHS = [5, 8, 10, 12, 15, 18, 20]
+    EPOCHS = [5, 10, 15, 18, 20]
     LEARNING_RATES = [5e-5, 1e-4, 2e-4]
 
     training_configs: list[TrainingConfig] = [
@@ -238,27 +183,9 @@ def main():
         OneStopLoader(),
     ]
 
-    run_dir = RunPaths.for_runs_root(Path("runs/seq2seq"))
-
-    #run_finetuning(trainings_configs, generation_configs, dataset_loaders, run_dir)
-
-    run_llm_zeroshot(dataset_loaders, run_dir)
-
-    trainings_configs: list[LLMTrainingConfig] =[
-        llm_training_config_1,
-        llm_training_config_2,
-    ]
-
-    generation_configs: list[LLMGenerationConfig] = [
-        llm_generation_config_1_greedy,
-        llm_generation_config_1_beam,
-        llm_generation_config_1_sampling,
-        llm_generation_config_1_contrastive,
-    ]
-
-    #run_llm_finetune(trainings_configs, generation_configs, dataset_loaders, run_dir)
-
-    #run_finetuning_seq2seq(training_configs, generation_configs, dataset_loaders, run_dir)
+    run_dir = RunPaths.for_runs_root(Path("runs/seq2seq/finetune"))
+    
+    run_finetuning_seq2seq(training_configs, generation_configs, dataset_loaders, run_dir)
 
 
 if __name__ == "__main__":

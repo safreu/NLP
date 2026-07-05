@@ -1,18 +1,14 @@
+from pathlib import Path
+
 from configuration.llm_config import (
+    LLMGenerationConfig,
     LLMTrainingConfig,
-    llm_training_config_1,
-    llm_training_config_2,
-    llm_generation_config_1_sampling,
     llm_generation_config_1_beam,
     llm_generation_config_1_contrastive,
-    llm_generation_config_1_greedy
-)
-from configuration.seq2seq_config import (
-    GenerationConfig,
-    TrainingConfig,
-    training_config_1,
-    training_config_2,
-    generation_config_1
+    llm_generation_config_1_greedy,
+    llm_generation_config_1_sampling,
+    llm_training_config_1,
+    llm_training_config_2,
 )
 from data.dataset_loader import DatasetLoader
 from data.newsela_loader import NewselaLoader
@@ -26,9 +22,8 @@ from evaluation.analyzers.length_analyzer import LengthAnalyzer
 from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
 from pipeline.llm_evalution_pipeline import LLMEvaluationPipeline
 from pipeline.llm_training_pipeline import LLMTrainingPipeline
-from pipeline.seq2seq_evaluation_pipeline import Seq2SeqEvaluationPipeline
-from pipeline.seq2seq_training_pipeline import Seq2SeqTrainingPipeline
 from storage.paths import RunPaths
+
 
 def run_llm_finetune(
     trainings_configs, generation_configs, dataset_loaders: list[DatasetLoader], run_dir: RunPaths
@@ -67,7 +62,7 @@ def run_llm_zeroshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
 
         LLMEvaluationPipeline(
             model_config=LLMTrainingConfig(),
-            generation_config=GenerationConfig(
+            generation_config=LLMGenerationConfig(
                 max_new_tokens=256,
                 do_sample=False,
                 num_beams=1,
