@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -52,6 +54,26 @@ class RunPaths:
     @property
     def copy_analysis_path(self) -> Path:
         return self.output_dir / "copy_analysis.json"
+
+    @property
+    def information_loss_path(self) -> Path:
+        return self.output_dir / "information_loss.json"
+
+    @property
+    def length_analysis_path(self) -> Path:
+        return self.output_dir / "length_analysis.json"
+
+    @property
+    def diversity_analysis_path(self) -> Path:
+        return self.output_dir / "diversity_analysis.json"
+
+    @property
+    def error_case_analysis_path(self) -> Path:
+        return self.output_dir / "error_case_analysis.json"
+
+    @property
+    def readability_analysis_path(self) -> Path:
+        return self.output_dir / "readability_analysis.json"
 
     @property
     def config_path(self) -> Path:

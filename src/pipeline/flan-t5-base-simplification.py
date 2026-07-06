@@ -82,7 +82,7 @@ SEED = 42
 # dataset loaders                                                          #
 # each returns a list of raw (complex, simple) pairs
 def load_onestop() -> list[tuple[str, str]]:
-    from data.one_stop_english_corpus import OneStopEnglish
+    from data.corpus.one_stop_english_corpus import OneStopEnglish
 
     path = str(REPO_ROOT / "data" / "OneStopEnglishCorpus" / "Sentence-Aligned")
     corpus = OneStopEnglish.load_from_disk(path)

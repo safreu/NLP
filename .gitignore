@@ -326,6 +326,7 @@ pytest.xml
 # Generated dataset caches
 data/**/*.pkl
 *.pkl
+*.pkl.enc
 *.pt
 *.bin
 *.safetensors
