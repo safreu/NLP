@@ -2,8 +2,8 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
+import torch.optim as optim
 from torch.nn.utils.rnn import pad_sequence
-from torch.optim import optim
 from torch.utils.data import DataLoader, Dataset
 
 from configuration.config import SEED
@@ -488,7 +488,7 @@ if __name__ == "__main__":
             vocabulary=vocabulary,
             inv_vocab=inv_vocab,
             device=device,
-            max_length=30,
+            max_length=256,
         )
         
         run_paths = RunPaths.for_runs_root(Path(f"runs/custom_transformer/{dataset.name}"))

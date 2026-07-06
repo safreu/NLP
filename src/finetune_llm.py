@@ -40,7 +40,7 @@ def run_llm_finetune(
                 run_paths=run_dir,
                 evaluation_pipeline=LLMEvaluationPipeline(
                     model_config=train_conf,
-                    generation_config=generation_configs,
+                    generation_configs=generation_configs,
                     run_paths=run_dir,
                     analyzers=[
                         CopyAnalyzer(threshold=0.95),
@@ -69,11 +69,13 @@ def run_llm_zeroshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
 
         LLMEvaluationPipeline(
             model_config=LLMTrainingConfig(),
-            generation_config=LLMGenerationConfig(
-                max_new_tokens=256,
-                do_sample=False,
-                num_beams=1,
-            ),
+            generation_configs=[
+                LLMGenerationConfig(
+                    max_new_tokens=256,
+                    do_sample=False,
+                    num_beams=1,
+                )
+            ],
             run_paths=run_dir,
             analyzers=[
                 CopyAnalyzer(threshold=0.95),
@@ -106,16 +108,50 @@ def main():
 
     # run_llm_zeroshot(dataset_loaders, run_dir)
 
-    trainings_configs: list[LLMTrainingConfig] = [
-        llm_training_config_2,
-        llm_training_config_1,    
-    ]
+    #trainings_configs: list[LLMTrainingConfig] = [
+    #    llm_training_config_2,
+    #    llm_training_config_1,    
+    #]
 
-    generation_configs: list[LLMGenerationConfig] = [
-        llm_generation_config_1_greedy,
-        llm_generation_config_1_beam,
-        llm_generation_config_1_sampling,
-        llm_generation_config_1_contrastive,
+    #generation_configs: list[LLMGenerationConfig] = [
+    #    llm_generation_config_1_greedy,
+    #    llm_generation_config_1_beam,
+    #    llm_generation_config_1_sampling,
+    #    llm_generation_config_1_contrastive,
+    #]
+    
+    trainings_configs = [
+        LLMTrainingConfig(
+            model_name="google/gemma-4-E2B-it",
+            use_qlora=True,
+            lora_r=16,
+            lora_alpha=32,
+            lora_dropout=0.05,
+            learning_rate=2e-4,
+            weight_decay=0.01,
+            num_train_epochs=3,
+            per_device_train_batch_size=1,
+            gradient_accumulation_steps=16,
+            max_seq_length=512,
+            warmup_steps=100,
+            bf16=True,
+            gradient_checkpointing=True,
+            optim="paged_adamw_8bit",    
+        ),
+    ]
+    
+    generation_configs = [
+        LLMGenerationConfig(
+            max_new_tokens=256,
+            do_sample=False,
+            no_repeat_ngram_size=5,
+        ),
+        LLMGenerationConfig(
+            max_new_tokens=256,
+            num_beams=4,
+            early_stopping=True,
+            no_repeat_ngram_size=5, 
+        )
     ]
 
     run_llm_finetune(trainings_configs, generation_configs, dataset_loaders, run_dir)

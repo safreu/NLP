@@ -39,7 +39,7 @@ class LLMTrainingConfig:
         ignored = {
             "model_name",
             "revision",
-            "device"
+            "device",
             "max_seq_length",
             "num_proc",
             "use_qlora",
