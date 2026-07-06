@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -90,10 +91,5 @@ class RunPaths:
 
     @classmethod
     def for_runs_root(cls, root: Path | None = None) -> RunPaths:
-        """Create a RunPaths targeting the repository runs root.
-
-        If `root` is omitted, this defaults to the conventional "runs" folder
-        in the current working directory. Callers should use this factory
-        instead of embedding Path("runs") literals.
-        """
-        return cls(root or Path("runs"))
+        tmpdir = Path(os.environ.get("TMPDIR", "."))
+        return cls(tmpdir / (root or Path("runs")))

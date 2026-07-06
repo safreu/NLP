@@ -3,7 +3,7 @@ from pathlib import Path
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from config import TrainingConfig
+from configuration.seq2seq_config import GenerationConfig
 from evaluation.metrics_builder import compute_all_metrics
 from preprocessing.cleaner import remove_prompt
 from storage.json_store import write_json
@@ -24,11 +24,10 @@ def load_model(model_path: str):
     return model, tokenizer, device
 
 
-def generate_batch(input_texts: list[str], model, tokenizer, device, config: TrainingConfig):
+def generate_batch(input_texts: list[str], model, tokenizer, device, config: GenerationConfig):
     inputs = tokenizer(
         input_texts,
         return_tensors="pt",
-        max_length=config.max_input_length,
         padding=True,
         truncation=True,
     ).to(device)
@@ -36,7 +35,7 @@ def generate_batch(input_texts: list[str], model, tokenizer, device, config: Tra
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
-            **config.generation_config,
+            **config.to_dict(),
         )
 
     return tokenizer.batch_decode(outputs, skip_special_tokens=True)
@@ -47,7 +46,7 @@ def generate_predictions(
     model,
     tokenizer,
     device,
-    config: TrainingConfig,
+    config: GenerationConfig,
     batch_size=16,
 ):
     candidates = []
@@ -77,7 +76,12 @@ def extract_sources(test_pairs):
     return [remove_prompt(input_text) for input_text, _ in test_pairs]
 
 
-def evaluate_model(test_pairs, config: TrainingConfig, model_path: Path, predictions_path: Path):
+def evaluate_model(
+    test_pairs, 
+    config: GenerationConfig, 
+    model_path: Path, 
+    predictions_path: Path, 
+):
     model, tokenizer, device = load_model(str(model_path))
 
     candidates, references = generate_predictions(test_pairs, model, tokenizer, device, config)
@@ -89,7 +93,7 @@ def evaluate_model(test_pairs, config: TrainingConfig, model_path: Path, predict
     return compute_all_metrics(sources, candidates, references)
 
 
-def evaluate_checkpoints(test_pairs, run_paths: RunPaths, config: TrainingConfig):
+def evaluate_checkpoints(test_pairs, run_paths: RunPaths, config: GenerationConfig):
     model_dir = Path(run_paths.model_dir)
 
     checkpoints = sorted(model_dir.glob("checkpoint-*"), key=lambda p: int(p.name.split("-")[-1]))
