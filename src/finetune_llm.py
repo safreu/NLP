@@ -1,4 +1,5 @@
 from pathlib import Path
+import time
 
 from configuration.llm_config import (
     LLMGenerationConfig,
@@ -30,6 +31,7 @@ def run_llm_finetune(
     trainings_configs, generation_configs, dataset_loaders: list[DatasetLoader], run_dir: RunPaths
 ):
     for dataset_idx, dataset_loader in enumerate(dataset_loaders):
+        start = time.time()
         dataset_name = dataset_loader.__class__.__name__.replace("Loader", "")
         
         for train_idx, train_conf in enumerate(trainings_configs):
@@ -58,6 +60,8 @@ def run_llm_finetune(
                     ]
                 ),
             ).run()
+            
+            print(f"{dataset_name} with {train_idx} finished in {(time.time() - start)/60:.1f} minutes")
 
 
 def run_llm_zeroshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
