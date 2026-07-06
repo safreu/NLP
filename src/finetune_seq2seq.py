@@ -17,6 +17,7 @@ from evaluation.analyzers.error_case_analyser import ErrorCaseAnalyzer
 from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
 from evaluation.analyzers.length_analyzer import LengthAnalyzer
 from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
+from evaluation.asset_sari_evaluator import AssetSariEvaluator
 from pipeline.seq2seq_evaluation_pipeline import Seq2SeqEvaluationPipeline
 from pipeline.seq2seq_training_pipeline import Seq2SeqTrainingPipeline
 from storage.paths import RunPaths
@@ -50,6 +51,12 @@ def run_finetuning_seq2seq(
                         ErrorCaseAnalyzer(),
                         ReadabilityAnalyzer(),
                     ],
+                    extra_evaluators=[
+                        AssetSariEvaluator(
+                            split="validation",
+                            max_examples=0
+                        )
+                    ]
                 ),
             ).run()
 

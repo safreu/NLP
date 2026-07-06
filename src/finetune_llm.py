@@ -20,6 +20,7 @@ from evaluation.analyzers.error_case_analyser import ErrorCaseAnalyzer
 from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
 from evaluation.analyzers.length_analyzer import LengthAnalyzer
 from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
+from evaluation.asset_sari_evaluator import AssetSariEvaluator
 from pipeline.llm_evalution_pipeline import LLMEvaluationPipeline
 from pipeline.llm_training_pipeline import LLMTrainingPipeline
 from storage.paths import RunPaths
@@ -49,6 +50,12 @@ def run_llm_finetune(
                         ErrorCaseAnalyzer(),
                         ReadabilityAnalyzer(),
                     ],
+                    extra_evaluators=[
+                        AssetSariEvaluator(
+                            split="validation",
+                            max_examples=0
+                        )
+                    ]
                 ),
             ).run()
 
@@ -76,6 +83,12 @@ def run_llm_zeroshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
                 ErrorCaseAnalyzer(),
                 ReadabilityAnalyzer(),
             ],
+            extra_evaluators=[
+                AssetSariEvaluator(
+                    split="validation",
+                    max_examples=0
+                )
+            ]
         ).run(test)
 
 
@@ -94,8 +107,8 @@ def main():
     # run_llm_zeroshot(dataset_loaders, run_dir)
 
     trainings_configs: list[LLMTrainingConfig] = [
-        llm_training_config_1,
         llm_training_config_2,
+        llm_training_config_1,    
     ]
 
     generation_configs: list[LLMGenerationConfig] = [

@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
 
@@ -5,7 +6,13 @@ from configuration.seq2seq_config import GenerationConfig
 from evaluation.analyzers.copy_analyzer import CopyAnalyzer
 from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
 from evaluation.checkpoint_compare import compare_best_checkpoints
-from evaluation.evaluate import evaluate_checkpoints, evaluate_model
+from evaluation.evaluate import (
+    evaluate_checkpoints,
+    evaluate_model,
+    generate_predictions,
+    load_model,
+)
+from prompts import simplify_prompt
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.prediction_store import PredictionRow, read_predictions
@@ -23,11 +30,34 @@ class Seq2SeqEvaluationPipeline:
         run_paths: RunPaths,
         mode: EvaluationMode = EvaluationMode.FINAL_MODEL,
         analyzers: list | None = None,
+        extra_evaluators: list | None = None,
     ):
         self.generation_configs = generation_configs
         self.run_paths = run_paths
         self.mode = mode
         self.analyzers = analyzers or [CopyAnalyzer(), InformationLossAnalyzer()]
+        self.extra_evaluators = extra_evaluators or []
+        
+    def _build_predict_fn(self, gen_conf: GenerationConfig) -> Callable[[list[str]], list[str]]:
+        model, tokenizer, device = load_model(str(self.run_paths.model_path))
+        
+        def predict_fn(sources:list[str]) -> list[str]:
+            test_pairs = [
+                (simplify_prompt(source), "")
+                for source in sources
+            ]
+            
+            candidates, _ = generate_predictions(
+                test_pairs=test_pairs,
+                model=model,
+                tokenizer=tokenizer,
+                device=device,
+                config=gen_conf,
+            )
+            return candidates
+        
+        return predict_fn
+        
 
     def _run_analyzers(self, predictions_path: Path, run_paths: RunPaths) -> None:
         predictions: list[PredictionRow] = read_predictions(predictions_path)
@@ -77,6 +107,15 @@ class Seq2SeqEvaluationPipeline:
                 model_path=self.run_paths.model_path,
                 predictions_path=gen_run_paths.predictions_path,
             )
+           
+            predict_fn = self._build_predict_fn(gen_conf) 
+
+            for evaluator in self.extra_evaluators:
+                extra_results = evaluator.run(
+                    predict_fn=predict_fn,
+                    output_dir=gen_dir,
+                )
+                results.update(extra_results)
 
             write_json(results, gen_run_paths.scores_path)
 

@@ -1,5 +1,7 @@
 from pathlib import Path
+from runpy import run_path
 
+from storage.paths import RunPaths
 import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pad_sequence
@@ -8,6 +10,7 @@ from torch.utils.data import DataLoader, Dataset
 
 from configuration.config import SEED
 from data.wikilarge_loader import WikiLargeLoader
+from evaluation.asset_sari_evaluator import AssetSariEvaluator
 from evaluation.metrics_builder import compute_all_metrics
 from storage.json_store import write_json
 
@@ -241,7 +244,7 @@ class Transformer(nn.Module):
         out = self.decoder(trg, enc_src, src_mask, trg_mask)
         return out
     
-    
+ 
 class TransformerDataset(Dataset):
     def __init__(self, pairs, vocabulary):
         self.pairs = pairs
@@ -262,7 +265,6 @@ class TransformerDataset(Dataset):
     
 
 vocabulary = {"<pad>": 0, "<sos>": 1, "<eos>": 2, "<unk>": 3}
-
 
 def collate_fn(batch):
     source_batch, target_batch = zip(*batch)
@@ -330,7 +332,47 @@ def generate_prediction(model, src_tensor, vocabulary, inv_vocab, device, max_le
     return [inv_vocab[idx] for idx in outputs]
 
 
-def eval_model(model, data_loader, vocabulary, inv_vocab, device, max_length, output_path):
+def build_custom_transformer_predict_fn(
+    model,
+    vocabulary,
+    inv_vocab,
+    device,
+    max_length: int
+):
+    def predict_fn(sources: list[str]) -> list[str]:
+        predictions = []
+        
+        for source in sources:
+            src_indices = [
+                vocabulary["<sos>"],
+                *[vocabulary.get(token, vocabulary["<unk>"]) for token in source.split()],
+                vocabulary["<eos>"]
+            ]
+            
+            src_tensor = torch.tensor([src_indices]).to(device)
+            
+            prediction_tokens = generate_prediction(
+                model=model,
+                src_tensor=src_tensor,
+                vocabulary=vocabulary,
+                inv_vocab=inv_vocab,
+                device=device,
+                max_length=max_length,
+            )
+            
+            prediction = " ".join(
+                token for token in prediction_tokens
+                if token not in {"<sos>", "<eos>", "<pad>"}
+            )
+            
+            predictions.append(prediction)
+            
+        return predictions
+    
+    return predict_fn
+    
+
+def eval_model(model, data_loader, vocabulary, inv_vocab, device, max_length):
     model.eval()
     
     sources = []
@@ -362,22 +404,12 @@ def eval_model(model, data_loader, vocabulary, inv_vocab, device, max_length, ou
         candidates.append(prediction)
         references.append(reference)
         
-    scores = compute_all_metrics(
+    return compute_all_metrics(
         sources=sources,
         candidates=candidates,
         references=references,
     )
     
-    output_path = Path(output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    write_json(scores, output_path)
-    
-    return scores 
-        
-        
-    
-
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -443,8 +475,33 @@ if __name__ == "__main__":
         inv_vocab=inv_vocab,
         device=device,
         max_length=30,
-        output_path="runs/custom_transformer/wikilarge/base/scores.json",
-    ) 
+    )
+    
+    run_paths = RunPaths.for_runs_root(Path("runs/custom_transformer/wikilarge"))
+    run_paths.pipeline_dir = Path("base")
+    
+    asset_evaluator = AssetSariEvaluator(
+        split="validation",
+        max_examples=0,
+    )
+    
+    predict_fn = build_custom_transformer_predict_fn(
+        model=model,
+        vocabulary=vocabulary,
+        inv_vocab=inv_vocab,
+        device=device,
+        max_length=30,
+    )
+    
+    asset_results = asset_evaluator.run(
+        predict_fn=predict_fn,
+        output_dir=run_paths.output_dir
+    )
+    
+    scores.update(asset_results)
+    
+    write_json(scores, run_paths.scores_path)
     
     print("Evaluation finished")
-    print(scores["sari"]) 
+    print(scores["sari"])
+    print(scores["asset_sari"])  

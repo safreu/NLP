@@ -1,8 +1,15 @@
+from collections.abc import Callable
 from pathlib import Path
 
 from evaluation.analyzers.copy_analyzer import CopyAnalyzer
 from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
-from evaluation.llm_evaluate import evaluate_llm
+from evaluation.llm_evaluate import (
+    evaluate_llm,
+    generate_predictions,
+    get_hf_token,
+    load_causal_model,
+    select_device,
+)
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.prediction_store import PredictionRow, read_predictions
@@ -15,11 +22,36 @@ class LLMEvaluationPipeline:
         generation_configs,
         run_paths,
         analyzers=None,
+        extra_evaluators=None,
     ):
         self.model_config = model_config
         self.generation_configs = generation_configs
         self.run_paths = run_paths
         self.analyzers = analyzers or [CopyAnalyzer(), InformationLossAnalyzer()]
+        self.extra_evaluators = extra_evaluators or []
+
+    def _build_predict_fn(self, gen_conf) -> Callable[[list[str]], list[str]]:
+        resolved_device = select_device(self.model_config.device)
+        
+        model, tokenizer = load_causal_model(
+            model_name=self.model_config.model_name,
+            revision=self.model_config.revision,
+            device=resolved_device,
+            hf_token=get_hf_token(),
+        )
+
+        def predict_fn(sources: list[str]) -> list[str]:
+            return generate_predictions(
+                sources=sources,
+                model=model,
+                tokenizer=tokenizer,
+                device=resolved_device,
+                generation_config=gen_conf.to_dict(),
+            )
+
+        return predict_fn
+    
+    
 
     def _run_analyzers(self, predictions_path: Path, run_paths: RunPaths) -> None:
         predictions: list[PredictionRow] = read_predictions(predictions_path)
@@ -46,6 +78,15 @@ class LLMEvaluationPipeline:
                 generation_config=gen_conf.to_dict(),
                 predictions_path=gen_run_paths.predictions_path,
             )
+            
+            predict_fn = self._build_predict_fn(gen_conf)
+            
+            for evaluator in self.extra_evaluators:
+                extra_results = evaluator.run(
+                    predict_fn=predict_fn,
+                    output_dir=gen_dir,
+                )
+                results.update(extra_results)
 
             write_json(results, gen_run_paths.scores_path)
 

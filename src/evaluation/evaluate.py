@@ -76,7 +76,12 @@ def extract_sources(test_pairs):
     return [remove_prompt(input_text) for input_text, _ in test_pairs]
 
 
-def evaluate_model(test_pairs, config: GenerationConfig, model_path: Path, predictions_path: Path):
+def evaluate_model(
+    test_pairs, 
+    config: GenerationConfig, 
+    model_path: Path, 
+    predictions_path: Path, 
+):
     model, tokenizer, device = load_model(str(model_path))
 
     candidates, references = generate_predictions(test_pairs, model, tokenizer, device, config)
