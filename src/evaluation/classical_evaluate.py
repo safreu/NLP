@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from pathlib import Path
 from typing import cast
 
@@ -15,6 +16,7 @@ def evaluate_classical_model(
     artifacts: ClassicalTrainingArtifacts,
     predictions_path: Path,
     config: ClassicalMLConfig,
+    extra_metrics: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
     simplifier = ClassicalSimplifier(
         model=artifacts.model,
@@ -27,7 +29,10 @@ def evaluate_classical_model(
 
     write_json(prediction_rows(sources, candidates, references), predictions_path)
 
+    metrics = dict(extra_metrics or {})
     if not config.compute_generation_metrics:
-        return {"prediction_count": len(candidates)}
+        metrics["prediction_count"] = len(candidates)
+        return metrics
 
-    return cast(dict[str, object], compute_all_metrics(sources, candidates, references))
+    metrics.update(cast(dict[str, object], compute_all_metrics(sources, candidates, references)))
+    return metrics
