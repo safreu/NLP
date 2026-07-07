@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset
+from transformers import AutoModel, AutoTokenizer
 
 from configuration.config import SEED
 from data.dataset_loader import DatasetLoader
@@ -183,30 +184,19 @@ class Decoder(nn.Module):
 class Transformer(nn.Module):
     def __init__(
         self,
-        src_vocab_size,
         trg_vocab_size,
-        src_pad_idx,
         trg_pad_idx,
-        embed_size=256,
         num_layers=6,
         forward_expansion=4,
         heads=8,
         dropout=0,
         device="cuda",
-        max_length=100,
+        max_length=256,
     ):
         super().__init__()
 
-        self.encoder = Encoder(
-            src_vocab_size,
-            embed_size,
-            num_layers,
-            heads,
-            device,
-            forward_expansion,
-            dropout,
-            max_length,
-        )
+        self.encoder = AutoModel.from_pretrained("google-bert/bert-base-uncased")
+        embed_size = self.encoder.config.hidden_size
 
         self.decoder = Decoder(
             trg_vocab_size,
@@ -219,14 +209,8 @@ class Transformer(nn.Module):
             max_length,
         )
 
-        self.src_pad_idx = src_pad_idx
         self.trg_pad_idx = trg_pad_idx
         self.device = device
-
-    def make_src_mask(self, src):
-        src_mask = (src != self.src_pad_idx).unsqueeze(1).unsqueeze(2)
-        # (N, 1, 1, src_len)
-        return src_mask.to(self.device)
 
     def make_trg_mask(self, trg):
         N, trg_len = trg.shape
@@ -234,25 +218,31 @@ class Transformer(nn.Module):
         # (N, 1, trg_len, trg_len)
         return trg_mask.to(self.device)
 
-    def forward(self, src, trg):
-        src_mask = self.make_src_mask(src)
+    def forward(self, src_ids, src_attention_mask, trg):
+        src_mask = src_attention_mask.unsqueeze(1).unsqueeze(2)
+        
+        enc_src = self.encoder(
+            input_ids=src_ids,
+            attention_mask=src_attention_mask,
+        ).last_hidden_state
+        
         trg_mask = self.make_trg_mask(trg)
-        enc_src = self.encoder(src, src_mask)
-        out = self.decoder(trg, enc_src, src_mask, trg_mask)
-        return out
+        return self.decoder(trg, enc_src, src_mask, trg_mask)
 
 
 class TransformerDataset(Dataset):
-    def __init__(self, pairs, vocabulary):
+    def __init__(self, pairs, tokenizer, max_length=256):
         self.pairs = pairs
-        self.vocab = vocabulary
+        self.tokenizer = tokenizer
+        self.max_length = max_length
 
     def tokenize(self, text):
-        return (
-            [self.vocab["<sos>"]]
-            + [self.vocab.get(token, self.vocab["<unk>"]) for token in text.split()]
-            + [self.vocab["<eos>"]]
-        )
+        return self.tokenizer(
+            text,
+            truncation=True,
+            max_length=self.max_length,
+            add_special_tokens=True,
+        )["input_ids"]
 
     def __len__(self):
         return len(self.pairs)
@@ -262,17 +252,18 @@ class TransformerDataset(Dataset):
         return torch.tensor(self.tokenize(source)), torch.tensor(self.tokenize(target))
 
 
-def make_collate_fn(vocabulary):
+def make_collate_fn(tokenizer):
     def collate_fn(batch):
         source_batch, target_batch = zip(*batch, strict=True)
         source_batch = pad_sequence(
-            source_batch, batch_first=True, padding_value=vocabulary["<pad>"]
+            source_batch, batch_first=True, padding_value=tokenizer.pad_token_id
         )
 
         target_batch = pad_sequence(
-            target_batch, batch_first=True, padding_value=vocabulary["<pad>"]
+            target_batch, batch_first=True, padding_value=tokenizer.pad_token_id
         )
-        return source_batch, target_batch
+        source_attention_mask = (source_batch != tokenizer.pad_token_id).long()
+        return source_batch, source_attention_mask, target_batch
 
     return collate_fn
 
@@ -282,14 +273,15 @@ def train_model(model, train_loader, optimizer, criterion, device, num_epochs):
         model.train()
         total_loss = 0
 
-        for source_batch, target_batch in train_loader:
+        for source_batch, source_attention_mask, target_batch in train_loader:
             source_batch = source_batch.to(device)
             target_batch = target_batch.to(device)
+            source_attention_mask = source_attention_mask.to(device)
 
             decoder_input = target_batch[:, :-1]
             targets = target_batch[:, 1:]
 
-            output = model(source_batch, decoder_input)
+            output = model(source_batch, source_attention_mask, decoder_input)
 
             output = output.reshape(-1, output.shape[-1])
             targets = targets.reshape(-1)
@@ -306,51 +298,49 @@ def train_model(model, train_loader, optimizer, criterion, device, num_epochs):
         print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {avg_loss:.4f}")
 
 
-def generate_prediction(model, src_tensor, vocabulary, inv_vocab, device, max_length=30):
+def generate_prediction(model, src_tensor, tokenizer, device, max_length=256):
     model.eval()
 
-    outputs = [vocabulary["<sos>"]]
-
+    outputs = [tokenizer.cls_token_id]
+    
     with torch.no_grad():
         for _ in range(max_length):
             trg_input = torch.tensor([outputs]).to(device)
 
-            out = model(src_tensor, trg_input)
+            src_attention_mask = (src_tensor != tokenizer.pad_token_id).long()
+            
+            out = model(src_tensor, src_attention_mask, trg_input)
 
             best_next_item = out.argmax(dim=2)[:, -1].item()
 
             outputs.append(best_next_item)
 
-            if best_next_item == vocabulary["<eos>"]:
+            if best_next_item == tokenizer.sep_token_id:
                 break
 
-    return [inv_vocab[idx] for idx in outputs]
+    return tokenizer.decode(outputs, skip_special_tokens=True)
 
 
-def build_custom_transformer_predict_fn(model, vocabulary, inv_vocab, device, max_length: int):
+def build_custom_transformer_predict_fn(model, tokenizer, device, max_length: int=256):
     def predict_fn(sources: list[str]) -> list[str]:
         predictions = []
 
         for source in sources:
-            src_indices = [
-                vocabulary["<sos>"],
-                *[vocabulary.get(token, vocabulary["<unk>"]) for token in source.split()],
-                vocabulary["<eos>"],
-            ]
+            src_indices = tokenizer(
+                source,
+                truncation=True,
+                max_length=max_length,
+                add_special_tokens=True,
+            )["input_ids"]
 
             src_tensor = torch.tensor([src_indices]).to(device)
 
-            prediction_tokens = generate_prediction(
+            prediction = generate_prediction(
                 model=model,
                 src_tensor=src_tensor,
-                vocabulary=vocabulary,
-                inv_vocab=inv_vocab,
+                tokenizer=tokenizer,
                 device=device,
                 max_length=max_length,
-            )
-
-            prediction = " ".join(
-                token for token in prediction_tokens if token not in {"<sos>", "<eos>", "<pad>"}
             )
 
             predictions.append(prediction)
@@ -360,7 +350,7 @@ def build_custom_transformer_predict_fn(model, vocabulary, inv_vocab, device, ma
     return predict_fn
 
 
-def eval_model(model, data_loader, vocabulary, inv_vocab, device, max_length):
+def eval_model(model, data_loader, tokenizer, device, max_length):
     model.eval()
 
     sources = []
@@ -373,17 +363,12 @@ def eval_model(model, data_loader, vocabulary, inv_vocab, device, max_length):
         src_indices = dataset.tokenize(source)
         src_tensor = torch.tensor([src_indices]).to(device)
 
-        prediction_tokens = generate_prediction(
+        prediction = generate_prediction(
             model=model,
             src_tensor=src_tensor,
-            vocabulary=vocabulary,
-            inv_vocab=inv_vocab,
+            tokenizer=tokenizer,
             device=device,
             max_length=max_length,
-        )
-
-        prediction = " ".join(
-            token for token in prediction_tokens if token not in {"<sos>", "<eos>", "<pad>"}
         )
 
         sources.append(source)
@@ -399,9 +384,9 @@ def eval_model(model, data_loader, vocabulary, inv_vocab, device, max_length):
 
 if __name__ == "__main__":
     dataset_loaders: list[DatasetLoader] = [
-        NewselaLoader(max_train_samples=10000, max_eval_samples=2000),
-        WikiLargeLoader(max_train_samples=10000, max_eval_samples=2000),
-        OneStopLoader(),
+        NewselaLoader(max_train_samples=100, max_eval_samples=20),
+        #WikiLargeLoader(max_train_samples=10000, max_eval_samples=2000),
+        #OneStopLoader(),
     ]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -412,41 +397,33 @@ if __name__ == "__main__":
         max_examples=0,
     )
 
+    tokenizer = AutoTokenizer.from_pretrained("google-bert/bert-base-uncased")
+    
     for dataset in dataset_loaders:
         start = time.time()
-        vocabulary = {"<pad>": 0, "<sos>": 1, "<eos>": 2, "<unk>": 3}
 
         train, valid, test = dataset.load_pairs(False)
 
-        for src, target in train:
-            for token in src.split() + target.split():
-                if token not in vocabulary:
-                    vocabulary[token] = len(vocabulary)
-
-        inv_vocab = {v: k for k, v in vocabulary.items()}
-
-        train_dataset = TransformerDataset(train, vocabulary)
+        train_dataset = TransformerDataset(train, tokenizer, 256)
 
         train_loader = DataLoader(
             train_dataset,
             batch_size=16,
             shuffle=True,
-            collate_fn=make_collate_fn(vocabulary),
+            collate_fn=make_collate_fn(tokenizer),
             generator=torch.Generator().manual_seed(SEED),
         )
 
         model = Transformer(
-            src_vocab_size=len(vocabulary),
-            trg_vocab_size=len(vocabulary),
-            src_pad_idx=vocabulary["<pad>"],
-            trg_pad_idx=vocabulary["<pad>"],
+            trg_vocab_size=tokenizer.vocab_size,
+            trg_pad_idx=tokenizer.pad_token_id,
             device=device,
             max_length=256,
         ).to(device)
 
         optimizer = optim.Adam(model.parameters(), lr=3e-4)
 
-        criterion = nn.CrossEntropyLoss(ignore_index=vocabulary["<pad>"])
+        criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
 
         train_model(
             model=model,
@@ -457,28 +434,26 @@ if __name__ == "__main__":
             num_epochs=10,
         )
 
-        test_dataset = TransformerDataset(test, vocabulary)
+        test_dataset = TransformerDataset(test, tokenizer, 256)
 
         test_loader = DataLoader(
-            test_dataset, batch_size=16, shuffle=False, collate_fn=make_collate_fn(vocabulary)
+            test_dataset, batch_size=16, shuffle=False, collate_fn=make_collate_fn(tokenizer)
         )
 
         scores = eval_model(
             model=model,
             data_loader=test_loader,
-            vocabulary=vocabulary,
-            inv_vocab=inv_vocab,
+            tokenizer=tokenizer, 
             device=device,
             max_length=256,
         )
 
-        run_paths = RunPaths.for_runs_root(Path(f"runs/custom_transformer/{dataset.name}"))
+        run_paths = RunPaths.for_runs_root(Path(f"runs/custom_transformer/{dataset.name}_1.0"))
         run_paths.pipeline_dir = Path("base")
 
         predict_fn = build_custom_transformer_predict_fn(
             model=model,
-            vocabulary=vocabulary,
-            inv_vocab=inv_vocab,
+            tokenizer=tokenizer,
             device=device,
             max_length=256,
         )
