@@ -378,11 +378,25 @@ def eval_model(model, data_loader, tokenizer, device, max_length):
         candidates.append(prediction)
         references.append(reference)
 
-    return compute_all_metrics(
+    scores = compute_all_metrics(
         sources=sources,
         candidates=candidates,
         references=references,
     )
+    
+    generations = list(zip(sources, candidates, references))
+    
+    prediction_rows = [
+        {
+            "source": source,
+            "candidate": candidate,
+            "references": reference,
+        }
+        for source, candidate, reference in generations
+    ]
+        
+    return scores, prediction_rows
+    
 
 
 if __name__ == "__main__":
@@ -423,8 +437,11 @@ if __name__ == "__main__":
             device=device,
             max_length=256,
         ).to(device)
+        
+        for p in model.encoder.parameters():
+            p.requires_grad = False
 
-        optimizer = optim.Adam(model.parameters(), lr=3e-4)
+        optimizer = optim.AdamW(model.decoder.parameters(), lr=3e-4)
 
         criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
 
@@ -443,7 +460,10 @@ if __name__ == "__main__":
             test_dataset, batch_size=16, shuffle=False, collate_fn=make_collate_fn(tokenizer)
         )
 
-        scores = eval_model(
+        run_paths = RunPaths.for_runs_root(Path(f"runs/custom_transformer/{dataset.name}_1.0"))
+        run_paths.pipeline_dir = Path("base")
+        
+        scores, generations = eval_model(
             model=model,
             data_loader=test_loader,
             tokenizer=tokenizer, 
@@ -451,8 +471,7 @@ if __name__ == "__main__":
             max_length=256,
         )
 
-        run_paths = RunPaths.for_runs_root(Path(f"runs/custom_transformer/{dataset.name}_1.0"))
-        run_paths.pipeline_dir = Path("base")
+        write_json(generations, run_paths.predictions_path)
 
         predict_fn = build_custom_transformer_predict_fn(
             model=model,
