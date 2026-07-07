@@ -6,7 +6,7 @@ class LLMTrainingConfig:
     model_name: str = "google/gemma-4-12b-it"
     revision: str | None = None
     device: str | None = None
-        
+
     max_seq_length: int | None = None
     num_proc: int | None = None
 

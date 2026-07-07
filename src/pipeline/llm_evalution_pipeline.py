@@ -32,7 +32,7 @@ class LLMEvaluationPipeline:
 
     def _build_predict_fn(self, gen_conf) -> Callable[[list[str]], list[str]]:
         resolved_device = select_device(self.model_config.device)
-        
+
         model, tokenizer = load_causal_model(
             model_name=self.model_config.model_name,
             revision=self.model_config.revision,
@@ -50,8 +50,6 @@ class LLMEvaluationPipeline:
             )
 
         return predict_fn
-    
-    
 
     def _run_analyzers(self, predictions_path: Path, run_paths: RunPaths) -> None:
         predictions: list[PredictionRow] = read_predictions(predictions_path)
@@ -61,13 +59,13 @@ class LLMEvaluationPipeline:
 
     def run(self, test_pairs):
         all_results = {}
-        
+
         for gen_idx, gen_conf in enumerate(self.generation_configs):
             gen_dir = self.run_paths.pipeline_dir / f"gen{gen_idx}"
             gen_dir.mkdir(parents=True, exist_ok=True)
-            
+
             gen_run_paths = RunPaths(gen_dir)
-            
+
             results = evaluate_llm(
                 test_pairs=test_pairs,
                 model_name=self.model_config.model_name,
@@ -76,9 +74,9 @@ class LLMEvaluationPipeline:
                 generation_config=gen_conf.to_dict(),
                 predictions_path=gen_run_paths.predictions_path,
             )
-            
+
             predict_fn = self._build_predict_fn(gen_conf)
-            
+
             for evaluator in self.extra_evaluators:
                 extra_results = evaluator.run(
                     predict_fn=predict_fn,
@@ -89,7 +87,7 @@ class LLMEvaluationPipeline:
             write_json(results, gen_run_paths.scores_path)
 
             self._run_analyzers(gen_run_paths.predictions_path, gen_run_paths)
-            
+
             all_results[f"gen_{gen_idx}"] = results
-            
+
         write_json(all_results, self.run_paths.scores_path)

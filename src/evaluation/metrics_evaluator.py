@@ -6,9 +6,7 @@ from transformers import GenerationConfig
 
 class MetricsEvaluator(Protocol):
     def compute(
-        self, 
+        self,
         model_path: Path,
-        generation_config: GenerationConfig, 
-    ) -> dict:
-        ...
-        
+        generation_config: GenerationConfig,
+    ) -> dict: ...
