@@ -11,9 +11,9 @@ class NewselaLoader:
     max_train_samples: int | None = None
     max_eval_samples: int | None = None
 
-    def load_pairs(self) -> tuple[list[Pair], list[Pair], list[Pair]]:
+    def load_pairs(self, add_prompt: bool = True) -> tuple[list[Pair], list[Pair], list[Pair]]:
         corpus = NewselaCorpus.load_from_disk()
-        pairs = corpus.as_training_pairs()
+        pairs = corpus.as_training_pairs(add_prompt)
 
         train, valid, test = split_pairs(pairs)
 

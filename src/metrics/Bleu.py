@@ -2,7 +2,6 @@ from nltk.translate.bleu_score import SmoothingFunction, corpus_bleu
 
 
 def compute_bleuscore(candidates: list[str], references: list[str]) -> float:
-    # Each candidate should have exactly one matching reference sentence.
     if len(candidates) != len(references):
         raise ValueError(
             f"Candidates length ({len(candidates)}) and references length "

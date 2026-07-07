@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from config import ClassicalMLConfig
+from configuration.classic_ml_config import ClassicalMLConfig
 from data.dataset_loader import DatasetLoader, Pair
 from evaluation.classical_evaluate import evaluate_classical_model
 from preprocessing.classical_training_data import to_classical_pairs

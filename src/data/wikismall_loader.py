@@ -1,6 +1,7 @@
 from pathlib import Path
 from random import Random
 
+from configuration.config import SEED
 from data.dataset_loader import Pair
 from prompts import simplify_prompt
 
