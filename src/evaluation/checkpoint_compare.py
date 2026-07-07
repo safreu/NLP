@@ -5,7 +5,9 @@ from preprocessing.filter import text_similarity
 from storage.json_store import read_json, write_json
 
 
-def get_nested_score(result: dict, metric_path: str) -> float:
+def get_nested_score(result: dict, metric_path: str | Path) -> float:
+    metric_path = str(metric_path)
+
     for key in metric_path.split("."):
         result = result[key]
 
@@ -23,7 +25,7 @@ def label_copy_state(source: str, candidate: str, copy_tresshold: float = 0.95) 
     return "different"
 
 
-def best_k_checkpoints(scores: dict, metric_path: str, k: int = 5, reverse: bool = True):
+def best_k_checkpoints(scores: dict, metric_path: Path | str, k: int = 5, reverse: bool = True):
     ranked = sorted(
         scores.items(),
         key=lambda item: get_nested_score(item[1], metric_path),
@@ -131,10 +133,10 @@ def compare_predictions(top_checkpoints, model_dir: Path, copy_tresshold: float 
 
 
 def compare_best_checkpoints(
-    scores_path: str,
-    model_dir: str,
-    output_path: str,
-    metric_path: str,
+    scores_path: str | Path,
+    model_dir: str | Path,
+    output_path: str | Path,
+    metric_path: str | Path,
     k: int = 5,
     higher_is_better: bool = True,
     copy_tresshold: float = 0.95,
@@ -142,6 +144,7 @@ def compare_best_checkpoints(
     scores_path = Path(scores_path)
     model_dir = Path(model_dir)
     output_path = Path(output_path)
+    metric_path = Path(metric_path)
 
     scores = read_json(scores_path)
 
