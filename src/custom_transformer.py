@@ -384,9 +384,9 @@ def eval_model(model, data_loader, tokenizer, device, max_length):
 
 if __name__ == "__main__":
     dataset_loaders: list[DatasetLoader] = [
-        NewselaLoader(max_train_samples=100, max_eval_samples=20),
-        #WikiLargeLoader(max_train_samples=10000, max_eval_samples=2000),
-        #OneStopLoader(),
+        NewselaLoader(max_train_samples=10000, max_eval_samples=2000),
+        WikiLargeLoader(max_train_samples=10000, max_eval_samples=2000),
+        OneStopLoader(),
     ]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
