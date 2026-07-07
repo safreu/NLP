@@ -1,18 +1,12 @@
-from configuration.llm_config import (
-    LLMTrainingConfig,
-    llm_training_config_1,
-    llm_training_config_2,
-    llm_generation_config_1_sampling,
-    llm_generation_config_1_beam,
-    llm_generation_config_1_contrastive,
-    llm_generation_config_1_greedy
-)
+from pathlib import Path
+import time
+
 from configuration.seq2seq_config import (
     GenerationConfig,
     TrainingConfig,
     training_config_1,
     training_config_2,
-    generation_config_1
+    generation_config_1,
 )
 from data.dataset_loader import DatasetLoader
 from data.newsela_loader import NewselaLoader
@@ -24,12 +18,10 @@ from evaluation.analyzers.error_case_analyser import ErrorCaseAnalyzer
 from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
 from evaluation.analyzers.length_analyzer import LengthAnalyzer
 from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
-from pipeline.llm_evalution_pipeline import LLMEvaluationPipeline
-from pipeline.llm_training_pipeline import LLMTrainingPipeline
+from evaluation.asset_sari_evaluator import AssetSariEvaluator
 from pipeline.seq2seq_evaluation_pipeline import Seq2SeqEvaluationPipeline
 from pipeline.seq2seq_training_pipeline import Seq2SeqTrainingPipeline
 from storage.paths import RunPaths
-from pathlib import Path
 
 
 def run_finetuning_seq2seq(
@@ -39,6 +31,7 @@ def run_finetuning_seq2seq(
     run_dir: RunPaths,
 ):
     for dataset_loader in dataset_loaders:
+        start = time.time()
         dataset_name = dataset_loader.__class__.__name__.replace("Loader", "")
 
         for train_idx, train_conf in enumerate(trainings_configs):
@@ -60,8 +53,16 @@ def run_finetuning_seq2seq(
                         ErrorCaseAnalyzer(),
                         ReadabilityAnalyzer(),
                     ],
+                    extra_evaluators=[
+                        AssetSariEvaluator(
+                            split="validation",
+                            max_examples=0
+                        )
+                    ]
                 ),
             ).run()
+            
+            print(f"{dataset_name} with {train_idx} finished in {(time.time() - start)/60:.1f} minutes")
 
 def main():
 
@@ -135,7 +136,7 @@ def main():
     # ),
     # ]
 
-    EPOCHS = [5, 8, 10, 12, 15, 18, 20]
+    EPOCHS = [5, 10, 15, 18, 20]
     LEARNING_RATES = [5e-5, 1e-4, 2e-4]
 
     training_configs: list[TrainingConfig] = [
@@ -193,8 +194,8 @@ def main():
         OneStopLoader(),
     ]
 
-    run_dir = RunPaths.for_runs_root(Path("runs/seq2seq"))
-
+    run_dir = RunPaths.for_runs_root(Path("runs/seq2seq/finetune"))
+    
     run_finetuning_seq2seq(training_configs, generation_configs, dataset_loaders, run_dir)
 
 

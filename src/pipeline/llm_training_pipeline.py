@@ -1,19 +1,19 @@
-from config import TrainingConfig
+from configuration.llm_config import LLMTrainingConfig
 from data.dataset_loader import DatasetLoader
-from pipeline.evaluation_pipeline import EvaluationPipeline
+from pipeline.llm_evalution_pipeline import LLMEvaluationPipeline
 from preprocessing.dataset_builder import to_dataset
 from storage.paths import RunPaths
-from training.trainer import train_model
+from training.llm_trainer import train_model
 
 
-class TrainingPipeline:
+class LLMTrainingPipeline:
     def __init__(
         self,
         name: str,
         dataset_loader: DatasetLoader,
-        training_config: TrainingConfig,
+        training_config: LLMTrainingConfig,
         run_paths: RunPaths,
-        evaluation_pipeline: EvaluationPipeline,
+        evaluation_pipeline: LLMEvaluationPipeline,
     ):
         self.name = name
         self.dataset_loader = dataset_loader
@@ -26,7 +26,7 @@ class TrainingPipeline:
 
         print(f"Running Pipeline {self.name}")
 
-        train, valid, test = self.dataset_loader.load_pairs()
+        train, valid, test = self.dataset_loader.load_pairs(add_prompt=False)
 
         train_model(
             train=to_dataset(train),

@@ -1,9 +1,9 @@
+import json
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any
 
-MIN_LENGTH_RATIO = 0.2
-SIMILARITY_THRESHOLD = 0.9
-SEED = 42
+from configuration.config import SEED
 
 
 @dataclass
@@ -35,6 +35,12 @@ class TrainingConfig:
         ignored = {"model_name", "max_input_length", "max_target_length"}
         return {k: v for k, v in asdict(self).items() if v is not None and k not in ignored}
 
+    def save(self, directory: Path) -> None:
+        (directory / "training_config.json").write_text(
+            json.dumps(self.to_dict(), indent=4),
+            encoding="utf-8",
+        )
+
 
 @dataclass
 class GenerationConfig:
@@ -49,7 +55,18 @@ class GenerationConfig:
     def to_dict(self) -> dict[str, Any]:
         return {k: v for k, v in asdict(self).items() if v is not None}
 
+    def save(self, directory: Path) -> None:
+        (directory / "generation_config.json").write_text(
+            json.dumps(self.to_dict(), indent=4),
+            encoding="utf-8",
+        )
 
+
+generation_config_1 = GenerationConfig(
+    # Page 343, Section 4.3 Training Details:
+    # https://aclanthology.org/2021.inlg-1.38.pdf
+    num_beams=8,
+)
 training_config_1 = TrainingConfig(
     # Page 343, Section 4.3 Training Details:
     # https://aclanthology.org/2021.inlg-1.38.pdf
@@ -64,12 +81,6 @@ training_config_1 = TrainingConfig(
     seed=12,
 )
 
-generation_config_1 = GenerationConfig(
-    # Page 343, Section 4.3 Training Details:
-    # https://aclanthology.org/2021.inlg-1.38.pdf
-    num_beams=8,
-)
-
 training_config_2 = TrainingConfig(
     # Page 4, Section 4 The Training Procedure
     # https://www.researchgate.net/profile/Ramazan_Mengi/publication/
@@ -82,22 +93,3 @@ training_config_2 = TrainingConfig(
     max_target_length=448,
     learning_rate=2e-5,
 )
-
-
-@dataclass
-class ZeroShotLLMConfig:
-    model_name: str = "google/gemma-4-12b-it"
-    revision: str | None = None
-    device: str | None = None
-
-
-@dataclass(frozen=True)
-class ClassicalMLConfig:
-    model_type: str = "logistic_regression"
-    random_state: int = 42
-    lowercase: bool = True
-    min_replacement_count: int = 1
-    max_train_samples: int | None = None
-    max_eval_samples: int | None = None
-    classifier_parameters: dict[str, Any] | None = None
-    compute_generation_metrics: bool = True

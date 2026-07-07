@@ -17,10 +17,16 @@ class WikiLargeLoader:
         self.max_eval_samples = max_eval_samples
         self.seed = seed
 
-    def _to_pairs(self, split) -> list[Pair]:
-        return [(simplify_prompt(row["Normal"]), row["Simple"]) for row in split]
+    def _to_pairs(self, split, add_prompt: bool = True) -> list[Pair]:
+        return [
+            (
+                simplify_prompt(row["Normal"]) if add_prompt else row["Normal"],
+                row["Simple"],
+            )
+            for row in split
+        ]
 
-    def load_pairs(self) -> tuple[list[Pair], list[Pair], list[Pair]]:
+    def load_pairs(self, add_prompt: bool = True) -> tuple[list[Pair], list[Pair], list[Pair]]:
         dataset = load_dataset("an-atlas/wikilarge")
 
         train_split = dataset["train"].shuffle(seed=self.seed)
@@ -35,8 +41,8 @@ class WikiLargeLoader:
 
             test_split = test_split.select(range(min(self.max_eval_samples, len(test_split))))
 
-        train_pairs = self._to_pairs(train_split)
-        valid_pairs = self._to_pairs(valid_split)
-        test_pairs = self._to_pairs(test_split)
+        train_pairs = self._to_pairs(train_split, add_prompt)
+        valid_pairs = self._to_pairs(valid_split, add_prompt)
+        test_pairs = self._to_pairs(test_split, add_prompt)
 
         return train_pairs, valid_pairs, test_pairs

@@ -2,6 +2,7 @@ from typing import Any
 
 from datasets import load_dataset
 
+from configuration.config import SEED
 from data.dataset_loader import Pair
 from prompts import simplify_prompt
 

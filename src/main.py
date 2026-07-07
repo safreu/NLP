@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
-from config import GenerationConfig, TrainingConfig
+from configuration.seq2seq_config import GenerationConfig, TrainingConfig
 from data.dataset_loader import DatasetLoader
 from data.newsela_loader import NewselaLoader
 from data.onestop_loader import OneStopLoader
@@ -14,8 +14,8 @@ from evaluation.analyzers.error_case_analyser import ErrorCaseAnalyzer
 from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
 from evaluation.analyzers.length_analyzer import LengthAnalyzer
 from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
-from pipeline.evaluation_pipeline import EvaluationMode, EvaluationPipeline
-from pipeline.training_pipeline import TrainingPipeline
+from pipeline.seq2seq_evaluation_pipeline import EvaluationMode, Seq2SeqEvaluationPipeline
+from pipeline.seq2seq_training_pipeline import Seq2SeqTrainingPipeline
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.run_store import create_run_dir
@@ -291,12 +291,12 @@ def run_experiments(args: argparse.Namespace) -> RunPaths:
     write_run_config(args, run_dir, experiments)
 
     for experiment in experiments:
-        TrainingPipeline(
+        Seq2SeqTrainingPipeline(
             name=experiment.name,
             dataset_loader=experiment.dataset_loader,
             training_config=experiment.config,
             run_paths=run_dir,
-            evaluation_pipeline=EvaluationPipeline(
+            evaluation_pipeline=Seq2SeqEvaluationPipeline(
                 generation_config=GenerationConfig(),
                 run_paths=run_dir,
                 mode=experiment.evaluation_mode,

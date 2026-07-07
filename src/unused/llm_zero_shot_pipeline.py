@@ -10,7 +10,7 @@ from typing import Any
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, set_seed
 
-from config import SEED
+from configuration.config import SEED
 from pipeline.sari_asset_pipeline import (
     DATASET_CONFIG,
     DATASET_NAME,
