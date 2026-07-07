@@ -1,9 +1,10 @@
+import time
 from pathlib import Path
 
 import torch
 import torch.nn as nn
+import torch.optim as optim
 from torch.nn.utils.rnn import pad_sequence
-from torch.optim import optim
 from torch.utils.data import DataLoader, Dataset
 
 from configuration.config import SEED
@@ -430,6 +431,7 @@ if __name__ == "__main__":
     )
 
     for dataset in dataset_loaders:
+        start = time.time()
         vocabulary = {"<pad>": 0, "<sos>": 1, "<eos>": 2, "<unk>": 3}
         
         train, valid, test = dataset.load_pairs(False)
@@ -488,7 +490,7 @@ if __name__ == "__main__":
             vocabulary=vocabulary,
             inv_vocab=inv_vocab,
             device=device,
-            max_length=30,
+            max_length=256,
         )
         
         run_paths = RunPaths.for_runs_root(Path(f"runs/custom_transformer/{dataset.name}"))
@@ -499,7 +501,7 @@ if __name__ == "__main__":
             vocabulary=vocabulary,
             inv_vocab=inv_vocab,
             device=device,
-            max_length=30,
+            max_length=256,
         )
         
         asset_results = asset_evaluator.run(
@@ -513,6 +515,7 @@ if __name__ == "__main__":
         
         print(f"Evaluation  of {dataset.name} finished")
         print(scores["sari"])
-        print(scores["asset_sari"])  
+        print(scores["asset_sari"])
+        print(f"{dataset.name} finished in {(time.time() - start)/60:.1f} minutes")
         
     print("Complete Evaluation finished")

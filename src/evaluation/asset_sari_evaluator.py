@@ -1,13 +1,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 from datasets import load_dataset
 
 from metrics.metric_sari import compute_sari
 from storage.json_store import write_json
-from collections.abc import Callable
+
 
 class AssetSariEvaluator:
     def __init__(

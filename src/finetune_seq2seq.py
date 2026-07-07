@@ -1,4 +1,5 @@
 from pathlib import Path
+import time
 
 from configuration.seq2seq_config import (
     GenerationConfig,
@@ -30,6 +31,7 @@ def run_finetuning_seq2seq(
     run_dir: RunPaths,
 ):
     for dataset_loader in dataset_loaders:
+        start = time.time()
         dataset_name = dataset_loader.__class__.__name__.replace("Loader", "")
 
         for train_idx, train_conf in enumerate(trainings_configs):
@@ -59,6 +61,8 @@ def run_finetuning_seq2seq(
                     ]
                 ),
             ).run()
+            
+            print(f"{dataset_name} with {train_idx} finished in {(time.time() - start)/60:.1f} minutes")
 
 def main():
 
