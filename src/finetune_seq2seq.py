@@ -1,6 +1,8 @@
 import time
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from configuration.seq2seq_config import (
     GenerationConfig,
     TrainingConfig,
@@ -23,6 +25,7 @@ from pipeline.seq2seq_evaluation_pipeline import Seq2SeqEvaluationPipeline
 from pipeline.seq2seq_training_pipeline import Seq2SeqTrainingPipeline
 from storage.paths import RunPaths
 
+load_dotenv()
 
 def run_finetuning_seq2seq(
     trainings_configs: list[TrainingConfig],

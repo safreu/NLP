@@ -4,6 +4,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from dotenv import load_dotenv
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoModel, AutoTokenizer
@@ -17,6 +18,8 @@ from evaluation.asset_sari_evaluator import AssetSariEvaluator
 from evaluation.metrics_builder import compute_all_metrics
 from storage.json_store import write_json
 from storage.paths import RunPaths
+
+load_dotenv()
 
 
 class SelfAttention(nn.Module):

@@ -1,6 +1,8 @@
 import time
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from configuration.llm_config import (
     LLMGenerationConfig,
     LLMTrainingConfig,
@@ -26,6 +28,7 @@ from pipeline.llm_evalution_pipeline import LLMEvaluationPipeline
 from pipeline.llm_training_pipeline import LLMTrainingPipeline
 from storage.paths import RunPaths
 
+load_dotenv()
 
 def run_llm_finetune(
     trainings_configs, generation_configs, dataset_loaders: list[DatasetLoader], run_dir: RunPaths
