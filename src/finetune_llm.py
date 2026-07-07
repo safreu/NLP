@@ -96,9 +96,9 @@ def run_llm_zeroshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
 def main():
 
     dataset_loaders: list[DatasetLoader] = [
-        NewselaLoader(max_train_samples=10000, max_eval_samples=2000),
-        WikiLargeLoader(max_train_samples=10000, max_eval_samples=2000),
         OneStopLoader(),
+        WikiLargeLoader(max_train_samples=10000, max_eval_samples=2000),
+        NewselaLoader(max_train_samples=10000, max_eval_samples=2000),
     ]
 
     run_dir = RunPaths.for_runs_root(Path("runs/llm/finetune"))
