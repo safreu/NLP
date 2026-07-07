@@ -43,13 +43,7 @@ class ClassicalMLPipeline:
         )
 
         scores = {
-            "validation": evaluate_classical_model(
-                test_pairs=valid,
-                artifacts=artifacts,
-                predictions_path=pipeline_dir / "validation_predictions.json",
-                config=self.config,
-                extra_metrics=artifacts.validation_metrics,
-            ),
+            "validation": artifacts.validation_metrics,
             "test": evaluate_classical_model(
                 test_pairs=test,
                 artifacts=artifacts,
