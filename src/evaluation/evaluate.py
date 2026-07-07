@@ -77,10 +77,10 @@ def extract_sources(test_pairs):
 
 
 def evaluate_model(
-    test_pairs, 
-    config: GenerationConfig, 
-    model_path: Path, 
-    predictions_path: Path, 
+    test_pairs,
+    config: GenerationConfig,
+    model_path: Path,
+    predictions_path: Path,
 ):
     model, tokenizer, device = load_model(str(model_path))
 

@@ -1,12 +1,12 @@
-from pathlib import Path
 import time
+from pathlib import Path
 
 from configuration.seq2seq_config import (
     GenerationConfig,
     TrainingConfig,
-    training_config_1,
-    training_config_2,
-    generation_config_1,
+    generation_config_1,  # noqa: F401
+    training_config_1,  # noqa: F401
+    training_config_2,  # noqa: F401
 )
 from data.dataset_loader import DatasetLoader
 from data.newsela_loader import NewselaLoader
@@ -53,16 +53,14 @@ def run_finetuning_seq2seq(
                         ErrorCaseAnalyzer(),
                         ReadabilityAnalyzer(),
                     ],
-                    extra_evaluators=[
-                        AssetSariEvaluator(
-                            split="validation",
-                            max_examples=0
-                        )
-                    ]
+                    extra_evaluators=[AssetSariEvaluator(split="validation", max_examples=0)],
                 ),
             ).run()
-            
-            print(f"{dataset_name} with {train_idx} finished in {(time.time() - start)/60:.1f} minutes")
+
+            print(
+                f"{dataset_name} with {train_idx} finished in {(time.time() - start) / 60:.1f} minutes"
+            )
+
 
 def main():
 
@@ -195,7 +193,7 @@ def main():
     ]
 
     run_dir = RunPaths.for_runs_root(Path("runs/seq2seq/finetune"))
-    
+
     run_finetuning_seq2seq(training_configs, generation_configs, dataset_loaders, run_dir)
 
 

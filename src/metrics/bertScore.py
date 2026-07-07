@@ -34,22 +34,22 @@ def compute_bertscore(
 
     pairs = []
     skipped = []
-    
+
     for i, (cand, ref) in enumerate(zip(standard, simple, strict=True)):
         cand = cand.strip()
         ref = ref.strip()
-        
+
         if not cand or not ref:
             skipped.append((i, cand, ref))
             continue
-        
+
         pairs.append((cand, ref))
-        
+
     if skipped:
         print(f"skipped {len(skipped)} empty candidates/references in BERTScore", file=sys.stderr)
         for i, cand, ref in skipped[:10]:
             print(f"entry at {i} empty: cand={cand!r}, ref={ref!r}", file=sys.stderr)
-            
+
     if not pairs:
         return {
             "precision": [],
@@ -60,7 +60,6 @@ def compute_bertscore(
             "f1_mean": 0.0,
         }
 
-
     if device is None:
         if torch.cuda.is_available():
             device = "cuda"
@@ -69,7 +68,7 @@ def compute_bertscore(
         else:
             device = "cpu"
 
-    standard, simple = zip(*pairs)
+    standard, simple = zip(*pairs, strict=True)
 
     precision, recall, f1 = _bert_score(
         cands=list(standard),

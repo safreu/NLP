@@ -37,16 +37,13 @@ class Seq2SeqEvaluationPipeline:
         self.mode = mode
         self.analyzers = analyzers or [CopyAnalyzer(), InformationLossAnalyzer()]
         self.extra_evaluators = extra_evaluators or []
-        
+
     def _build_predict_fn(self, gen_conf: GenerationConfig) -> Callable[[list[str]], list[str]]:
         model, tokenizer, device = load_model(str(self.run_paths.model_path))
-        
-        def predict_fn(sources:list[str]) -> list[str]:
-            test_pairs = [
-                (simplify_prompt(source), "")
-                for source in sources
-            ]
-            
+
+        def predict_fn(sources: list[str]) -> list[str]:
+            test_pairs = [(simplify_prompt(source), "") for source in sources]
+
             candidates, _ = generate_predictions(
                 test_pairs=test_pairs,
                 model=model,
@@ -55,9 +52,8 @@ class Seq2SeqEvaluationPipeline:
                 config=gen_conf,
             )
             return candidates
-        
+
         return predict_fn
-        
 
     def _run_analyzers(self, predictions_path: Path, run_paths: RunPaths) -> None:
         predictions: list[PredictionRow] = read_predictions(predictions_path)
@@ -107,8 +103,8 @@ class Seq2SeqEvaluationPipeline:
                 model_path=self.run_paths.model_path,
                 predictions_path=gen_run_paths.predictions_path,
             )
-           
-            predict_fn = self._build_predict_fn(gen_conf) 
+
+            predict_fn = self._build_predict_fn(gen_conf)
 
             for evaluator in self.extra_evaluators:
                 extra_results = evaluator.run(

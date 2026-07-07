@@ -1,15 +1,15 @@
-from pathlib import Path
 import time
+from pathlib import Path
 
 from configuration.llm_config import (
     LLMGenerationConfig,
     LLMTrainingConfig,
-    llm_generation_config_1_beam,
-    llm_generation_config_1_contrastive,
-    llm_generation_config_1_greedy,
-    llm_generation_config_1_sampling,
-    llm_training_config_1,
-    llm_training_config_2,
+    llm_generation_config_1_beam,  # noqa: F401
+    llm_generation_config_1_contrastive,  # noqa: F401
+    llm_generation_config_1_greedy,  # noqa: F401
+    llm_generation_config_1_sampling,  # noqa: F401
+    llm_training_config_1,  # noqa: F401
+    llm_training_config_2,  # noqa: F401
 )
 from data.dataset_loader import DatasetLoader
 from data.newsela_loader import NewselaLoader
@@ -30,10 +30,10 @@ from storage.paths import RunPaths
 def run_llm_finetune(
     trainings_configs, generation_configs, dataset_loaders: list[DatasetLoader], run_dir: RunPaths
 ):
-    for dataset_idx, dataset_loader in enumerate(dataset_loaders):
+    for _, dataset_loader in enumerate(dataset_loaders):
         start = time.time()
         dataset_name = dataset_loader.__class__.__name__.replace("Loader", "")
-        
+
         for train_idx, train_conf in enumerate(trainings_configs):
             LLMTrainingPipeline(
                 name=f"LLM_{dataset_name}_train{train_idx}",
@@ -52,16 +52,13 @@ def run_llm_finetune(
                         ErrorCaseAnalyzer(),
                         ReadabilityAnalyzer(),
                     ],
-                    extra_evaluators=[
-                        AssetSariEvaluator(
-                            split="validation",
-                            max_examples=0
-                        )
-                    ]
+                    extra_evaluators=[AssetSariEvaluator(split="validation", max_examples=0)],
                 ),
             ).run()
-            
-            print(f"{dataset_name} with {train_idx} finished in {(time.time() - start)/60:.1f} minutes")
+
+            print(
+                f"{dataset_name} with {train_idx} finished in {(time.time() - start) / 60:.1f} minutes"
+            )
 
 
 def run_llm_zeroshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
@@ -89,17 +86,12 @@ def run_llm_zeroshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
                 ErrorCaseAnalyzer(),
                 ReadabilityAnalyzer(),
             ],
-            extra_evaluators=[
-                AssetSariEvaluator(
-                    split="validation",
-                    max_examples=0
-                )
-            ]
+            extra_evaluators=[AssetSariEvaluator(split="validation", max_examples=0)],
         ).run(test)
 
 
 def main():
-    
+
     dataset_loaders: list[DatasetLoader] = [
         NewselaLoader(max_train_samples=10000, max_eval_samples=2000),
         WikiLargeLoader(max_train_samples=10000, max_eval_samples=2000),
@@ -107,23 +99,23 @@ def main():
     ]
 
     run_dir = RunPaths.for_runs_root(Path("runs/llm/finetune"))
-    #run_dir = RunPaths.for_runs_root(Path("runs/llm/zeroshot"))
-    #run_dir = RunPaths.for_runs_root(Path("runs/llm/fewshot"))
+    # run_dir = RunPaths.for_runs_root(Path("runs/llm/zeroshot"))
+    # run_dir = RunPaths.for_runs_root(Path("runs/llm/fewshot"))
 
     # run_llm_zeroshot(dataset_loaders, run_dir)
 
-    #trainings_configs: list[LLMTrainingConfig] = [
+    # trainings_configs: list[LLMTrainingConfig] = [
     #    llm_training_config_2,
-    #    llm_training_config_1,    
-    #]
+    #    llm_training_config_1,
+    # ]
 
-    #generation_configs: list[LLMGenerationConfig] = [
+    # generation_configs: list[LLMGenerationConfig] = [
     #    llm_generation_config_1_greedy,
     #    llm_generation_config_1_beam,
     #    llm_generation_config_1_sampling,
     #    llm_generation_config_1_contrastive,
-    #]
-    
+    # ]
+
     trainings_configs = [
         LLMTrainingConfig(
             model_name="google/gemma-4-E2B-it",
@@ -140,10 +132,10 @@ def main():
             warmup_steps=100,
             bf16=True,
             gradient_checkpointing=True,
-            optim="paged_adamw_8bit",    
+            optim="paged_adamw_8bit",
         ),
     ]
-    
+
     generation_configs = [
         LLMGenerationConfig(
             max_new_tokens=256,
@@ -154,8 +146,8 @@ def main():
             max_new_tokens=256,
             num_beams=4,
             early_stopping=True,
-            no_repeat_ngram_size=5, 
-        )
+            no_repeat_ngram_size=5,
+        ),
     ]
 
     run_llm_finetune(trainings_configs, generation_configs, dataset_loaders, run_dir)
