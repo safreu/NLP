@@ -8,6 +8,8 @@ from data.dataset_loader import DatasetLoader
 from data.newsela_loader import NewselaLoader
 from data.onestop_loader import OneStopLoader
 from data.wikilarge_loader import WikiLargeLoader
+from data.wikismall_loader import WikiSmallLoader
+from pipeline.training_pipeline import EvaluationMode, TrainingPipeline
 from evaluation.analyzers.copy_analyzer import CopyAnalyzer
 from evaluation.analyzers.diversity_analyzer import DiversityAnalyzer
 from evaluation.analyzers.error_case_analyser import ErrorCaseAnalyzer
@@ -24,11 +26,13 @@ DEFAULT_DATASET = "all"
 
 DEFAULT_WIKILARGE_MAX_TRAIN_SAMPLES = 10000
 DEFAULT_WIKILARGE_MAX_EVAL_SAMPLES = 2000
+DEFAULT_WIKISMALL_MAX_TRAIN_SAMPLES = 10000
+DEFAULT_WIKISMALL_MAX_EVAL_SAMPLES = 2000
 
 DEFAULT_NEWSELA_MAX_TRAIN_SAMPLES = 10000
 DEFAULT_NEWSELA_MAX_EVAL_SAMPLES = 2000
 
-DATASET_CHOICES = ("all", "onestop", "wikilarge", "newsela")
+DATASET_CHOICES = ("all", "onestop", "wikilarge", "newsela", "wikismall")
 
 
 @dataclass(frozen=True)
@@ -112,6 +116,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="WikiLarge validation/test sample cap. Use 0 for the full splits.",
     )
     parser.add_argument(
+        "--wikismall-max-train-samples",
+        type=non_negative_int,
+        default=None,
+        help="WikiSmall train sample cap. Use 0 for the full split.",
+    )
+    parser.add_argument(
+        "--wikismall-max-eval-samples",
+        type=non_negative_int,
+        default=None,
+        help="WikiSmall validation/test sample cap. Use 0 for the full splits.",
+    )
+    parser.add_argument(
+
         "--newsela-max-train-samples",
         type=non_negative_int,
         default=None,
@@ -179,6 +196,26 @@ def build_experiments(args: argparse.Namespace) -> list[ExperimentSpec]:
             )
             continue
 
+        if dataset_name == "wikilarge":
+            max_train_samples = resolve_sample_limit(
+                args.wikilarge_max_train_samples,
+                DEFAULT_WIKILARGE_MAX_TRAIN_SAMPLES,
+            )
+            max_eval_samples = resolve_sample_limit(
+                args.wikilarge_max_eval_samples,
+                DEFAULT_WIKILARGE_MAX_EVAL_SAMPLES,
+            )
+            experiments.append(
+                ExperimentSpec(
+                    name="wikilarge",
+                    dataset_loader=WikiLargeLoader(
+                        max_train_samples=max_train_samples,
+                        max_eval_samples=max_eval_samples,
+                    ),
+                    config=apply_training_overrides(
+                        TrainingConfig(epochs=3, max_target_length=128),
+                        args,
+                    ),
         if dataset_name == "newsela":
             max_train_samples = resolve_sample_limit(
                 args.newsela_max_train_samples,
@@ -206,17 +243,17 @@ def build_experiments(args: argparse.Namespace) -> list[ExperimentSpec]:
             continue
 
         max_train_samples = resolve_sample_limit(
-            args.wikilarge_max_train_samples,
-            DEFAULT_WIKILARGE_MAX_TRAIN_SAMPLES,
+            args.wikismall_max_train_samples,
+            DEFAULT_WIKISMALL_MAX_TRAIN_SAMPLES,
         )
         max_eval_samples = resolve_sample_limit(
-            args.wikilarge_max_eval_samples,
-            DEFAULT_WIKILARGE_MAX_EVAL_SAMPLES,
+            args.wikismall_max_eval_samples,
+            DEFAULT_WIKISMALL_MAX_EVAL_SAMPLES,
         )
         experiments.append(
             ExperimentSpec(
-                name="wikilarge",
-                dataset_loader=WikiLargeLoader(
+                name="wikismall",
+                dataset_loader=WikiSmallLoader(
                     max_train_samples=max_train_samples,
                     max_eval_samples=max_eval_samples,
                 ),

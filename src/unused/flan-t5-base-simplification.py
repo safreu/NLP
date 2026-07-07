@@ -95,8 +95,9 @@ def load_wikilarge() -> list[tuple[str, str]]:
 
 
 def load_wikismall() -> list[tuple[str, str]]:
-    dataset = load_dataset("cestwc/adapted-wikismall")
-    return [(row["long"], row["short"]) for row in dataset["train"]]
+    from data.wikismall_loader import load_raw_wikismall_split
+
+    return load_raw_wikismall_split("train")
 
 
 DATASET_LOADERS = {

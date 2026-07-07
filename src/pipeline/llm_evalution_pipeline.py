@@ -68,8 +68,6 @@ class LLMEvaluationPipeline:
             
             gen_run_paths = RunPaths(gen_dir)
             
-            gen_conf.save(gen_dir)
-            
             results = evaluate_llm(
                 test_pairs=test_pairs,
                 model_name=self.model_config.model_name,

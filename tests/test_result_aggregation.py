@@ -171,6 +171,29 @@ def test_aggregate_checkpoint_scores(tmp_path: Path) -> None:
     assert rows[1]["bleu"] == 0.4
 
 
+def test_aggregate_classical_validation_and_test_scores(tmp_path: Path) -> None:
+    run_dir = tmp_path / "run_004"
+    write_training_run_config(run_dir, "classical", "logistic_regression")
+    scores_path = run_dir / "classical" / "scores.json"
+    validation_payload = {"accuracy": 0.8, "macro_f1": 0.75, **metric_payload()}
+    write_score_file(
+        scores_path,
+        {
+            "validation": validation_payload,
+            "test": metric_payload(),
+        },
+    )
+
+    rows = result_aggregation.aggregate_results([run_dir])
+
+    assert [row["checkpoint"] for row in rows] == ["validation", "test"]
+    assert rows[0]["model"] == "logistic_regression"
+    assert rows[0]["sari"] == 41.5
+    assert rows[0]["bertscore_f1"] == 0.86
+    assert rows[1]["model"] == "logistic_regression"
+    assert rows[1]["rouge_l"] == 0.62
+
+
 def test_invalid_baseline_configuration_keeps_empty_model(tmp_path: Path) -> None:
     run_dir = tmp_path / "baselines_full"
     write_baseline_run_config(run_dir, ["copy", {"description": "Missing baseline name."}])
