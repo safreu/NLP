@@ -26,7 +26,7 @@ class ReadabilityAnalyzer(PredictionAnalyzer):
     """
 
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
-        rows = []
+        rows: list[dict[str, object]] = []
 
         for index, row in enumerate(predictions):
             source = row["source"]
@@ -55,25 +55,19 @@ class ReadabilityAnalyzer(PredictionAnalyzer):
         summary = {
             "num_predictions": len(rows),
             "avg_source_flesch_kincaid": mean([row["source_flesch_kincaid"] for row in rows])
-            if rows
-            else 0.0,
+            if rows else 0.0,
             "avg_candidate_flesch_kincaid": mean([row["candidate_flesch_kincaid"] for row in rows])
-            if rows
-            else 0.0,
+            if rows else 0.0,
             "avg_reference_flesch_kincaid": mean([row["reference_flesch_kincaid"] for row in rows])
-            if rows
-            else 0.0,
+            if rows else 0.0,
             "avg_candidate_source_delta": mean([row["candidate_source_delta"] for row in rows])
-            if rows
-            else 0.0,
+            if rows else 0.0,
             "avg_reference_source_delta": mean([row["reference_source_delta"] for row in rows])
-            if rows
-            else 0.0,
+            if rows else 0.0,
             "avg_candidate_reference_delta": mean(
                 [row["candidate_reference_delta"] for row in rows]
             )
-            if rows
-            else 0.0,
+            if rows else 0.0,
         }
 
         write_json(

@@ -1,87 +1,19 @@
+from __future__ import annotations
+
 from collections import Counter
-from dataclasses import asdict, dataclass
+from statistics import mean
 
 import spacy
+from spacy.language import Language
 
+from evaluation.analyzers.analyzer_utils import (
+    extract_numbers,
+    preservation_rate,
+)
 from evaluation.analyzers.base import PredictionAnalyzer
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.prediction_store import PredictionRow
-
-NEGATIONS = {"not", "no", "never", "n't", "none", "without"}
-
-nlp = spacy.load("en_core_web_sm")
-
-
-def create_summary_counter() -> dict[str, Counter[str]]:
-    return {
-        "entities": Counter(),
-        "numbers": Counter(),
-        "negations": Counter(),
-        "proper_nouns": Counter(),
-        "noun_chunks": Counter(),
-        "verbs": Counter(),
-    }
-
-
-def count_losses(loss: dict[str, list[str]]) -> dict[str, int]:
-    return {category: len(items) for category, items in loss.items()}
-
-
-def extract_negations(doc) -> set[str]:
-    return {
-        token.text.lower()
-        for token in doc
-        if token.text.lower() in NEGATIONS or token.dep_ == "neg"
-    }
-
-
-def build_summary(counter: dict[str, Counter[str]], num_predictions: int) -> dict[str, object]:
-    totals = {category: sum(values.values()) for category, values in counter.items()}
-
-    averages = {
-        category: total / num_predictions if num_predictions else 0.0
-        for category, total in totals.items()
-    }
-
-    return {
-        "loss_totals": totals,
-        "loss_average_per_prediction": averages,
-        "most_common_losses": {
-            category: values.most_common(25) for category, values in counter.items()
-        },
-    }
-
-
-@dataclass
-class InformationLossResult:
-    entities: list[str]
-    numbers: list[str]
-    negations: list[str]
-    proper_nouns: list[str]
-    noun_chunks: list[str]
-    verbs: list[str]
-
-
-def extract_information(text: str) -> dict[str, set[str]]:
-    doc = nlp(text)
-    return {
-        "entities": {ent.text.lower() for ent in doc.ents},
-        "numbers": {token.text.lower() for token in doc if token.like_num},
-        "negations": extract_negations(doc),
-        "proper_nouns": {token.text.lower() for token in doc if token.pos_ == "PROPN"},
-        "noun_chunks": {chunk.text.lower() for chunk in doc.noun_chunks},
-        "verbs": {token.lemma_.lower() for token in doc if token.pos_ == "VERB"},
-    }
-
-
-def calculate_information_loss(reference: str, prediction: str) -> InformationLossResult:
-    reference_info = extract_information(reference)
-    prediction_info = extract_information(prediction)
-
-    lost = {key: sorted(reference_info[key] - prediction_info[key]) for key in reference_info}
-
-    return InformationLossResult(**lost)
 
 
 class InformationLossAnalyzer(PredictionAnalyzer):
@@ -107,51 +39,110 @@ class InformationLossAnalyzer(PredictionAnalyzer):
     prediction, and the most frequently removed information across the
     entire dataset.
     """
+    
+    def __init__(self, model_name: str = "en_core_web_sm") -> None:
+        self.model_name = model_name
+        self._nlp: Language | None = None
+    
+        
+    def _load_nlp(self) -> Language:
+        if self._nlp is None:
+            self._nlp = spacy.load(self.model_name)
+        
+        return self._nlp
+    
+    
+    def _entities(self, text: str) -> list[str]:
+        doc = self._load_nlp()(text)
+        
+        return [
+            entity.text.lower()
+            for entity in doc.ents
+        ]
+        
 
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
+        rows: list[dict[str, object]] = []
+        
+        entity_rates: list[float] = []
+        number_rates: list[float] = []
+        
+        lost_entities: Counter[str] = Counter()
+        lost_numbers: Counter[str] = Counter()
 
-        results = []
+        for index, row in enumerate(predictions):
+            source = row["source"]
+            candidate = row["candidate"]
+            reference = row["reference"]
 
-        reference_summary_counter = create_summary_counter()
-        source_summary_counter = create_summary_counter()
+            source_entities = self._entities(source)
+            candidate_entities = self._entities(candidate)
+            
+            source_numbers = extract_numbers(source)
+            candidate_numbers = extract_numbers(candidate)
+            
+            entity_rate = preservation_rate(source_entities, candidate_entities)
+            number_rate = preservation_rate(source_numbers, candidate_numbers)
+            
+            if entity_rate is not None:
+                entity_rates.append(entity_rate)
+                
+            if number_rate is not None:
+                number_rates.append(number_rate)
+                
+            source_entity_counts = Counter(source_entities)
+            candidate_entity_counts = Counter(candidate_entities)
+            
+            source_number_counts = Counter(source_numbers)
+            candidate_number_counts = Counter(candidate_numbers)
+            
+            row_lost_entities = list(
+                (
+                    source_entity_counts - candidate_entity_counts
+                ).elements()
+            )
+            
+            row_lost_numbers = list(
+                (
+                    source_number_counts - candidate_number_counts
+                ).elements()
+            )
+            
+            lost_entities.update(row_lost_entities)
+            lost_numbers.update(row_lost_numbers)
 
-        for index, item in enumerate(predictions):
-            source = item["source"]
-            reference = item["reference"]
-            prediction = item["candidate"]
 
-            source_loss = calculate_information_loss(source, prediction)
-            reference_loss = calculate_information_loss(reference, prediction)
-
-            source_loss_dict = asdict(source_loss)
-            reference_loss_dict = asdict(reference_loss)
-
-            source_loss_counts = count_losses(source_loss_dict)
-            reference_loss_counts = count_losses(reference_loss_dict)
-
-            for category, items in source_loss_dict.items():
-                source_summary_counter[category].update(items)
-
-            for category, items in reference_loss_dict.items():
-                reference_summary_counter[category].update(items)
-
-            results.append(
+            rows.append(
                 {
                     "index": index,
                     "source": source,
+                    "candidate": candidate,
                     "reference": reference,
-                    "candidate": prediction,
-                    "source_loss": source_loss_dict,
-                    "reference_loss": reference_loss_dict,
-                    "source_loss_counts": source_loss_counts,
-                    "reference_loss_counts": reference_loss_counts,
+                    "source_entities": source_entities,
+                    "candidate_entities": candidate_entities,
+                    "source_numbers": source_numbers,
+                    "candidate_numbers": candidate_numbers,
+                    "lost_entities": row_lost_entities,
+                    "lost_numbers": row_lost_numbers,
+                    "entity_preservation_rate": entity_rate,
+                    "number_preservation_rate": number_rate,
                 }
             )
 
         summary = {
-            "num_predictions": len(predictions),
-            "source_loss": build_summary(source_summary_counter, len(predictions)),
-            "reference_loss": build_summary(reference_summary_counter, len(predictions)),
+            "num_predictions": len(rows),
+            "num_sentences_with_source_entities": len(entity_rates),
+            "num_sentences_with_source_numbers": len(number_rates),
+            "entity_preservation_rate": (
+                mean(entity_rates) if entity_rates else None
+            ),
+            "number_preservation_rate": (
+                mean(number_rates) if number_rates else None
+            ),
+            "lost_entity_count": sum(lost_entities.values()),
+            "lost_number_count": sum(lost_numbers.values()),
+            "most_common_lost_entities": lost_entities.most_common(25),
+            "most_common_lost_numbers": lost_numbers.most_common(25),
         }
 
-        write_json({"summary": summary, "data": results}, run_paths.information_loss_path)
+        write_json({"summary": summary, "data": rows}, run_paths.information_loss_path)

@@ -1,17 +1,14 @@
 from statistics import mean
 
+from evaluation.analyzers.analyzer_utils import (
+    safe_ratio,
+    tokens,
+    words,
+)
 from evaluation.analyzers.base import PredictionAnalyzer
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.prediction_store import PredictionRow
-
-
-def word_count(text: str) -> int:
-    return len(text.split())
-
-
-def safe_ratio(a: int, b: int) -> float:
-    return a / b if b else 0.0
 
 
 class LengthAnalyzer(PredictionAnalyzer):
@@ -30,39 +27,123 @@ class LengthAnalyzer(PredictionAnalyzer):
     """
 
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
-        rows = []
+        rows: list[dict[str, object]] = []
+        
+        
 
         for index, row in enumerate(predictions):
-            source_len = word_count(row["source"])
-            candidate_len = word_count(row["candidate"])
-            reference_len = word_count(row["reference"])
+            source = row["source"]
+            candidate = row["candidate"]
+            reference = row["reference"]
+
+            source_tokens = tokens(source)
+            candidate_tokens = tokens(candidate)
+            reference_tokens = tokens(reference)
+            
+            source_words = words(source)
+            candidate_words = words(candidate)
+            reference_words = words(reference)
 
             rows.append(
                 {
                     "index": index,
-                    "source_word_count": source_len,
-                    "candidate_word_count": candidate_len,
-                    "reference_word_count": reference_len,
-                    "candidate_source_ratio": safe_ratio(candidate_len, source_len),
-                    "candidate_reference_ratio": safe_ratio(candidate_len, reference_len),
+                    "source": source,
+                    "candidate": candidate,
+                    "reference": reference,
+                    "source_token_count": len(source_tokens),
+                    "candidate_token_count": len(candidate_tokens),
+                    "reference_token_count": len(reference_tokens),
+                    "source_sentence_length": len(source),
+                    "candidate_sentence_length": len(candidate),
+                    "reference_sentence_length": len(reference),
+                    "source_avg_word_length": (
+                        sum(len(word) for word in source_words) / len(source_words)
+                        if source_words else 0.0
+                    ),
+                    "candidate_avg_word_length": (
+                        sum(len(word) for word in candidate_words) / len(candidate_words)
+                        if candidate_words else 0.0
+                    ),
+                    "reference_avg_word_length": (
+                        sum(len(word) for word in reference_words) / len(reference_words)
+                        if reference_words else 0.0
+                    ),
+                    "candidate_source_ratio": safe_ratio(len(candidate_tokens), len(source_tokens)),
+                    "candidate_reference_ratio": safe_ratio(
+                        len(candidate_tokens), 
+                        len(reference_tokens)
+                    ),
                 }
             )
 
         summary = {
             "num_predictions": len(rows),
-            "avg_source_word_count": mean([r["source_word_count"] for r in rows]) if rows else 0,
-            "avg_candidate_word_count": mean([r["candidate_word_count"] for r in rows])
-            if rows
-            else 0,
-            "avg_reference_word_count": mean([r["reference_word_count"] for r in rows])
-            if rows
-            else 0,
-            "avg_candidate_source_ratio": mean([r["candidate_source_ratio"] for r in rows])
-            if rows
-            else 0,
-            "avg_candidate_reference_ratio": mean([r["candidate_reference_ratio"] for r in rows])
-            if rows
-            else 0,
+            "avg_source_token_count": (
+                mean(
+                    float(row["source_token_count"]) for row in rows
+                )
+                if rows else 0.0
+            ),
+            "avg_candidate_token_count": (
+                mean(
+                    float(row["candidate_token_count"]) for row in rows
+                )
+                if rows else 0.0
+            ),
+            "avg_reference_token_count": (
+                mean(
+                    float(row["reference_token_count"]) for row in rows
+                )
+                if rows else 0.0
+            ),
+            "avg_source_sentence_length": (
+                mean(
+                    float(row["source_sentence_length"]) for row in rows
+                )
+                if rows else 0.0
+            ),
+            "avg_candidate_sentence_length": (
+                mean(
+                    float(row["candidate_sentence_length"]) for row in rows
+                )
+                if rows else 0.0
+            ),
+            "avg_reference_sentence_length": (
+                mean(
+                    float(row["reference_sentence_length"]) for row in rows
+                )
+                if rows else 0.0
+            ),
+            "avg_source_word_length": (
+                mean(
+                    float(row["source_avg_word_length"]) for row in rows
+                )
+                if rows else 0.0
+            ),
+            "avg_candidate_word_length": (
+                mean(
+                    float(row["candidate_avg_word_length"]) for row in rows
+                )
+                if rows else 0.0
+            ),
+            "avg_reference_word_length": (
+                mean(
+                    float(row["reference_avg_word_length"]) for row in rows
+                )
+                if rows else 0.0
+            ),
+            "avg_candidate_source_ratio": (
+                mean(
+                    float(row["candidate_source_ratio"]) for row in rows
+                )
+                if rows else 0.0
+            ),
+            "avg_candidate_reference_ratio": (
+                mean(
+                    float(row["candidate_reference_ratio"]) for row in rows
+                )
+                if rows else 0.0
+            ),
         }
 
         write_json({"summary": summary, "data": rows}, run_paths.length_analysis_path)
