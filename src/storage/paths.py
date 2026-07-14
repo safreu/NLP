@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 
@@ -90,6 +91,12 @@ class RunPaths:
         return self.checkpoint_dir(checkpoint_name) / "predictions.json"
 
     @classmethod
-    def for_runs_root(cls, root: Path | None = None) -> RunPaths:
+    def for_runs_root(cls, root: Path | None = None, timestamp: bool = True) -> RunPaths:
         tmpdir = Path(os.environ.get("TMPDIR", "."))
-        return cls(tmpdir / (root or Path("runs")))
+        
+        root = root or Path("runs")
+        
+        if timestamp:
+            root /= datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        
+        return cls(tmpdir / root)
