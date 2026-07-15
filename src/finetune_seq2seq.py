@@ -27,6 +27,7 @@ from storage.paths import RunPaths
 
 load_dotenv()
 
+
 def run_finetuning_seq2seq(
     trainings_configs: list[TrainingConfig],
     generation_configs: list[GenerationConfig],
@@ -61,7 +62,8 @@ def run_finetuning_seq2seq(
             ).run()
 
             print(
-                f"{dataset_name} with {train_idx} finished in {(time.time()-start)/60:.1f} minutes"
+                f"{dataset_name} with {train_idx} finished in ",
+                f"{(time.time() - start) / 60:.1f} minutes",
             )
 
 

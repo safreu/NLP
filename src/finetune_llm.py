@@ -30,6 +30,7 @@ from storage.paths import RunPaths
 
 load_dotenv()
 
+
 def run_llm_finetune(
     trainings_configs, generation_configs, dataset_loaders: list[DatasetLoader], run_dir: RunPaths
 ):
@@ -60,7 +61,8 @@ def run_llm_finetune(
             ).run()
 
             print(
-                f"{dataset_name} with {train_idx} finished in {(time.time()-start)/60:.1f} minutes"
+                f"{dataset_name} with {train_idx} finished in ",
+                f"{(time.time() - start) / 60:.1f} minutes",
             )
 
 
