@@ -46,8 +46,8 @@ class CopyAnalyzer(PredictionAnalyzer):
 
             source_overlap = token_f1(candidate, source)
             reference_overlap = token_f1(candidate, reference)
-            
-            exact_copy = (normalize_text(source) == normalize_text(candidate))
+
+            exact_copy = normalize_text(source) == normalize_text(candidate)
 
             result = {
                 "index": index,
@@ -59,7 +59,7 @@ class CopyAnalyzer(PredictionAnalyzer):
                 "exact_copy": exact_copy,
                 "changed_from_source": not exact_copy,
             }
-            
+
             rows.append(result)
 
             if exact_copy:
@@ -80,24 +80,19 @@ class CopyAnalyzer(PredictionAnalyzer):
             "near_copy_ratio": len(near_copies) / total if total else 0.0,
             "different_ratio": len(different_predictions) / total if total else 0.0,
             "percent_sentences_changed": (
-                sum(bool(row["changed_from_source"]) for row in rows)
-                / total * 100 if total else 0.0
+                sum(bool(row["changed_from_source"]) for row in rows) / total * 100
+                if total
+                else 0.0
             ),
             "avg_source_token_overlap": (
-                mean(
-                    float(row["source_token_overlap"]) for row in rows
-                )
-                if rows else 0.0
+                mean(float(row["source_token_overlap"]) for row in rows) if rows else 0.0
             ),
             "avg_reference_token_overlap": (
-                mean(
-                    float(row["reference_token_overlap"]) for row in rows
-                )
-                if rows else 0.0
+                mean(float(row["reference_token_overlap"]) for row in rows) if rows else 0.0
             ),
             "near_copy_threshold": self.threshold,
         }
-        
+
         report = {
             "summary": summary,
             "data": rows,

@@ -93,10 +93,10 @@ class RunPaths:
     @classmethod
     def for_runs_root(cls, root: Path | None = None, timestamp: bool = True) -> RunPaths:
         tmpdir = Path(os.environ.get("TMPDIR", "."))
-        
+
         root = root or Path("runs")
-        
+
         if timestamp:
             root /= datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        
+
         return cls(tmpdir / root)

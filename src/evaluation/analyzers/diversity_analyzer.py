@@ -26,15 +26,11 @@ class DiversityAnalyzer(PredictionAnalyzer):
 
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
         candidates = [row["candidate"].strip() for row in predictions]
-        
-        normalized_candidates = [
-            normalize_text(candidate)
-            for candidate in candidates    
-        ]
-        
+
+        normalized_candidates = [normalize_text(candidate) for candidate in candidates]
+
         raw_counter = Counter(candidates)
         normalized_counter = Counter(normalized_candidates)
-        
 
         repeated = [
             {
@@ -44,7 +40,7 @@ class DiversityAnalyzer(PredictionAnalyzer):
             for candidate, count in raw_counter.most_common()
             if count > 1
         ]
-        
+
         normalized_repeated = [
             {
                 "normalized_candidate": candidate,
@@ -55,7 +51,7 @@ class DiversityAnalyzer(PredictionAnalyzer):
         ]
 
         empty_outputs = [index for index, candidate in enumerate(candidates) if not candidate]
-        
+
         total = len(candidates)
 
         summary = {

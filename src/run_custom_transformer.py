@@ -19,13 +19,14 @@ from evaluation.analyzers.length_analyzer import LengthAnalyzer
 from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
 from evaluation.asset_sari_evaluator import AssetSariEvaluator
 from pipeline.custom_transformer_evaluation_pipeline import CustomTransformerGenerationPipeline
+from pipeline.custom_transformer_training_pipeline import CustomTransformerTrainingPipeline
 from storage.paths import RunPaths
 
 load_dotenv()
 
+
 def run_custom_transformer(
     trainings_configs: list[CustomTransformerTrainingConfig],
-    generation_configs: list[CustomTransfomerGenerationConfig],
     dataset_loaders: list[DatasetLoader],
     run_dir: RunPaths,
 ):
@@ -36,7 +37,7 @@ def run_custom_transformer(
         for train_idx, train_conf in enumerate(trainings_configs):
             run_name = f"{dataset_name}_train{train_idx}"
 
-            CustomTransformerTrainingConfig(
+            CustomTransformerTrainingPipeline(
                 name=run_name,
                 dataset_loader=dataset_loader,
                 training_config=train_conf,
@@ -56,27 +57,22 @@ def run_custom_transformer(
             ).run()
 
             print(
-                f"{dataset_name} with {train_idx} finished in {(time.time()-start)/60:.1f} minutes"
+                f"{dataset_name} with {train_idx} finished in ",
+                f"{(time.time() - start) / 60:.1f} minutes",
             )
 
 
 def main():
 
-    training_configs = [
-        CustomTransformerTrainingConfig(
-            num_epochs=10,
-            decoder_learning_rate=3e-4
-        )
-    ]
-    
+    training_configs = [CustomTransformerTrainingConfig(num_epochs=1, decoder_learning_rate=3e-4)]
 
     dataset_loaders: list[DatasetLoader] = [
-        NewselaLoader(max_train_samples=10000, max_eval_samples=2000),
-        WikiLargeLoader(max_train_samples=10000, max_eval_samples=2000),
+        NewselaLoader(max_train_samples=10, max_eval_samples=2),
+        WikiLargeLoader(max_train_samples=10, max_eval_samples=2),
         OneStopLoader(),
     ]
 
-    run_dir = RunPaths.for_runs_root(Path("runs/seq2seq/finetune"))
+    run_dir = RunPaths.for_runs_root(Path("runs/custom_transformer/base"))
 
     run_custom_transformer(training_configs, dataset_loaders, run_dir)
 

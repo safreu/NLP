@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 from dotenv import load_dotenv
@@ -75,7 +74,8 @@ class TransformerBlock(nn.Module):
         out = self.dropout(self.norm2(forward + x))
         return out
 
-'''
+
+"""
 class Encoder(nn.Module):
     def __init__(
         self,
@@ -113,7 +113,8 @@ class Encoder(nn.Module):
             out = layer(out, out, out, mask)
 
         return out
-'''
+"""
+
 
 class DecoderBlock(nn.Module):
     def __init__(self, embed_size, heads, dropout, forward_expansion, device):
@@ -208,11 +209,11 @@ class Transformer(nn.Module):
 
     def forward(self, src_ids, src_attention_mask, trg):
         src_mask = src_attention_mask.unsqueeze(1).unsqueeze(2)
-        
+
         enc_src = self.encoder(
             input_ids=src_ids,
             attention_mask=src_attention_mask,
         ).last_hidden_state
-        
+
         trg_mask = self.make_trg_mask(trg)
         return self.decoder(trg, enc_src, src_mask, trg_mask)
