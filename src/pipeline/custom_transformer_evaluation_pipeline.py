@@ -23,7 +23,7 @@ class CustomTransformerGenerationPipeline:
         self.analyzers = analyzers or [CopyAnalyzer(), InformationLossAnalyzer()]
         self.extra_evaluators = extra_evaluators or []
 
-    def _run_anlyzers(self) -> None:
+    def _run_analyzers(self) -> None:
         predictions = read_predictions(self.run_paths.predictions_path)
 
         for analyzer in self.analyzers:
@@ -47,7 +47,7 @@ class CustomTransformerGenerationPipeline:
 
         return results
 
-    def run(self, model, tokenizer, device, test_pairs: list[tuple[str, str]]) -> None:
+    def run(self, model, tokenizer, device, test_pairs: list[tuple[str, str]]) -> dict[str, Any]:
         sources = [source for source, _ in test_pairs]
         references = [reference for _, reference in test_pairs]
 
@@ -79,6 +79,6 @@ class CustomTransformerGenerationPipeline:
 
         write_json(results, self.run_paths.scores_path)
 
-        self._run_anlyzers()
+        self._run_analyzers()
 
         return results

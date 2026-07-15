@@ -1,9 +1,50 @@
+from typing import type
+
 import torch
 import torch.nn as nn
-from dotenv import load_dotenv
 from transformers import AutoModel
 
-load_dotenv()
+from models.custom_transformer.components import TransformerComponents
+
+"""
+class Encoder(nn.Module):
+    def __init__(
+        self,
+        src_vocab_size,
+        embed_size,
+        num_layers,
+        heads,
+        device,
+        forward_expansion,
+        dropout,
+        max_length,
+    ):
+        super().__init__()
+        self.embed_size = embed_size
+        self.device = device
+        self.word_embedding = nn.Embedding(src_vocab_size, embed_size)
+        self.position_embedding = nn.Embedding(max_length, embed_size)
+
+        self.layers = nn.ModuleList(
+            [
+                TransformerBlock(
+                    embed_size, heads, dropout=dropout, forward_expansion=forward_expansion
+                )
+                for _ in range(num_layers)
+            ]
+        )
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x, mask):
+        N, seq_length = x.shape
+        positions = torch.arange(0, seq_length).expand(N, seq_length).to(self.device)
+        out = self.dropout(self.word_embedding(x) + self.position_embedding(positions))
+
+        for layer in self.layers:
+            out = layer(out, out, out, mask)
+
+        return out
+"""
 
 
 class SelfAttention(nn.Module):
@@ -52,9 +93,13 @@ class SelfAttention(nn.Module):
 
 
 class TransformerBlock(nn.Module):
-    def __init__(self, embed_size, heads, dropout, forward_expansion):
+    def __init__(
+        self, embed_size, heads, dropout, forward_expansion, attention_cls: type[nn.Module]
+    ):
         super().__init__()
-        self.attention = SelfAttention(embed_size, heads)
+
+        self.attention = attention_cls(embed_size, heads)
+
         self.norm1 = nn.LayerNorm(embed_size)
         self.norm2 = nn.LayerNorm(embed_size)
 
@@ -70,64 +115,47 @@ class TransformerBlock(nn.Module):
         attention = self.attention(value, key, query, mask)
 
         x = self.dropout(self.norm1(attention + query))
+
         forward = self.feed_forward(x)
+
         out = self.dropout(self.norm2(forward + x))
-        return out
-
-
-"""
-class Encoder(nn.Module):
-    def __init__(
-        self,
-        src_vocab_size,
-        embed_size,
-        num_layers,
-        heads,
-        device,
-        forward_expansion,
-        dropout,
-        max_length,
-    ):
-        super().__init__()
-        self.embed_size = embed_size
-        self.device = device
-        self.word_embedding = nn.Embedding(src_vocab_size, embed_size)
-        self.position_embedding = nn.Embedding(max_length, embed_size)
-
-        self.layers = nn.ModuleList(
-            [
-                TransformerBlock(
-                    embed_size, heads, dropout=dropout, forward_expansion=forward_expansion
-                )
-                for _ in range(num_layers)
-            ]
-        )
-        self.dropout = nn.Dropout(dropout)
-
-    def forward(self, x, mask):
-        N, seq_length = x.shape
-        positions = torch.arange(0, seq_length).expand(N, seq_length).to(self.device)
-        out = self.dropout(self.word_embedding(x) + self.position_embedding(positions))
-
-        for layer in self.layers:
-            out = layer(out, out, out, mask)
 
         return out
-"""
 
 
 class DecoderBlock(nn.Module):
-    def __init__(self, embed_size, heads, dropout, forward_expansion, device):
+    def __init__(
+        self,
+        embed_size,
+        heads,
+        dropout,
+        forward_expansion,
+        attention_cls: type[nn.Module],
+        transformer_block_cls: type[nn.Module],
+    ):
         super().__init__()
-        self.attention = SelfAttention(embed_size, heads)
+
+        self.attention = attention_cls(embed_size, heads)
+
         self.norm = nn.LayerNorm(embed_size)
-        self.transformer_block = TransformerBlock(embed_size, heads, dropout, forward_expansion)
+
+        self.transformer_block = transformer_block_cls(
+            embed_size=embed_size,
+            heads=heads,
+            dropout=dropout,
+            forward_expansion=forward_expansion,
+            attention_cls=attention_cls,
+        )
+
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x, value, key, src_mask, trg_mask):
         attention = self.attention(x, x, x, trg_mask)
+
         query = self.dropout(self.norm(attention + x))
+
         out = self.transformer_block(value, key, query, src_mask)
+
         return out
 
 
@@ -142,24 +170,40 @@ class Decoder(nn.Module):
         dropout,
         device,
         max_length,
+        attention_cls: type[nn.Module],
+        transformer_block_cls: type[nn.Module],
+        decoder_block_cls: type[nn.Module],
     ):
         super().__init__()
+
         self.device = device
+
         self.word_embedding = nn.Embedding(trg_vocab_size, embed_size)
+
         self.position_embedding = nn.Embedding(max_length, embed_size)
 
         self.layers = nn.ModuleList(
             [
-                DecoderBlock(embed_size, heads, dropout, forward_expansion, device)
+                decoder_block_cls(
+                    embed_size=embed_size,
+                    heads=heads,
+                    dropout=dropout,
+                    forward_expansion=forward_expansion,
+                    attention_cls=attention_cls,
+                    transformer_block_cls=transformer_block_cls,
+                )
                 for _ in range(num_layers)
             ]
         )
         self.fc_out = nn.Linear(embed_size, trg_vocab_size)
+
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x, enc_out, src_mask, trg_mask):
         N, seq_length = x.shape
+
         positions = torch.arange(0, seq_length).expand(N, seq_length).to(self.device)
+
         x = self.dropout(self.word_embedding(x) + self.position_embedding(positions))
 
         for layer in self.layers:
@@ -175,6 +219,8 @@ class Transformer(nn.Module):
         self,
         trg_vocab_size,
         trg_pad_idx,
+        components: TransformerComponents,
+        encoder_name: str = "google-bert/bert-base-uncased",
         num_layers=6,
         forward_expansion=4,
         heads=8,
@@ -184,18 +230,21 @@ class Transformer(nn.Module):
     ):
         super().__init__()
 
-        self.encoder = AutoModel.from_pretrained("google-bert/bert-base-uncased")
+        self.encoder = AutoModel.from_pretrained(encoder_name)
         embed_size = self.encoder.config.hidden_size
 
-        self.decoder = Decoder(
-            trg_vocab_size,
-            embed_size,
-            num_layers,
-            heads,
-            forward_expansion,
-            dropout,
-            device,
-            max_length,
+        self.decoder = components.decoder_cls(
+            trg_vocab_size=trg_vocab_size,
+            embed_size=embed_size,
+            num_layers=num_layers,
+            heads=heads,
+            forward_expansion=forward_expansion,
+            dropout=dropout,
+            device=device,
+            max_length=max_length,
+            attention_cls=components.attention_cls,
+            transformer_block_cls=components.transformer_block_cls,
+            decoder_block_cls=components.decoder_block_cls,
         )
 
         self.trg_pad_idx = trg_pad_idx

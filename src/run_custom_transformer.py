@@ -4,7 +4,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from configuration.custom_transformer_config import (
-    CustomTransfomerGenerationConfig,
     CustomTransformerTrainingConfig,
 )
 from data.dataset_loader import DatasetLoader
@@ -18,6 +17,7 @@ from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyz
 from evaluation.analyzers.length_analyzer import LengthAnalyzer
 from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
 from evaluation.asset_sari_evaluator import AssetSariEvaluator
+from models.custom_transformer.factory import TransformerVersion
 from pipeline.custom_transformer_evaluation_pipeline import CustomTransformerGenerationPipeline
 from pipeline.custom_transformer_training_pipeline import CustomTransformerTrainingPipeline
 from storage.paths import RunPaths
@@ -35,7 +35,7 @@ def run_custom_transformer(
         dataset_name = dataset_loader.__class__.__name__.replace("Loader", "")
 
         for train_idx, train_conf in enumerate(trainings_configs):
-            run_name = f"{dataset_name}_train{train_idx}"
+            run_name = f"{dataset_name}_{train_conf.version.value}_train{train_idx}"
 
             CustomTransformerTrainingPipeline(
                 name=run_name,
@@ -44,6 +44,7 @@ def run_custom_transformer(
                 run_paths=run_dir,
                 evaluation_pipeline=CustomTransformerGenerationPipeline(
                     run_paths=run_dir,
+                    max_length=train_conf.max_length,
                     analyzers=[
                         CopyAnalyzer(threshold=0.95),
                         InformationLossAnalyzer(),
@@ -64,7 +65,23 @@ def run_custom_transformer(
 
 def main():
 
-    training_configs = [CustomTransformerTrainingConfig(num_epochs=1, decoder_learning_rate=3e-4)]
+    training_configs = [
+        CustomTransformerTrainingConfig(
+            version=TransformerVersion.BASELINE,
+            num_epochs=1,
+            decoder_learning_rate=3e-4,
+        ),
+        CustomTransformerTrainingConfig(
+            version=TransformerVersion.V1,
+            num_epochs=1,
+            decoder_learning_rate=3e-4,
+        ),
+        CustomTransformerTrainingConfig(
+            version=TransformerVersion.V2,
+            num_epochs=1,
+            decoder_learning_rate=3e-4,
+        ),
+    ]
 
     dataset_loaders: list[DatasetLoader] = [
         NewselaLoader(max_train_samples=10, max_eval_samples=2),
@@ -72,7 +89,7 @@ def main():
         OneStopLoader(),
     ]
 
-    run_dir = RunPaths.for_runs_root(Path("runs/custom_transformer/base"))
+    run_dir = RunPaths.for_runs_root(Path("runs/custom_transformer"))
 
     run_custom_transformer(training_configs, dataset_loaders, run_dir)
 
