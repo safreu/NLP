@@ -72,11 +72,6 @@ def main():
             decoder_learning_rate=3e-4,
         ),
         CustomTransformerTrainingConfig(
-            version=TransformerVersion.V1,
-            num_epochs=10,
-            decoder_learning_rate=3e-4,
-        ),
-        CustomTransformerTrainingConfig(
             version=TransformerVersion.V2,
             num_epochs=10,
             decoder_learning_rate=3e-4,

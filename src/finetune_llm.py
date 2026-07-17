@@ -147,12 +147,12 @@ def main():
             do_sample=False,
             no_repeat_ngram_size=5,
         ),
-        LLMGenerationConfig(
-            max_new_tokens=256,
-            num_beams=4,
-            early_stopping=True,
-            no_repeat_ngram_size=5,
-        ),
+        #LLMGenerationConfig(
+        #    max_new_tokens=256,
+        #    num_beams=4,
+        #    early_stopping=True,
+        #    no_repeat_ngram_size=5,
+        #),
     ]
 
     run_llm_finetune(trainings_configs, generation_configs, dataset_loaders, run_dir)
