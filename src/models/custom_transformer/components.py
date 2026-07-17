@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import type
 
 import torch.nn as nn
 
