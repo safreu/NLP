@@ -68,24 +68,24 @@ def main():
     training_configs = [
         CustomTransformerTrainingConfig(
             version=TransformerVersion.BASELINE,
-            num_epochs=1,
+            num_epochs=10,
             decoder_learning_rate=3e-4,
         ),
         CustomTransformerTrainingConfig(
             version=TransformerVersion.V1,
-            num_epochs=1,
+            num_epochs=10,
             decoder_learning_rate=3e-4,
         ),
         CustomTransformerTrainingConfig(
             version=TransformerVersion.V2,
-            num_epochs=1,
+            num_epochs=10,
             decoder_learning_rate=3e-4,
         ),
     ]
 
     dataset_loaders: list[DatasetLoader] = [
-        NewselaLoader(max_train_samples=10, max_eval_samples=2),
-        WikiLargeLoader(max_train_samples=10, max_eval_samples=2),
+        NewselaLoader(max_train_samples=10000, max_eval_samples=2000),
+        WikiLargeLoader(max_train_samples=10000, max_eval_samples=2000),
         OneStopLoader(),
     ]
 
