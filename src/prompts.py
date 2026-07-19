@@ -17,6 +17,29 @@ ZERO_SHOT_SIMPLIFY_INSTRUCTION = (
 )
 
 
+def few_shot_simplify_message(text: str, examples: list[tuple[str, str]]) -> list[dict[str, str]]:
+    messages = list[dict[str, str]] = []
+
+    for source, target in examples:
+        messages.append(
+            {
+                "role": "user",
+                "content": f"{ZERO_SHOT_SIMPLIFY_INSTRUCTION}{source}",
+            }
+        )
+
+        messages.append(
+            {
+                "role": "model",
+                "content": target,
+            }
+        )
+
+    messages.append({"role": "user", "content": f"{ZERO_SHOT_SIMPLIFY_INSTRUCTION}{text}"})
+
+    return messages
+
+
 def simplify_prompt(text: str) -> str:
     return f"{SIMPLIFY_TEXT}{text}"
 

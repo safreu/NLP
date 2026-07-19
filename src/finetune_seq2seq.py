@@ -138,8 +138,7 @@ def main():
     # repetition_penalty=1.1,
     # ),
     # ]
-    
-    
+
     generation_config = GenerationConfig(
         max_new_tokens=256,
         do_sample=False,
@@ -165,7 +164,6 @@ def main():
         seed=42,
     )
 
-
     training_config_5_epochs = TrainingConfig(
         per_device_train_batch_size=16,
         per_device_eval_batch_size=16,
@@ -187,9 +185,7 @@ def main():
         training_config_5_epochs,
     ]
 
-    generation_configs: list[GenerationConfig] = [
-        generation_config
-    ]
+    generation_configs: list[GenerationConfig] = [generation_config]
 
     dataset_loaders: list[DatasetLoader] = [
         NewselaLoader(max_train_samples=10000, max_eval_samples=2000),

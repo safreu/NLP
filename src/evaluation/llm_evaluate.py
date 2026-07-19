@@ -1,5 +1,5 @@
 import os
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -7,7 +7,6 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from evaluation.metrics_builder import compute_all_metrics
-from prompts import zero_shot_simplify_messages
 from storage.json_store import write_json
 from storage.prediction_store import prediction_rows
 
@@ -56,14 +55,18 @@ def load_causal_model(
     return model, tokenizer
 
 
+MessageBuilder = Callable[[str], list[dict[str, str]]]
+
+
 def generate_prediction(
     source: str,
     model: Any,
     tokenizer: Any,
     device: str,
     generation_config: dict[str, Any],
+    message_builder: MessageBuilder,
 ) -> str:
-    messages = zero_shot_simplify_messages(source)
+    messages = message_builder(source)
     inputs = tokenizer.apply_chat_template(
         messages,
         add_generation_prompt=True,
@@ -90,9 +93,17 @@ def generate_predictions(
     tokenizer: Any,
     device: str,
     generation_config: dict[str, Any],
+    message_builder: MessageBuilder,
 ) -> list[str]:
     return [
-        generate_prediction(source, model, tokenizer, device, generation_config)
+        generate_prediction(
+            source,
+            model,
+            tokenizer,
+            device,
+            generation_config,
+            message_builder,
+        )
         for source in sources
     ]
 
@@ -103,6 +114,7 @@ def evaluate_llm(
     revision: str | None,
     generation_config: dict[str, Any],
     predictions_path: Path,
+    message_builder: MessageBuilder,
     device: str | None = None,
 ):
     resolved_device = select_device(device)
@@ -123,6 +135,7 @@ def evaluate_llm(
         tokenizer=tokenizer,
         device=resolved_device,
         generation_config=generation_config,
+        message_builder=message_builder,
     )
 
     write_json(prediction_rows(sources, candidates, references), predictions_path)

@@ -1,8 +1,11 @@
+import random
 import time
+from functools import partial
 from pathlib import Path
 
 from dotenv import load_dotenv
 
+from configuration.config import SEED
 from configuration.llm_config import (
     LLMGenerationConfig,
     LLMTrainingConfig,
@@ -26,6 +29,7 @@ from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
 from evaluation.asset_sari_evaluator import AssetSariEvaluator
 from pipeline.llm_evalution_pipeline import LLMEvaluationPipeline
 from pipeline.llm_training_pipeline import LLMTrainingPipeline
+from prompts import few_shot_simplify_message
 from storage.paths import RunPaths
 
 load_dotenv()
@@ -67,6 +71,52 @@ def run_llm_finetune(
 
 
 def run_llm_zeroshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
+
+    for i, dataset_loader in enumerate(dataset_loaders):
+        start = time.time()
+
+        dataset_name = dataset_loader.__class__.__name__.replace("Loader", "")
+
+        train, _, test = dataset_loader.load_pairs()
+
+        run_dir.pipeline_dir = f"LLM_{dataset_name}_fewshot_{i}"
+
+        few_shot_examples = random.Random(SEED).sample(train, k=5)
+
+        message_builder = partial(
+            few_shot_simplify_message,
+            examples=few_shot_examples,
+        )
+
+        LLMEvaluationPipeline(
+            model_config=LLMTrainingConfig(),
+            generation_configs=[
+                LLMGenerationConfig(
+                    max_new_tokens=256,
+                    do_sample=False,
+                    num_beams=1,
+                )
+            ],
+            run_paths=run_dir,
+            message_builder=message_builder,
+            analyzers=[
+                CopyAnalyzer(threshold=0.95),
+                InformationLossAnalyzer(),
+                LengthAnalyzer(),
+                DiversityAnalyzer(),
+                ErrorCaseAnalyzer(),
+                ReadabilityAnalyzer(),
+            ],
+            extra_evaluators=[AssetSariEvaluator(split="validation", max_examples=0)],
+        ).run(test)
+
+        print(
+            f"{dataset_name} with {i} finished in ",
+            f"{(time.time() - start) / 60:.1f} minutes",
+        )
+
+
+def run_llm_fewshot(dataset_loaders: list[DatasetLoader], run_dir: RunPaths):
 
     for i, dataset_loader in enumerate(dataset_loaders):
         _, _, test = dataset_loader.load_pairs()
@@ -147,12 +197,12 @@ def main():
             do_sample=False,
             no_repeat_ngram_size=5,
         ),
-        #LLMGenerationConfig(
+        # LLMGenerationConfig(
         #    max_new_tokens=256,
         #    num_beams=4,
         #    early_stopping=True,
         #    no_repeat_ngram_size=5,
-        #),
+        # ),
     ]
 
     run_llm_finetune(trainings_configs, generation_configs, dataset_loaders, run_dir)

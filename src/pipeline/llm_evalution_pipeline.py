@@ -10,6 +10,7 @@ from evaluation.llm_evaluate import (
     load_causal_model,
     select_device,
 )
+from prompts import zero_shot_simplify_messages
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.prediction_store import PredictionRow, read_predictions
@@ -21,12 +22,14 @@ class LLMEvaluationPipeline:
         model_config,
         generation_configs,
         run_paths,
+        message_builder=zero_shot_simplify_messages,
         analyzers=None,
         extra_evaluators=None,
     ):
         self.model_config = model_config
         self.generation_configs = generation_configs
         self.run_paths = run_paths
+        self.message_builder = message_builder
         self.analyzers = analyzers or [CopyAnalyzer(), InformationLossAnalyzer()]
         self.extra_evaluators = extra_evaluators or []
 
@@ -47,6 +50,7 @@ class LLMEvaluationPipeline:
                 tokenizer=tokenizer,
                 device=resolved_device,
                 generation_config=gen_conf.to_dict(),
+                message_builder=self.message_builder,
             )
 
         return predict_fn
@@ -73,6 +77,7 @@ class LLMEvaluationPipeline:
                 device=self.model_config.device,
                 generation_config=gen_conf.to_dict(),
                 predictions_path=gen_run_paths.predictions_path,
+                message_builder=self.message_builder,
             )
 
             predict_fn = self._build_predict_fn(gen_conf)
