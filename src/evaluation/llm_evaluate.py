@@ -1,11 +1,11 @@
+import json
 import os
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
-import json
-from peft import PeftModel
 import torch
+from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from evaluation.metrics_builder import compute_all_metrics
@@ -69,8 +69,8 @@ def load_causal_model(
             base_model_name,
             revision=revision,
             token=hf_token,
-            torch_dtype=resolve_dtype(device),
-            device_map="auto" if device == "cude" else None,
+            dtype=resolve_dtype(device),
+            device_map="auto" if device == "cuda" else None,
         )
         model: Any = PeftModel.from_pretrained(base_model, path)
         model = model.merge_and_unload()
@@ -80,7 +80,7 @@ def load_causal_model(
             model_name,
             revision=revision,
             token=hf_token,
-            torch_dtype=resolve_dtype(device),
+            dtype=resolve_dtype(device),
             device_map="auto" if device == "cuda" else None,
         )
 
