@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from configuration.llm_config import LLMTrainingConfig
 from data.dataset_loader import DatasetLoader
 from pipeline.llm_evalution_pipeline import LLMEvaluationPipeline
@@ -33,6 +35,11 @@ class LLMTrainingPipeline:
             valid=to_dataset(valid),
             path=self.run_paths.model_dir,
             config=self.config,
+        )
+        
+        self.evaluation_pipeline.model_config = replace(
+            self.config,
+            model_name=str(self.run_paths.model_dir)
         )
 
         self.evaluation_pipeline.run(test)
