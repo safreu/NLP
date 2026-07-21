@@ -4,6 +4,8 @@ from types import SimpleNamespace
 from config import ClassicalMLConfig
 from pipeline import classical_ml_pipeline
 from storage.json_store import read_json
+from storage.paths import RunPaths
+from storage.prediction_store import PredictionRow
 
 
 class StubLoader:
@@ -23,6 +25,14 @@ class StubSimplifier:
 
     def simplify(self, sentence: str) -> str:
         return f"simple: {sentence}"
+
+
+class StubAnalyzer:
+    def __init__(self) -> None:
+        self.calls: list[tuple[list[PredictionRow], RunPaths]] = []
+
+    def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
+        self.calls.append((predictions, run_paths))
 
 
 def test_classical_pipeline_scores_validation_and_test_generation_metrics(
@@ -62,10 +72,12 @@ def test_classical_pipeline_scores_validation_and_test_generation_metrics(
         stub_compute_all_metrics,
     )
 
+    analyzer = StubAnalyzer()
     pipeline = classical_ml_pipeline.ClassicalMLPipeline(
         name="classical",
         dataset_loader=StubLoader(),
         config=ClassicalMLConfig(),
+        analyzers=[analyzer],
     )
 
     pipeline.run(tmp_path)
@@ -106,6 +118,12 @@ def test_classical_pipeline_scores_validation_and_test_generation_metrics(
             ["The house was big."],
         ),
     ]
+    assert analyzer.calls == [
+        (
+            validation_predictions,
+            RunPaths(pipeline_dir / "validation_analysis"),
+        )
+    ]
 
 
 def test_classical_pipeline_lightweight_validation_keeps_classifier_metrics(
@@ -130,6 +148,7 @@ def test_classical_pipeline_lightweight_validation_keeps_classifier_metrics(
         name="classical",
         dataset_loader=StubLoader(),
         config=ClassicalMLConfig(compute_generation_metrics=False),
+        analyzers=[],
     )
 
     pipeline.run(tmp_path)

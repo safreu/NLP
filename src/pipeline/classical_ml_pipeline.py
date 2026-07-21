@@ -2,9 +2,18 @@ from pathlib import Path
 
 from config import ClassicalMLConfig
 from data.dataset_loader import DatasetLoader, Pair
+from evaluation.analyzers.base import PredictionAnalyzer
+from evaluation.analyzers.copy_analyzer import CopyAnalyzer
+from evaluation.analyzers.diversity_analyzer import DiversityAnalyzer
+from evaluation.analyzers.error_case_analyser import ErrorCaseAnalyzer
+from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
+from evaluation.analyzers.length_analyzer import LengthAnalyzer
+from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
 from evaluation.classical_evaluate import evaluate_classical_model
 from preprocessing.classical_training_data import to_classical_pairs
 from storage.json_store import write_json
+from storage.paths import RunPaths
+from storage.prediction_store import PredictionRow, read_predictions
 from training.classical_trainer import train_classical_model
 
 
@@ -16,10 +25,29 @@ class ClassicalMLPipeline:
         name: str,
         dataset_loader: DatasetLoader,
         config: ClassicalMLConfig | None = None,
+        analyzers: list[PredictionAnalyzer] | None = None,
     ) -> None:
         self.name = name
         self.dataset_loader = dataset_loader
         self.config = config or ClassicalMLConfig()
+        self.analyzers = (
+            analyzers
+            if analyzers is not None
+            else [
+                CopyAnalyzer(threshold=0.95),
+                InformationLossAnalyzer(),
+                LengthAnalyzer(),
+                DiversityAnalyzer(),
+                ErrorCaseAnalyzer(),
+                ReadabilityAnalyzer(),
+            ]
+        )
+
+    def _run_analyzers(self, predictions_path: Path, run_paths: RunPaths) -> None:
+        predictions: list[PredictionRow] = read_predictions(predictions_path)
+
+        for analyzer in self.analyzers:
+            analyzer.run(predictions, run_paths)
 
     def run(self, run_dir: Path) -> None:
         pipeline_dir = run_dir / self.name
@@ -58,6 +86,11 @@ class ClassicalMLPipeline:
             ),
         }
         write_json(scores, pipeline_dir / "scores.json")
+
+        validation_predictions_path = pipeline_dir / "validation_predictions.json"
+        validation_run_paths = RunPaths(pipeline_dir / "validation_analysis")
+        self._run_analyzers(validation_predictions_path, validation_run_paths)
+
         print(f"Finished Pipeline {self.name}")
 
     @staticmethod
