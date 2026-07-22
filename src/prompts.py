@@ -18,7 +18,7 @@ ZERO_SHOT_SIMPLIFY_INSTRUCTION = (
 
 
 def few_shot_simplify_message(text: str, examples: list[tuple[str, str]]) -> list[dict[str, str]]:
-    messages = list[dict[str, str]] = []
+    messages: list[dict[str, str]] = []
 
     for source, target in examples:
         messages.append(
