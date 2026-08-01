@@ -212,10 +212,11 @@ uv run python -m pipeline.newsela_classical_pipeline \
   --random-forest-estimators 5 --skip-generation-metrics
 ```
 
-On Slurm, export `NEWSELA_CACHE`, `NEWSELA_ENV_FILE`, and `OUTPUT_PATH`, then
-submit `scripts/run_newsela_classical_slurm.sh`. Classical fitting uses CPU;
-the requested GPU accelerates BERTScore. If the cluster has no GPU available,
-remove the `--gres=gpu:1` directive; the metric will fall back to CPU.
+On UC3, keep the repository at `$HOME/NLP2`, the encrypted data under
+`$HOME/NLP2/private_data`, and the persistent environment at
+`$HOME/NLP2/.venv-newsela`. Then submit `scripts/run_newsela_classical_slurm.sh`.
+The script enters the existing NVIDIA Apptainer image automatically. Classical
+fitting uses CPU; the requested A100 accelerates BERTScore.
 
 ## Common experiment flags
 
