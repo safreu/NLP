@@ -1,0 +1,29 @@
+{
+  "controlled_defaults": {
+    "dataset": "wikilarge",
+    "train_size": 2000,
+    "validation_size": 200,
+    "test_size": "full_existing_split",
+    "epochs": 5,
+    "batch_size": 8,
+    "seed": 42,
+    "embed_size": 256,
+    "num_layers": 2,
+    "forward_expansion": 2,
+    "dropout": 0.1,
+    "learning_rate": 0.0003,
+    "max_length": 256,
+    "deterministic": true
+  },
+  "experiments": [
+    {"id": "E1", "name": "E1_corrected_baseline", "model": "corrected", "activation": "relu", "position_encoding": "learned", "heads": 8, "reconstruction_weight": 0.0},
+    {"id": "E2", "name": "E2_dual_decoder_lambda_025", "model": "dual_decoder", "activation": "relu", "position_encoding": "learned", "heads": 8, "reconstruction_weight": 0.25},
+    {"id": "E3", "name": "E3_dual_decoder_lambda_050", "model": "dual_decoder", "activation": "relu", "position_encoding": "learned", "heads": 8, "reconstruction_weight": 0.5},
+    {"id": "E4", "name": "E4_dual_decoder_lambda_100", "model": "dual_decoder", "activation": "relu", "position_encoding": "learned", "heads": 8, "reconstruction_weight": 1.0},
+    {"id": "E5", "name": "E5_dual_decoder_swiglu", "model": "dual_decoder", "activation": "swiglu", "position_encoding": "learned", "heads": 8, "reconstruction_weight": "selected_from_E2_E4"},
+    {"id": "E6", "name": "E6_dual_decoder_rope", "model": "dual_decoder", "activation": "relu", "position_encoding": "rope", "heads": 8, "reconstruction_weight": "selected_from_E2_E4"},
+    {"id": "E7", "name": "E7_dual_decoder_heads_4", "model": "dual_decoder", "activation": "relu", "position_encoding": "learned", "heads": 4, "reconstruction_weight": "selected_from_E2_E4"},
+    {"id": "E8", "name": "E8_dual_decoder_heads_16", "model": "dual_decoder", "activation": "relu", "position_encoding": "learned", "heads": 16, "reconstruction_weight": "selected_from_E2_E4"},
+    {"id": "E9", "name": "E9_final_combined", "model": "dual_decoder", "activation": "selected", "position_encoding": "selected", "heads": "selected", "reconstruction_weight": "selected_from_E2_E4"}
+  ]
+}

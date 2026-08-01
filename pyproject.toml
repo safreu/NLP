@@ -44,11 +44,12 @@ aggregate-results = "evaluation.result_aggregation:main"
 evaluate-baselines = "pipeline.baseline_pipeline:main"
 llm-zero-shot = "pipeline.llm_zero_shot_pipeline:main"
 src = "main:main"
+transformer-experiments = "pipeline.transformer_experiments:main"
 visualize-results = "evaluation.result_visualization:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["config", "main", "prompts"]
+py-modules = ["config", "dual_decoder_transformer", "main", "prompts"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
