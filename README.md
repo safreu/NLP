@@ -11,6 +11,21 @@ uv sync --dev
 uv run nox
 ```
 
+## Dual-decoder Transformer experiments
+
+The controlled Transformer implementation adds a shared encoder, separate simplification and
+source-reconstruction decoders, corrected attention scaling and target masking, configurable
+ReLU/SwiGLU feed-forward blocks, learned/RoPE positions, and 4/8/16-head ablations.
+
+- [Architecture and results](docs/DUAL_DECODER_TRANSFORMER.md)
+- [Reproduction and server run guide](docs/RUN_TRANSFORMER_EXPERIMENTS.md)
+
+Run the end-to-end CPU smoke and resume check with:
+
+```bash
+uv run transformer-experiments smoke --overwrite
+```
+
 ---
 
 # Project Structure
