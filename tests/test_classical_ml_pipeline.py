@@ -27,6 +27,19 @@ class StubSimplifier:
         return f"simple: {sentence}"
 
 
+class StubClassifier:
+    def metrics(self, features, labels):
+        return {"accuracy": 0.5, "macro_f1": 0.4}
+
+
+class StubFeatureExtractor:
+    def sentence_context(self, sentence):
+        return {}
+
+    def extract_for_token(self, token, token_index, context, replacement=None):
+        return {"token": token}
+
+
 class StubAnalyzer:
     def __init__(self) -> None:
         self.calls: list[tuple[list[PredictionRow], RunPaths]] = []
@@ -40,8 +53,8 @@ def test_classical_pipeline_scores_validation_and_test_generation_metrics(
     tmp_path: Path,
 ) -> None:
     artifacts = SimpleNamespace(
-        model=object(),
-        feature_extractor=object(),
+        model=StubClassifier(),
+        feature_extractor=StubFeatureExtractor(),
         replacement_dictionary=object(),
         validation_metrics={"accuracy": 0.8, "macro_f1": 0.75},
     )
@@ -87,8 +100,9 @@ def test_classical_pipeline_scores_validation_and_test_generation_metrics(
     validation_predictions = read_json(pipeline_dir / "validation_predictions.json")
     test_predictions = read_json(pipeline_dir / "predictions.json")
 
-    assert scores["validation"]["accuracy"] == 0.8
-    assert scores["validation"]["macro_f1"] == 0.75
+    assert scores["validation"]["classifier"]["accuracy"] == 0.8
+    assert scores["validation"]["classifier"]["macro_f1"] == 0.75
+    assert scores["test"]["classifier"]["accuracy"] == 0.5
     for split in ("validation", "test"):
         assert {"bert", "bleu", "f1", "flesch", "sari", "rouge-l"} <= set(scores[split])
 
@@ -131,8 +145,8 @@ def test_classical_pipeline_lightweight_validation_keeps_classifier_metrics(
     tmp_path: Path,
 ) -> None:
     artifacts = SimpleNamespace(
-        model=object(),
-        feature_extractor=object(),
+        model=StubClassifier(),
+        feature_extractor=StubFeatureExtractor(),
         replacement_dictionary=object(),
         validation_metrics={"accuracy": 0.8, "macro_f1": 0.75},
     )
@@ -156,8 +170,10 @@ def test_classical_pipeline_lightweight_validation_keeps_classifier_metrics(
     scores = read_json(tmp_path / "classical" / "scores.json")
 
     assert scores["validation"] == {
-        "accuracy": 0.8,
-        "macro_f1": 0.75,
+        "classifier": {"accuracy": 0.8, "macro_f1": 0.75},
         "prediction_count": 1,
     }
-    assert scores["test"] == {"prediction_count": 1}
+    assert scores["test"] == {
+        "classifier": {"accuracy": 0.5, "macro_f1": 0.4},
+        "prediction_count": 1,
+    }

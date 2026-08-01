@@ -176,6 +176,47 @@ For the full WikiSmall split, use `0` to disable the sample caps:
 uv run src --dataset wikismall --wikismall-max-train-samples 0 --wikismall-max-eval-samples 0 --output-path runs/full_wikismall
 ```
 
+## Train classical models on Newsela
+
+The dedicated Newsela runner trains logistic regression, linear SVM, and random
+forest models on one shared deterministic split. Articles (not individual
+sentences) are assigned 80/10/10 to train, validation, and test. Repeated source
+sentences crossing those boundaries are removed. The generated
+`split_manifest.json` records document IDs and verifies that there is no overlap.
+
+The encrypted dataset and its key remain outside Git:
+
+```bash
+uv run python -m pipeline.newsela_classical_pipeline \
+  --encrypted-cache /path/to/newsela_articles_20150302.aligned.sents.pkl.enc \
+  --env-file /path/to/_env \
+  --output-path runs/newsela_classical_full
+```
+
+Each model gets classifier accuracy, macro precision/recall/F1 and weighted F1,
+plus BERTScore, BLEU, token F1, Flesch-Kincaid grade, SARI, ROUGE-L, number
+preservation, and exact named-entity preservation (normalized entity text and
+spaCy type). Entity and number scores also report the human reference's
+preservation rate as a useful ceiling/context value.
+
+For a quick local integration check, cap the data and skip the expensive
+generation metrics:
+
+```bash
+uv run python -m pipeline.newsela_classical_pipeline \
+  --encrypted-cache /path/to/newsela_articles_20150302.aligned.sents.pkl.enc \
+  --env-file /path/to/_env \
+  --output-path runs/newsela_classical_smoke \
+  --models logistic_regression svm random_forest \
+  --max-train-samples 100 --max-eval-samples 20 \
+  --random-forest-estimators 5 --skip-generation-metrics
+```
+
+On Slurm, export `NEWSELA_CACHE`, `NEWSELA_ENV_FILE`, and `OUTPUT_PATH`, then
+submit `scripts/run_newsela_classical_slurm.sh`. Classical fitting uses CPU;
+the requested GPU accelerates BERTScore. If the cluster has no GPU available,
+remove the `--gres=gpu:1` directive; the metric will fall back to CPU.
+
 ## Common experiment flags
 
 | Flag | Purpose |
