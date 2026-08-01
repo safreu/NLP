@@ -38,7 +38,7 @@ run_python() {
     --pwd /workspace \
     "$image" \
     /bin/sh -c \
-      'ln -sf /usr/local/cuda/compat/lib/libcuda.so.1 /usr/local/cuda/compat/lib/libcuda.so; exec "$@"' \
+      'mkdir -p /usr/local/cuda/compat/lib; ln -sf /.singularity.d/libs/libcuda.so.1 /usr/local/cuda/compat/lib/libcuda.so; exec "$@"' \
     sh \
     /usr/bin/env \
       JAVA_HOME=/work/.jdk/temurin-21 \
