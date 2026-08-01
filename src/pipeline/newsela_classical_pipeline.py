@@ -8,7 +8,8 @@ from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 
-from config import SEED, ClassicalMLConfig
+from configuration.classic_ml_config import ClassicalMLConfig
+from configuration.config import SEED
 from data.newsela_loader import NewselaLoader
 from pipeline.classical_ml_pipeline import ClassicalMLPipeline
 from storage.json_store import write_json

@@ -5,8 +5,8 @@ import pytest
 import torch
 from transformers import BatchEncoding
 
-from pipeline import llm_zero_shot_pipeline
 from prompts import zero_shot_simplify_messages
+from unused import llm_zero_shot_pipeline
 
 
 def test_zero_shot_simplify_messages_is_single_user_turn() -> None:

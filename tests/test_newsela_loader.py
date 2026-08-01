@@ -19,7 +19,7 @@ class StubCorpus:
             {doc_id: pairs for doc_id, pairs in self.pairs_by_document.items() if doc_id in doc_ids}
         )
 
-    def as_training_pairs(self) -> list[tuple[str, str]]:
+    def as_training_pairs(self, add_prompt: bool = True) -> list[tuple[str, str]]:
         return [pair for pairs in self.pairs_by_document.values() for pair in pairs]
 
 

@@ -26,7 +26,7 @@ class ReadabilityAnalyzer(PredictionAnalyzer):
     """
 
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
-        rows = []
+        rows: list[dict[str, object]] = []
 
         for index, row in enumerate(predictions):
             source = row["source"]

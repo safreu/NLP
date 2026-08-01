@@ -3,7 +3,7 @@ from pathlib import Path
 
 from sklearn.model_selection import train_test_split
 
-from config import SEED
+from configuration.config import SEED
 from data.corpus.newsela_corpus import NewselaCorpus
 from data.dataset_loader import Pair
 
@@ -41,15 +41,15 @@ class NewselaLoader:
     max_eval_samples: int | None = None
     random_state: int = SEED
     split_metadata: dict[str, object] = field(default_factory=dict, init=False)
-    _cached_splits: tuple[list[Pair], list[Pair], list[Pair]] | None = field(
-        default=None,
+    _cached_splits: dict[bool, tuple[list[Pair], list[Pair], list[Pair]]] = field(
+        default_factory=dict,
         init=False,
         repr=False,
     )
 
-    def load_pairs(self) -> tuple[list[Pair], list[Pair], list[Pair]]:
-        if self._cached_splits is not None:
-            return self._cached_splits
+    def load_pairs(self, add_prompt: bool = True) -> tuple[list[Pair], list[Pair], list[Pair]]:
+        if add_prompt in self._cached_splits:
+            return self._cached_splits[add_prompt]
 
         if self.plaintext_path is not None:
             corpus = NewselaCorpus.load_from_disk(
@@ -70,9 +70,9 @@ class NewselaLoader:
             document_ids,
             random_state=self.random_state,
         )
-        train = corpus.subset(train_ids).as_training_pairs()
-        valid = corpus.subset(valid_ids).as_training_pairs()
-        test = corpus.subset(test_ids).as_training_pairs()
+        train = corpus.subset(train_ids).as_training_pairs(add_prompt=add_prompt)
+        valid = corpus.subset(valid_ids).as_training_pairs(add_prompt=add_prompt)
+        test = corpus.subset(test_ids).as_training_pairs(add_prompt=add_prompt)
 
         if train_ids & valid_ids or train_ids & test_ids or valid_ids & test_ids:
             raise RuntimeError("Newsela document splits overlap.")
@@ -117,5 +117,6 @@ class NewselaLoader:
             "cross_split_source_overlap": False,
             "dropped_cross_split_source_duplicates": dropped_source_duplicates,
         }
-        self._cached_splits = train, valid, test
-        return self._cached_splits
+        splits = train, valid, test
+        self._cached_splits[add_prompt] = splits
+        return splits

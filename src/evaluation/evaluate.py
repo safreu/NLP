@@ -3,7 +3,7 @@ from pathlib import Path
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from config import GenerationConfig
+from configuration.seq2seq_config import GenerationConfig
 from evaluation.metrics_builder import compute_all_metrics
 from preprocessing.cleaner import remove_prompt
 from storage.json_store import write_json
@@ -76,7 +76,12 @@ def extract_sources(test_pairs):
     return [remove_prompt(input_text) for input_text, _ in test_pairs]
 
 
-def evaluate_model(test_pairs, config: GenerationConfig, model_path: Path, predictions_path: Path):
+def evaluate_model(
+    test_pairs,
+    config: GenerationConfig,
+    model_path: Path,
+    predictions_path: Path,
+):
     model, tokenizer, device = load_model(str(model_path))
 
     candidates, references = generate_predictions(test_pairs, model, tokenizer, device, config)

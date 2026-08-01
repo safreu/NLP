@@ -8,6 +8,8 @@ def test_create_run_dir_creates_next_run(tmp_path):
     first = create_run_dir(run_paths)
     second = create_run_dir(run_paths)
 
-    assert first == tmp_path / "run_001"
-    assert second == tmp_path / "run_002"
+    assert first.name == "run_001"
+    assert second.name == "run_002"
+    assert first.parent == second.parent
+    assert first.parent.parent == tmp_path
     assert run_paths.latest_txt_path.read_text(encoding="utf-8") == str(second)

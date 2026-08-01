@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 from pathlib import Path
 
-from config import ClassicalMLConfig
+from configuration.classic_ml_config import ClassicalMLConfig
 from data.dataset_loader import Pair
 from evaluation.classical_simplifier import ClassicalSimplifier
 from evaluation.metrics_builder import compute_all_metrics

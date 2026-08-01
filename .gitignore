@@ -319,13 +319,6 @@ pytest.xml
 /.venv-newsela/
 /newsela-classical-*.out
 /data/
-!/data/
-/data/*
-!/data/OneStopEnglishCorpus/
-!/data/OneStopEnglishCorpus/**
-!/data/wikismall/
-!/data/wikismall/README.md
-!/data/wikismall/PWKP_108016.tag.80.aner.ori.*
 # Generated dataset caches
 data/**/*.pkl
 *.pkl

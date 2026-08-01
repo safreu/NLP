@@ -1,8 +1,8 @@
 from pathlib import Path
 
 import main
-from config import TrainingConfig
-from pipeline.evaluation_pipeline import EvaluationMode
+from configuration.seq2seq_config import TrainingConfig
+from pipeline.seq2seq_evaluation_pipeline import EvaluationMode
 from storage.json_store import read_json
 
 
@@ -73,45 +73,6 @@ def test_wikilarge_zero_sample_limit_means_full_split() -> None:
     assert experiments[0].max_eval_samples is None
 
 
-def test_wikismall_experiment_uses_checked_in_loader() -> None:
-    experiments = main.build_experiments(
-        main.parse_args(
-            [
-                "--dataset",
-                "wikismall",
-                "--wikismall-max-train-samples",
-                "25",
-                "--wikismall-max-eval-samples",
-                "5",
-            ]
-        )
-    )
-
-    assert len(experiments) == 1
-    assert experiments[0].name == "wikismall"
-    assert experiments[0].dataset_loader.name == "wikismall"
-    assert experiments[0].max_train_samples == 25
-    assert experiments[0].max_eval_samples == 5
-
-
-def test_wikismall_zero_sample_limit_means_full_split() -> None:
-    experiments = main.build_experiments(
-        main.parse_args(
-            [
-                "--dataset",
-                "wikismall",
-                "--wikismall-max-train-samples",
-                "0",
-                "--wikismall-max-eval-samples",
-                "0",
-            ]
-        )
-    )
-
-    assert experiments[0].max_train_samples is None
-    assert experiments[0].max_eval_samples is None
-
-
 def test_run_experiments_writes_config_and_runs_selected_pipeline(
     monkeypatch,
     tmp_path: Path,
@@ -133,7 +94,7 @@ def test_run_experiments_writes_config_and_runs_selected_pipeline(
         def run(self) -> None:
             pipeline_calls.append((self.name, output_path, self.config.num_train_epochs))
 
-    monkeypatch.setattr(main, "TrainingPipeline", StubTrainingPipeline)
+    monkeypatch.setattr(main, "Seq2SeqTrainingPipeline", StubTrainingPipeline)
 
     output_path = tmp_path / "experiment"
     args = main.parse_args(

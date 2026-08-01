@@ -10,8 +10,8 @@ import torch
 from datasets import load_dataset
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from config import TrainingConfig
-from prompts import elementary_prompt, intermediate_prompt
+from configuration.seq2seq_config import GenerationConfig, TrainingConfig
+from prompts import simplify_prompt
 from storage.paths import RunPaths
 
 DATASET_NAME = "facebook/asset"
@@ -25,6 +25,44 @@ DEFAULT_PROMPT_LEVEL = "elementary"
 RUN_PATHS = RunPaths.for_runs_root()
 DEFAULT_PREDICTIONS_PATH = Path("results/asset_sari_predictions.json")
 DEFAULT_SCORE_PATH = Path("results/asset_sari_score.json")
+
+
+def config_dir_from_model_path(model_path: str) -> Path | None:
+    path = Path(model_path)
+    if path.name == "model":
+        return path.parent
+    return None
+
+
+def load_training_config(model_path: str) -> TrainingConfig:
+    config_dir = config_dir_from_model_path(model_path)
+    if config_dir is None:
+        return TrainingConfig()
+
+    path = config_dir / "training_config.json"
+    if not path.exists():
+        return TrainingConfig()
+
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return TrainingConfig(**data)
+
+
+def load_generation_config(model_path: str, training_config: TrainingConfig) -> GenerationConfig:
+    config_dir = config_dir_from_model_path(model_path)
+    if config_dir is None:
+        return GenerationConfig(max_new_tokens=training_config.max_target_length)
+
+    path = config_dir / "generation_config.json"
+    if not path.exists():
+        return GenerationConfig(max_new_tokens=training_config.max_target_length)
+
+    data = json.loads(path.read_text(encoding="utf-8"))
+    gen_conf = GenerationConfig(**data)
+
+    if gen_conf.max_new_tokens is None:
+        gen_conf.max_new_tokens = training_config.max_target_length
+
+    return gen_conf
 
 
 def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
@@ -185,13 +223,7 @@ def load_seq2seq_model(model_path: str, device: str) -> tuple[Any, Any]:
 
 
 def build_prompt(source: str, prompt_level: str) -> str:
-    if prompt_level == "elementary":
-        return str(elementary_prompt(source))
-
-    if prompt_level == "intermediate":
-        return str(intermediate_prompt(source))
-
-    return source
+    return simplify_prompt(source)
 
 
 def generate_prediction(
@@ -199,21 +231,22 @@ def generate_prediction(
     model: Any,
     tokenizer: Any,
     device: str,
-    config: TrainingConfig,
+    trainings_config: TrainingConfig,
+    generation_config: GenerationConfig,
     prompt_level: str,
 ) -> str:
     input_text = build_prompt(source, prompt_level)
     inputs = tokenizer(
         input_text,
         return_tensors="pt",
-        max_length=config.max_input_length,
+        max_length=trainings_config.max_input_length,
         truncation=True,
     ).to(device)
 
     with torch.no_grad():
         output = model.generate(
             **inputs,
-            **config.generation_config,
+            **generation_config.to_dict(),
         )
 
     prediction = tokenizer.decode(output[0], skip_special_tokens=True)
@@ -225,11 +258,14 @@ def generate_predictions(
     model: Any,
     tokenizer: Any,
     device: str,
-    config: TrainingConfig,
+    trainings_config: TrainingConfig,
+    generation_config: GenerationConfig,
     prompt_level: str,
 ) -> list[str]:
     return [
-        generate_prediction(source, model, tokenizer, device, config, prompt_level)
+        generate_prediction(
+            source, model, tokenizer, device, trainings_config, generation_config, prompt_level
+        )
         for source in sources
     ]
 
@@ -265,7 +301,8 @@ def write_score(
     split: str,
     max_examples: int,
     prompt_level: str,
-    config: TrainingConfig,
+    trainings_config: TrainingConfig,
+    generation_config: GenerationConfig,
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     score_data = {
@@ -277,8 +314,8 @@ def write_score(
         "max_examples": None if max_examples <= 0 else max_examples,
         "model_path": model_path,
         "prompt_level": prompt_level,
-        "configured_model_name": config.model_name,
-        "generation_config": config.generation_config,
+        "configured_model_name": trainings_config.model_name,
+        "generation_config": generation_config.to_dict(),
     }
 
     path.write_text(json.dumps(score_data, indent=4, ensure_ascii=False), encoding="utf-8")
@@ -303,14 +340,22 @@ def print_examples(
 
 def main() -> None:
     args = parse_args()
-    config = TrainingConfig()
-    model_path = resolve_model_path(args.model_path, config, args.pipeline_name)
+    default_config = TrainingConfig()
+
+    model_path = resolve_model_path(args.model_path, default_config, args.pipeline_name)
+
+    training_config = load_training_config(model_path)
+    generation_config = load_generation_config(model_path, training_config)
+
     device = select_device(args.device)
 
     print(f"Loading ASSET split: {args.split}")
     sources, references = load_asset_examples(args.split, args.max_examples)
 
     print(f"Loading model: {model_path}")
+    print(f"Training config: {training_config}")
+    print(f"Generation config: {generation_config}")
+
     model, tokenizer = load_seq2seq_model(model_path, device)
 
     print(f"Generating {len(sources)} predictions on {device}")
@@ -319,7 +364,8 @@ def main() -> None:
         model,
         tokenizer,
         device,
-        config,
+        training_config,
+        generation_config,
         args.prompt_level,
     )
 
@@ -334,7 +380,8 @@ def main() -> None:
         args.split,
         args.max_examples,
         args.prompt_level,
-        config,
+        training_config,
+        generation_config,
     )
 
     print_examples(sources[:5], predictions[:5], references[:5])

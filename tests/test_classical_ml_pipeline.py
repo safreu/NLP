@@ -1,7 +1,7 @@
 from pathlib import Path
 from types import SimpleNamespace
 
-from config import ClassicalMLConfig
+from configuration.classic_ml_config import ClassicalMLConfig
 from pipeline import classical_ml_pipeline
 from storage.json_store import read_json
 from storage.paths import RunPaths

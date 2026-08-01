@@ -25,6 +25,9 @@ dependencies = [
     "accelerate>=1.13.0",
     "cryptography>=48.0.1",
     "python-dotenv>=1.2.2",
+    "peft>=0.19.1",
+    "trl>=1.6.0",
+    "bitsandbytes>=0.49.2",
 ]
 [dependency-groups]
 dev = [
@@ -38,39 +41,37 @@ dev = [
 
 [project.scripts]
 aggregate-results = "evaluation.result_aggregation:main"
-entity-preservation = "evaluation.entity_preservation:main"
-evaluate-baselines = "pipeline.baseline_pipeline:main"
-llm-zero-shot = "pipeline.llm_zero_shot_pipeline:main"
-neural-filter-apply = "pipeline.neural_replacement_filter.apply_neural_filter:main"
-neural-filter-build-candidates = "pipeline.neural_replacement_filter.build_candidates:main"
-neural-filter-evaluate = "pipeline.neural_replacement_filter.evaluate_neural_filter:main"
-neural-filter-evaluate-final = "pipeline.neural_replacement_filter.evaluate_final_filter_outputs:main"
-neural-filter-generate-outputs = "pipeline.neural_replacement_filter.generate_filtered_outputs:main"
-neural-filter-train = "pipeline.neural_replacement_filter.train_neural_filter:main"
-number-preservation = "evaluation.number_preservation:main"
+evaluate-baselines = "unused.baseline_pipeline:main"
+llm-zero-shot = "unused.llm_zero_shot_pipeline:main"
 src = "main:main"
 visualize-results = "evaluation.result_visualization:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["config", "main", "prompts"]
+py-modules = ["main", "prompts"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 include = [
     "data*",
+    "configuration*",
     "evaluation*",
     "metrics*",
+    "models*",
     "pipeline*",
     "preprocessing*",
     "storage*",
     "training*",
+    "unused*",
 ]
 
 
 [tool.ruff]
 line-length = 100
 target-version = "py314"
+exclude = [
+    ".ipynb_checkpoints",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM"]
@@ -79,6 +80,7 @@ select = ["E", "F", "I", "B", "UP", "SIM"]
 python_version = "3.14"
 strict = true
 ignore_missing_imports = true
+exclude = '(^|/)\.ipynb_checkpoints(/|$)'
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

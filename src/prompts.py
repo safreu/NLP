@@ -30,11 +30,3 @@ def zero_shot_simplify_messages(text: str) -> list[dict[str, str]]:
     so the full instruction is placed in a single ``user`` turn.
     """
     return [{"role": "user", "content": f"{ZERO_SHOT_SIMPLIFY_INSTRUCTION}{text}"}]
-
-
-def elementary_prompt(text: str) -> str:
-    return f"{ELEMENTARY_TEXT}{text}"
-
-
-def intermediate_prompt(text: str) -> str:
-    return f"{INTERMEDIATE_TEXT}{text}"

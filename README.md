@@ -131,7 +131,6 @@ This creates the next `runs/run_XXX` directory, writes `config.json`, and reprod
 | --- | --- |
 | `onestop` | `TrainingConfig()` with checkpoint evaluation |
 | `wikilarge` | `epochs=3`, `max_target_length=128`, `max_train_samples=10000`, `max_eval_samples=2000`, checkpoint evaluation |
-| `wikismall` | available with `--dataset wikismall`; uses checked-in de-anonymized WikiSmall `.ori` parallel files |
 
 The command is configured in `pyproject.toml`:
 
@@ -162,29 +161,12 @@ uv run src --dataset wikilarge --wikilarge-max-train-samples 0 --wikilarge-max-e
 
 Why: `0` disables the WikiLarge sample cap and uses the full train, validation, and test splits.
 
-## Run a WikiSmall experiment
-
-```bash
-uv run src --dataset wikismall --epochs 1 --batch-size 4 --wikismall-max-train-samples 100 --wikismall-max-eval-samples 20 --output-path runs/quick_wikismall
-```
-
-Why: WikiSmall is loaded from `data/wikismall/PWKP_108016.tag.80.aner.ori.*`, which stores line-aligned complex `.src` and simplified `.dst` files in the repository.
-
-For the full WikiSmall split, use `0` to disable the sample caps:
-
-```bash
-uv run src --dataset wikismall --wikismall-max-train-samples 0 --wikismall-max-eval-samples 0 --output-path runs/full_wikismall
-```
-
 ## Train classical models on Newsela
 
-The dedicated Newsela runner trains logistic regression, linear SVM, and random
-forest models on one shared deterministic split. Articles (not individual
-sentences) are assigned 80/10/10 to train, validation, and test. Repeated source
-sentences crossing those boundaries are removed. The generated
-`split_manifest.json` records document IDs and verifies that there is no overlap.
-
-The encrypted dataset and its key remain outside Git:
+The dedicated runner trains logistic regression, linear SVM, and random forest
+on a shared, deterministic 80/10/10 article-level split. It removes source
+sentences duplicated across split boundaries and writes an auditable
+`split_manifest.json` alongside validation and test metrics.
 
 ```bash
 uv run python -m pipeline.newsela_classical_pipeline \
@@ -193,47 +175,22 @@ uv run python -m pipeline.newsela_classical_pipeline \
   --output-path runs/newsela_classical_full
 ```
 
-Each model gets classifier accuracy, macro precision/recall/F1 and weighted F1,
-plus BERTScore, BLEU, token F1, Flesch-Kincaid grade, SARI, ROUGE-L, number
-preservation, and exact named-entity preservation (normalized entity text and
-spaCy type). Entity and number scores also report the human reference's
-preservation rate as a useful ceiling/context value.
-
-For a quick local integration check, cap the data and skip the expensive
-generation metrics:
-
-```bash
-uv run python -m pipeline.newsela_classical_pipeline \
-  --encrypted-cache /path/to/newsela_articles_20150302.aligned.sents.pkl.enc \
-  --env-file /path/to/_env \
-  --output-path runs/newsela_classical_smoke \
-  --models logistic_regression svm random_forest \
-  --max-train-samples 100 --max-eval-samples 20 \
-  --random-forest-estimators 5 --skip-generation-metrics
-```
-
-On UC3, keep the repository at `$HOME/NLP2`, the encrypted data under
-`$HOME/NLP2/private_data`, and the persistent environment at
-`$HOME/NLP2/.venv-newsela`. Then submit `scripts/run_newsela_classical_slurm.sh`.
-The script enters the existing NVIDIA Apptainer image automatically. Classical
-fitting uses CPU; the requested A100 accelerates BERTScore.
-
-For complete first-time setup, smoke-test, monitoring, troubleshooting, and
-result-download instructions, see
+The evaluation includes classifier metrics, SARI, BLEU, ROUGE-L, BERTScore,
+token F1, Flesch-Kincaid grade, named-entity preservation, and number
+preservation. For complete UC3 setup, smoke-test, Slurm, monitoring,
+troubleshooting, and result-download instructions, see
 [`docs/newsela_classical_uc3.md`](docs/newsela_classical_uc3.md).
 
 ## Common experiment flags
 
 | Flag | Purpose |
 | --- | --- |
-| `--dataset all\|onestop\|wikilarge\|wikismall` | Selects which pipeline to run |
+| `--dataset all\|onestop\|wikilarge` | Selects which pipeline to run |
 | `--model-name MODEL` | Overrides `TrainingConfig.model_name` |
 | `--epochs N` | Overrides the selected dataset defaults |
 | `--batch-size N` | Overrides train and evaluation batch size |
 | `--evaluation-mode final_model\|checkpoints` | Selects final-model or checkpoint evaluation |
 | `--output-path PATH` | Writes the run to a specific directory instead of the next `runs/run_XXX` |
-| `--wikismall-max-train-samples N` | Caps WikiSmall training rows; use `0` for the full train split |
-| `--wikismall-max-eval-samples N` | Caps WikiSmall validation/test rows; use `0` for full eval splits |
 
 Every run writes the resolved configuration to `config.json` in the run directory.
 
@@ -247,30 +204,6 @@ uv run aggregate-results runs/baselines_quick
 ```
 
 The baseline runner writes one pipeline directory per dataset and baseline, for example `runs/baselines_quick/wikilarge_copy/scores.json`. The `copy` baseline returns the source text unchanged after prompt removal. The `punctuation_split` baseline is a deliberately simple rule-based baseline that splits on semicolons, colons, dashes, and a few clause boundaries.
-
-## Preservation and neural replacement analysis
-
-Run the reusable preservation analyses against saved prediction files:
-
-```bash
-uv run number-preservation
-uv run entity-preservation
-```
-
-The commands write generated reports under `results/`, which is local output and should normally stay out of Git.
-
-The neural replacement filter debug pipeline is exposed as project commands:
-
-```bash
-uv run neural-filter-build-candidates --mode debug
-uv run neural-filter-train --mode debug
-uv run neural-filter-apply --mode debug
-uv run neural-filter-generate-outputs --mode debug
-uv run neural-filter-evaluate --mode debug
-uv run neural-filter-evaluate-final --mode debug
-```
-
-Generated neural outputs, model artifacts, and logs are written under `results/neural_replacement_filter/`.
 
 ## Zero-shot LLM baseline
 

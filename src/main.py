@@ -3,20 +3,19 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
-from config import GenerationConfig, TrainingConfig
+from configuration.seq2seq_config import GenerationConfig, TrainingConfig
 from data.dataset_loader import DatasetLoader
 from data.newsela_loader import NewselaLoader
 from data.onestop_loader import OneStopLoader
 from data.wikilarge_loader import WikiLargeLoader
-from data.wikismall_loader import WikiSmallLoader
 from evaluation.analyzers.copy_analyzer import CopyAnalyzer
 from evaluation.analyzers.diversity_analyzer import DiversityAnalyzer
 from evaluation.analyzers.error_case_analyser import ErrorCaseAnalyzer
 from evaluation.analyzers.information_loss_analyzer import InformationLossAnalyzer
 from evaluation.analyzers.length_analyzer import LengthAnalyzer
 from evaluation.analyzers.readability_analyzer import ReadabilityAnalyzer
-from pipeline.evaluation_pipeline import EvaluationMode, EvaluationPipeline
-from pipeline.training_pipeline import TrainingPipeline
+from pipeline.seq2seq_evaluation_pipeline import EvaluationMode, Seq2SeqEvaluationPipeline
+from pipeline.seq2seq_training_pipeline import Seq2SeqTrainingPipeline
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.run_store import create_run_dir
@@ -29,10 +28,7 @@ DEFAULT_WIKILARGE_MAX_EVAL_SAMPLES = 2000
 DEFAULT_NEWSELA_MAX_TRAIN_SAMPLES = 10000
 DEFAULT_NEWSELA_MAX_EVAL_SAMPLES = 2000
 
-DEFAULT_WIKISMALL_MAX_TRAIN_SAMPLES = 10000
-DEFAULT_WIKISMALL_MAX_EVAL_SAMPLES = 2000
-
-DATASET_CHOICES = ("all", "onestop", "wikilarge", "newsela", "wikismall")
+DATASET_CHOICES = ("all", "onestop", "wikilarge", "newsela")
 
 
 @dataclass(frozen=True)
@@ -127,18 +123,6 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Newsela validation/test sample cap. Use 0 for the full splits.",
     )
-    parser.add_argument(
-        "--wikismall-max-train-samples",
-        type=non_negative_int,
-        default=None,
-        help="WikiSmall train sample cap. Use 0 for the full split.",
-    )
-    parser.add_argument(
-        "--wikismall-max-eval-samples",
-        type=non_negative_int,
-        default=None,
-        help="WikiSmall validation/test sample cap. Use 0 for the full splits.",
-    )
     return parser
 
 
@@ -200,10 +184,12 @@ def build_experiments(args: argparse.Namespace) -> list[ExperimentSpec]:
                 args.newsela_max_train_samples,
                 DEFAULT_NEWSELA_MAX_TRAIN_SAMPLES,
             )
+
             max_eval_samples = resolve_sample_limit(
                 args.newsela_max_eval_samples,
                 DEFAULT_NEWSELA_MAX_EVAL_SAMPLES,
             )
+
             experiments.append(
                 ExperimentSpec(
                     name="newsela",
@@ -212,33 +198,6 @@ def build_experiments(args: argparse.Namespace) -> list[ExperimentSpec]:
                         max_eval_samples=max_eval_samples,
                     ),
                     config=apply_training_overrides(TrainingConfig(), args),
-                    evaluation_mode=evaluation_mode,
-                    max_train_samples=max_train_samples,
-                    max_eval_samples=max_eval_samples,
-                )
-            )
-            continue
-
-        if dataset_name == "wikismall":
-            max_train_samples = resolve_sample_limit(
-                args.wikismall_max_train_samples,
-                DEFAULT_WIKISMALL_MAX_TRAIN_SAMPLES,
-            )
-            max_eval_samples = resolve_sample_limit(
-                args.wikismall_max_eval_samples,
-                DEFAULT_WIKISMALL_MAX_EVAL_SAMPLES,
-            )
-            experiments.append(
-                ExperimentSpec(
-                    name="wikismall",
-                    dataset_loader=WikiSmallLoader(
-                        max_train_samples=max_train_samples,
-                        max_eval_samples=max_eval_samples,
-                    ),
-                    config=apply_training_overrides(
-                        TrainingConfig(num_train_epochs=3, max_target_length=128),
-                        args,
-                    ),
                     evaluation_mode=evaluation_mode,
                     max_train_samples=max_train_samples,
                     max_eval_samples=max_eval_samples,
@@ -332,13 +291,13 @@ def run_experiments(args: argparse.Namespace) -> RunPaths:
     write_run_config(args, run_dir, experiments)
 
     for experiment in experiments:
-        TrainingPipeline(
+        Seq2SeqTrainingPipeline(
             name=experiment.name,
             dataset_loader=experiment.dataset_loader,
             training_config=experiment.config,
             run_paths=run_dir,
-            evaluation_pipeline=EvaluationPipeline(
-                generation_config=GenerationConfig(),
+            evaluation_pipeline=Seq2SeqEvaluationPipeline(
+                generation_configs=[GenerationConfig()],
                 run_paths=run_dir,
                 mode=experiment.evaluation_mode,
                 analyzers=[

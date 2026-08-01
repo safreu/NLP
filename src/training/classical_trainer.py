@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from config import ClassicalMLConfig
+from configuration.classic_ml_config import ClassicalMLConfig
 from data.dataset_loader import Pair
 from preprocessing.classical_features import FeatureExtractor
 from preprocessing.classical_replacements import ReplacementDictionary

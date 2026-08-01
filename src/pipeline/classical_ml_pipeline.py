@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from config import ClassicalMLConfig
+from configuration.classic_ml_config import ClassicalMLConfig
 from data.dataset_loader import DatasetLoader, Pair
 from evaluation.analyzers.base import PredictionAnalyzer
 from evaluation.analyzers.copy_analyzer import CopyAnalyzer
