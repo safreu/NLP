@@ -6,7 +6,8 @@ if ! command -v sbatch >/dev/null 2>&1; then
   exit 1
 fi
 
-project_root=$(git rev-parse --show-toplevel)
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+project_root=$(cd -- "$script_dir/../.." && pwd)
 cd "$project_root"
 mkdir -p results/transformer_experiments
 
@@ -18,7 +19,8 @@ if [[ -f results/transformer_experiments/pipeline_job_id.txt ]]; then
   fi
 fi
 
-submission=$(sbatch "$@" scripts/slurm/run_transformer_pipeline.sbatch)
+submission=$(sbatch --export="ALL,NLP_PROJECT_ROOT=$project_root" \
+  "$@" scripts/slurm/run_transformer_pipeline.sbatch)
 job_id=${submission##* }
 printf '%s\n' "$job_id" > results/transformer_experiments/pipeline_job_id.txt
 echo "Submitted Transformer pipeline job $job_id"
