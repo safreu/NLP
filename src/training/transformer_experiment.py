@@ -326,7 +326,8 @@ def restore_random_states(payload: dict[str, Any]) -> None:
     np.random.set_state(payload["numpy_random_state"])
     torch.set_rng_state(payload["torch_random_state"].cpu())
     if torch.cuda.is_available() and "cuda_random_state" in payload:
-        torch.cuda.set_rng_state_all(payload["cuda_random_state"])
+        cuda_states = [state.cpu() for state in payload["cuda_random_state"]]
+        torch.cuda.set_rng_state_all(cuda_states)
 
 
 def _numbers(text: str) -> set[str]:
