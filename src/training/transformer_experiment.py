@@ -257,7 +257,7 @@ def _git_value(arguments: list[str]) -> str | None:
         return subprocess.run(
             ["git", *arguments], check=True, capture_output=True, text=True
         ).stdout.strip()
-    except OSError, subprocess.CalledProcessError:
+    except (OSError, subprocess.CalledProcessError):
         return None
 
 
@@ -672,7 +672,7 @@ def train_experiment(
             },
         )
         return run_dir
-    except InterruptedError, KeyboardInterrupt:
+    except (InterruptedError, KeyboardInterrupt):
         write_json(
             status_path,
             {
