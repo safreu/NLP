@@ -41,7 +41,7 @@ run_python() {
       PATH=/work/.jdk/temurin-21/bin:/opt/conda/bin:/usr/local/bin:/usr/bin:/bin \
       LD_LIBRARY_PATH=/.singularity.d/libs:/work/.jdk/temurin-21/lib/server \
       OPENAI_API_KEY=unused-placeholder \
-      PYTHONPATH=/workspace/src \
+      PYTHONPATH=/work/.transformer-deps:/workspace/src \
       /work/.venv/bin/python "$@"
 }
 
