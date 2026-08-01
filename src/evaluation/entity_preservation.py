@@ -1002,9 +1002,15 @@ def evaluate_all(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, help="Evaluate one prediction CSV/JSON/JSONL/TSV file.")
-    parser.add_argument("--dataset-name", default="Dataset", help="Dataset label used when --input is provided.")
-    parser.add_argument("--model-name", default="Model", help="Model label used when --input is provided.")
+    parser.add_argument(
+        "--input", type=Path, help="Evaluate one prediction CSV/JSON/JSONL/TSV file."
+    )
+    parser.add_argument(
+        "--dataset-name", default="Dataset", help="Dataset label used when --input is provided."
+    )
+    parser.add_argument(
+        "--model-name", default="Model", help="Model label used when --input is provided."
+    )
     return parser.parse_args()
 
 

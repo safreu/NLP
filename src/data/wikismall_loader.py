@@ -37,9 +37,7 @@ def load_raw_wikismall_split(split: str, data_dir: Path = DEFAULT_DATA_DIR) -> l
 
     pairs = [(source, target) for source, target in zip(sources, targets, strict=True)]
     empty_rows = [
-        index
-        for index, (source, target) in enumerate(pairs, start=1)
-        if not source or not target
+        index for index, (source, target) in enumerate(pairs, start=1) if not source or not target
     ]
     if empty_rows:
         preview = ", ".join(str(index) for index in empty_rows[:5])
