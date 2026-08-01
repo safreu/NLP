@@ -9,28 +9,26 @@ from models.custom_transformer.base import (
 from models.custom_transformer.components import TransformerComponents
 
 
-# The original Decoder uses new random embeddings, 
+# The original Decoder uses new random embeddings,
 # but this change copies the encoder embeddings to the decoder,
 # so it should be an improvement as the ebeddings are already trained BERT embeddings
 class TransformerV2(Transformer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        encoder_embeddings = self.encoder.get_input_embeddings() 
-        
+        encoder_embeddings = self.encoder.get_input_embeddings()
+
         if encoder_embeddings.weight.shape != self.decoder.word_embedding.weight.shape:
             raise ValueError(
                 "Encode and decoder embedding shapes do not match: "
                 f"{encoder_embeddings.weight.shape} != {self.decoder.word_embedding.weight.shape}"
             )
-            
+
         with torch.no_grad():
-            self.decoder.word_embedding.weight.copy_(
-                encoder_embeddings.weight
-            )
-            
-            
-#The normalization now happens before the Attention
+            self.decoder.word_embedding.weight.copy_(encoder_embeddings.weight)
+
+
+# The normalization now happens before the Attention
 class TransformerBlockV2(nn.Module):
     def __init__(
         self, embed_size, heads, dropout, forward_expansion, attention_cls: type[nn.Module]
@@ -50,11 +48,10 @@ class TransformerBlockV2(nn.Module):
 
         self.dropout = nn.Dropout(dropout)
 
-
     def forward(self, value, key, query, mask):
-        
+
         normalized_query = self.norm1(query)
-        
+
         attention = self.attention(value, key, normalized_query, mask)
 
         x = query + self.dropout(attention)
@@ -91,11 +88,10 @@ class DecoderBlockV2(nn.Module):
         )
 
         self.dropout = nn.Dropout(dropout)
-        
 
     def forward(self, x, value, key, src_mask, trg_mask):
         normalized_x = self.norm(x)
-        
+
         attention = self.attention(normalized_x, normalized_x, normalized_x, trg_mask)
 
         query = x + self.dropout(attention)
@@ -112,7 +108,6 @@ class DecoderV2(Decoder):
         embed_size = self.word_embedding.embedding_dim
         self.final_norm = nn.LayerNorm(embed_size)
 
-
     def forward(self, x, enc_out, src_mask, trg_mask):
         N, seq_length = x.shape
 
@@ -128,7 +123,6 @@ class DecoderV2(Decoder):
         out = self.fc_out(x)
 
         return out
-
 
 
 COMPONENTS = TransformerComponents(

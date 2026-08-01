@@ -12,6 +12,11 @@ def test_compute_all_metrics_collects_every_metric(monkeypatch: pytest.MonkeyPat
     monkeypatch.setattr(metrics_builder, "compute_flesch_kincaid", lambda c, r: "flesch-value")
     monkeypatch.setattr(metrics_builder, "compute_sari", lambda s, c, r: "sari-value")
     monkeypatch.setattr(metrics_builder, "compute_rougescore", lambda c, r: "rouge-value")
+    monkeypatch.setattr(
+        metrics_builder,
+        "compute_preservation_metrics",
+        lambda s, c, r: {"entity_preservation": "entity", "number_preservation": "number"},
+    )
 
     result = metrics_builder.compute_all_metrics(
         sources=["source"],
@@ -26,6 +31,8 @@ def test_compute_all_metrics_collects_every_metric(monkeypatch: pytest.MonkeyPat
         "flesch": "flesch-value",
         "sari": "sari-value",
         "rouge-l": "rouge-value",
+        "entity_preservation": "entity",
+        "number_preservation": "number",
     }
 
 
@@ -48,6 +55,12 @@ def test_compute_all_metrics_passes_arguments_to_each_metric(
     monkeypatch.setattr(metrics_builder, "compute_sari", record("sari"))
     monkeypatch.setattr(metrics_builder, "compute_rougescore", record("rouge"))
 
+    def record_preservation(*args):
+        calls["preservation"] = args
+        return {}
+
+    monkeypatch.setattr(metrics_builder, "compute_preservation_metrics", record_preservation)
+
     sources = ["a complex sentence"]
     candidates = ["a simple sentence"]
     references = ["a reference sentence"]
@@ -58,3 +71,4 @@ def test_compute_all_metrics_passes_arguments_to_each_metric(
     assert calls["sari"] == (sources, candidates, references)
     for name in ("bert", "bleu", "f1", "flesch", "rouge"):
         assert calls[name] == (candidates, references)
+    assert calls["preservation"] == (sources, candidates, references)

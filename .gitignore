@@ -315,6 +315,9 @@ pytest.xml
 /outputs/
 /checkpoints/
 /cache/
+/private_data/
+/.venv-newsela/
+/newsela-classical-*.out
 /data/
 # Generated dataset caches
 data/**/*.pkl
