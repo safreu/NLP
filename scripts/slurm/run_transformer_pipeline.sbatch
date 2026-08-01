@@ -30,19 +30,20 @@ run_python() {
     return 127
   fi
 
-  mkdir -p "$runtime_root/.cuda-lib"
-  ln -sfn /usr/local/cuda/compat/lib/libcuda.so.1 "$runtime_root/.cuda-lib/libcuda.so"
-
   apptainer exec \
     --nv \
+    --writable-tmpfs \
     --bind "$PROJECT_ROOT:/workspace" \
     --bind "$runtime_root:/work" \
     --pwd /workspace \
     "$image" \
-    env \
+    /bin/sh -c \
+      'ln -sf /usr/local/cuda/compat/lib/libcuda.so.1 /usr/local/cuda/compat/lib/libcuda.so; exec "$@"' \
+    sh \
+    /usr/bin/env \
       JAVA_HOME=/work/.jdk/temurin-21 \
       PATH=/work/.jdk/temurin-21/bin:/opt/conda/bin:/usr/local/bin:/usr/bin:/bin \
-      LD_LIBRARY_PATH=/work/.cuda-lib:/.singularity.d/libs:/usr/local/cuda/compat/lib:/work/.jdk/temurin-21/lib/server \
+      LD_LIBRARY_PATH=/.singularity.d/libs:/usr/local/cuda/compat/lib:/work/.jdk/temurin-21/lib/server \
       OPENAI_API_KEY=unused-placeholder \
       PYTHONPATH=/work/.transformer-deps:/workspace/src \
       /work/.venv/bin/python "$@"
