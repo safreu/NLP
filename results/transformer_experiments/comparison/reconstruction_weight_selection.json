@@ -1,0 +1,9 @@
+{
+  "selected_weight": 1.0,
+  "rank_sums": {
+    "0.25": 12,
+    "0.5": 11,
+    "1.0": 7
+  },
+  "rule": "unweighted rank sum"
+}

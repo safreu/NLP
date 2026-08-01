@@ -1,0 +1,13 @@
+{
+  "source_experiment": "E8_dual_decoder_heads_16",
+  "rank_sums": {
+    "E2_dual_decoder_lambda_025": 24,
+    "E3_dual_decoder_lambda_050": 24,
+    "E4_dual_decoder_lambda_100": 19,
+    "E5_dual_decoder_swiglu": 20,
+    "E6_dual_decoder_rope": 22,
+    "E7_dual_decoder_heads_4": 16,
+    "E8_dual_decoder_heads_16": 15
+  },
+  "rule": "unweighted rank sum"
+}

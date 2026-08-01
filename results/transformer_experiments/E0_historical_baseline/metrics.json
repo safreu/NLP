@@ -1,0 +1,20 @@
+{
+  "validation_loss": 6.944425868988037,
+  "test_loss": 7.516144136587779,
+  "sari": 20.673956253860073,
+  "bert_precision": 0.8291907906532288,
+  "bert_recall": 0.8190926909446716,
+  "bert_f1": 0.8238633275032043,
+  "rouge_l": 0.1533726725549262,
+  "bleu": 0.002467126820450048,
+  "flesch_reading_ease": null,
+  "flesch_kincaid_grade": 3.908963983181724,
+  "entity_preservation": null,
+  "number_preservation": null,
+  "token_precision": 0.2614165212332752,
+  "token_recall": 0.1394035159985147,
+  "token_f1": 0.1758675354690217,
+  "trainable_parameters": 5476995,
+  "training_duration_seconds": 43.74008893966675,
+  "result_type": "historical_unretrained"
+}

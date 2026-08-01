@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "start_time": "2026-08-01T16:15:17.683428+00:00",
+  "end_time": "2026-08-01T16:18:09.904790+00:00",
+  "pid": 38006,
+  "epoch": 5,
+  "best_checkpoint": "results/transformer_experiments/E9_final_combined/checkpoint_best.pt",
+  "last_checkpoint": "results/transformer_experiments/E9_final_combined/checkpoint_last.pt",
+  "metrics_path": "results/transformer_experiments/E9_final_combined/metrics.json",
+  "log_path": "results/transformer_experiments/E9_final_combined/run.log"
+}

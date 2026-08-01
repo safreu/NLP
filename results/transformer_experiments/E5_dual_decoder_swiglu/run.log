@@ -1,0 +1,6 @@
+command=uv run transformer-experiments run-all --output-root results/transformer_experiments --device cpu --resume
+epoch=1 train_total=14.978660 train_simple=7.380631 train_reconstruction=7.598029 validation_total=14.239139 validation_simple=6.969889 validation_reconstruction=7.269250
+epoch=2 train_total=13.335003 train_simple=6.513266 train_reconstruction=6.821738 validation_total=13.908763 validation_simple=6.810763 validation_reconstruction=7.098000
+epoch=3 train_total=12.469509 train_simple=6.087412 train_reconstruction=6.382096 validation_total=13.693561 validation_simple=6.750073 validation_reconstruction=6.943488
+epoch=4 train_total=11.705758 train_simple=5.720368 train_reconstruction=5.985390 validation_total=13.603069 validation_simple=6.746253 validation_reconstruction=6.856816
+epoch=5 train_total=11.005305 train_simple=5.415188 train_reconstruction=5.590117 validation_total=13.442668 validation_simple=6.763678 validation_reconstruction=6.678989

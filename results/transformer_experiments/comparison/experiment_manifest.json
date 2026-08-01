@@ -1,0 +1,16 @@
+{
+  "selection_method": "Unweighted rank sum across SARI, BERTScore F1, entity preservation, number preservation, FK grade, and validation simplification loss.",
+  "qualitative_selection": "First 20 test examples in fixed WikiLarge test order.",
+  "experiments": [
+    "E1_corrected_baseline",
+    "E2_dual_decoder_lambda_025",
+    "E3_dual_decoder_lambda_050",
+    "E4_dual_decoder_lambda_100",
+    "E5_dual_decoder_swiglu",
+    "E6_dual_decoder_rope",
+    "E7_dual_decoder_heads_4",
+    "E8_dual_decoder_heads_16",
+    "E9_final_combined"
+  ],
+  "git_commit": "e6a1ef9c82185b54ced84acb7fcd5f6d71fe66ae"
+}

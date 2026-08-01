@@ -1,0 +1,12 @@
+{
+  "python_version": "3.14.0",
+  "pytorch_version": "2.11.0",
+  "cuda_version": null,
+  "device": "cpu",
+  "gpu_model": null,
+  "operating_system": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+  "numpy_version": "2.4.4",
+  "git_commit": "e6a1ef9c82185b54ced84acb7fcd5f6d71fe66ae",
+  "git_branch": "codex/dual-decoder-transformer",
+  "deterministic_mode": true
+}

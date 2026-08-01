@@ -1,0 +1,6 @@
+command=uv run transformer-experiments train --experiment-name E9_final_combined --model dual_decoder --embed-size 256 --heads 16 --activation relu --position-encoding learned --reconstruction-weight 1.0 --epochs 5 --batch-size 8 --seed 42 --train-size 2000 --valid-size 200 --test-size 0 --output-root results/transformer_experiments --device cpu --overwrite
+epoch=1 train_total=14.848006 train_simple=7.327002 train_reconstruction=7.521004 validation_total=14.235299 validation_simple=6.962532 validation_reconstruction=7.272767
+epoch=2 train_total=13.308916 train_simple=6.515067 train_reconstruction=6.793849 validation_total=13.914160 validation_simple=6.822905 validation_reconstruction=7.091255
+epoch=3 train_total=12.512045 train_simple=6.130746 train_reconstruction=6.381298 validation_total=13.746318 validation_simple=6.762261 validation_reconstruction=6.984056
+epoch=4 train_total=11.892376 train_simple=5.829594 train_reconstruction=6.062782 validation_total=13.778757 validation_simple=6.747045 validation_reconstruction=7.031712
+epoch=5 train_total=11.360244 train_simple=5.571384 train_reconstruction=5.788860 validation_total=13.714919 validation_simple=6.764311 validation_reconstruction=6.950608

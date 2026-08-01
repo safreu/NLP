@@ -1,0 +1,7 @@
+{
+  "status": "completed",
+  "result_type": "historical_unretrained",
+  "checkpoint_available": false,
+  "predictions_available": false,
+  "note": "Metrics were imported from the existing historical result; this run was not retrained."
+}

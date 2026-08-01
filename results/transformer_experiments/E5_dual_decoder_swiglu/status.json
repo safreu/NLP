@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "start_time": "2026-08-01T15:58:36.642799+00:00",
+  "end_time": "2026-08-01T16:01:24.805451+00:00",
+  "pid": 34841,
+  "epoch": 5,
+  "best_checkpoint": "results/transformer_experiments/E5_dual_decoder_swiglu/checkpoint_best.pt",
+  "last_checkpoint": "results/transformer_experiments/E5_dual_decoder_swiglu/checkpoint_last.pt",
+  "metrics_path": "results/transformer_experiments/E5_dual_decoder_swiglu/metrics.json",
+  "log_path": "results/transformer_experiments/E5_dual_decoder_swiglu/run.log"
+}

@@ -1,0 +1,23 @@
+\begin{table*}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{llrllrrrrrrrrrrr}
+\toprule
+Experiment & Architecture & Reconstruction Weight & Activation & Position Encoding & Heads & Head Dim & Parameters & Test Loss & Sari & Bert F1 & Rouge L & Flesch Kincaid Grade & Entity Preservation & Number Preservation & Training Duration Seconds \\
+\midrule
+E0\_historical\_baseline & historical\_original & 0.0000 & relu & learned & 4 & 32 & 5476995 & 7.5161 & 20.6740 & 0.8239 & 0.1534 & 3.9090 & NA & NA & 43.7401 \\
+E1\_corrected\_baseline & corrected & 0.0000 & relu & learned & 8 & 32 & 11402698 & 7.5497 & 20.7426 & 0.8316 & 0.1518 & 4.2814 & 0.0317 & NA & 75.0210 \\
+E2\_dual\_decoder\_lambda\_025 & dual\_decoder & 0.2500 & relu & learned & 8 & 32 & 18811284 & 9.4278 & 20.9305 & 0.8114 & 0.1403 & 10.4206 & 0.0423 & NA & 127.0864 \\
+E3\_dual\_decoder\_lambda\_050 & dual\_decoder & 0.5000 & relu & learned & 8 & 32 & 18811284 & 11.2398 & 20.9302 & 0.8122 & 0.1394 & 9.7634 & 0.0370 & NA & 125.7400 \\
+E4\_dual\_decoder\_lambda\_100 & dual\_decoder & 1.0000 & relu & learned & 8 & 32 & 18811284 & 14.7995 & 20.9681 & 0.8154 & 0.1416 & 9.1391 & 0.0370 & NA & 127.5988 \\
+E5\_dual\_decoder\_swiglu & dual\_decoder & 1.0000 & swiglu & learned & 8 & 32 & 19600788 & 14.7144 & 20.7668 & 0.8238 & 0.1503 & 8.4192 & 0.0370 & NA & 138.9883 \\
+E6\_dual\_decoder\_rope & dual\_decoder & 1.0000 & relu & rope & 8 & 32 & 18614676 & 11.6551 & 21.0348 & 0.8075 & 0.1293 & 17.4107 & 0.0370 & NA & 150.2113 \\
+E7\_dual\_decoder\_heads\_4 & dual\_decoder & 1.0000 & relu & learned & 4 & 64 & 18903444 & 13.7436 & 20.9468 & 0.8264 & 0.1454 & 7.8628 & 0.0317 & NA & 125.6077 \\
+E8\_dual\_decoder\_heads\_16 & dual\_decoder & 1.0000 & relu & learned & 16 & 16 & 18788244 & 14.8637 & 20.7258 & 0.8299 & 0.1542 & 5.6412 & 0.0423 & NA & 138.7596 \\
+E9\_final\_combined & dual\_decoder & 1.0000 & relu & learned & 16 & 16 & 18788244 & 14.8637 & 20.7258 & 0.8299 & 0.1542 & 5.6412 & 0.0423 & NA & 134.3438 \\
+\bottomrule
+\end{tabular}
+\caption{Controlled Transformer experiments. Pending denotes an unexecuted run.}
+\label{tab:dual-decoder-transformer}
+\end{table*}

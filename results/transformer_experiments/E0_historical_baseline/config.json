@@ -1,0 +1,24 @@
+{
+  "experiment_name": "E0_historical_baseline",
+  "model": "historical_original",
+  "dataset": "wikilarge",
+  "train_size": 2000,
+  "valid_size": 200,
+  "test_size": 191,
+  "epochs": 5,
+  "batch_size": 8,
+  "seed": 42,
+  "embed_size": 128,
+  "heads": 4,
+  "head_dim": 32,
+  "activation": "relu",
+  "position_encoding": "learned",
+  "reconstruction_weight": 0.0,
+  "trainable_parameters": 5476995,
+  "result_type": "historical_unretrained",
+  "source": "Transformer/my_transformer_experiments/01_baseline_relu/final_results.json",
+  "known_implementation_notes": [
+    "attention scores scaled by sqrt(embed_size)",
+    "target mask did not mask target padding keys"
+  ]
+}
