@@ -5,13 +5,107 @@
 ```bash
 git clone https://github.com/safreu/NLP.git
 cd NLP
-git switch codex/dual-decoder-transformer
+git switch dual-decoder-transformer
 uv sync --dev
 ```
 
 WikiLarge is loaded through `data.wikilarge_loader.WikiLargeLoader` from
 `an-atlas/wikilarge`. The first run downloads it through Hugging Face; later runs use the local
 cache. No API token is required for WikiLarge.
+
+## Exact UC3 A100 reproduction
+
+The successful UC3 run used an NLP-project-local environment. It did not use an environment,
+container, cache, or checkpoint from another project.
+
+On a UC3 login node, clone the non-prefixed branch and load Python 3.12:
+
+```bash
+git clone --branch dual-decoder-transformer --single-branch \
+  https://github.com/safreu/NLP.git NLP2-transformer
+cd NLP2-transformer
+module load devel/python/3.12.3-gnu-14.2
+python3 -m venv .venv
+```
+
+If Git metadata operations fail on the UC3 parallel filesystem, download the branch archive
+instead. The Slurm scripts do not require a `.git` directory:
+
+```bash
+curl -fL --retry 3 \
+  https://github.com/safreu/NLP/archive/refs/heads/dual-decoder-transformer.tar.gz \
+  -o "$HOME/nlp-dual-decoder.tar.gz"
+mkdir -p "$HOME/NLP2-transformer"
+tar -xzf "$HOME/nlp-dual-decoder.tar.gz" --strip-components=1 \
+  -C "$HOME/NLP2-transformer"
+cd "$HOME/NLP2-transformer"
+module load devel/python/3.12.3-gnu-14.2
+python3 -m venv .venv
+```
+
+Install the CUDA 12.8 PyTorch build, then the pinned Transformer-only dependencies. Installing
+the editable package with `--no-deps` avoids pulling unrelated LLM pipeline dependencies:
+
+```bash
+.venv/bin/python -m pip install \
+  --index-url https://download.pytorch.org/whl/cu128 \
+  torch==2.11.0+cu128 torchvision==0.26.0+cu128
+.venv/bin/python -m pip install -r requirements-transformer.txt
+.venv/bin/python -m pip install --no-deps -e .
+```
+
+Validate imports on the login node:
+
+```bash
+.venv/bin/python -c "import torch, datasets, transformers, evaluate, sacrebleu, sacremoses, bert_score, nltk, rouge_score, spacy; spacy.load('en_core_web_sm'); from pipeline.transformer_experiments import main; print('Transformer environment ready')"
+```
+
+Before the full run, request a short A100 allocation and run the smoke test:
+
+```bash
+salloc --partition=gpu_a100_short --gres=gpu:1 --time=00:10:00 \
+  --cpus-per-task=8 --mem=64G
+.venv/bin/python -c "import torch; print(torch.cuda.get_device_name(0))"
+.venv/bin/python -m pipeline.transformer_experiments smoke \
+  --output-root results/transformer_nlp2_smoke --overwrite
+exit
+```
+
+Submit E1-E9 from the login node. Use a fresh output root: the repository contains compact
+reference evidence under `results/transformer_experiments`, whose completed statuses are
+intentionally skipped by the runner.
+
+```bash
+module load devel/python/3.12.3-gnu-14.2
+export TRANSFORMER_OUTPUT_ROOT=results/transformer_nlp2_runs
+bash scripts/slurm/submit_transformer_pipeline.sh \
+  --partition=gpu_a100_short \
+  --gres=gpu:1 \
+  --time=00:30:00 \
+  --cpus-per-task=8 \
+  --mem=64G
+```
+
+The verified server environment was Python 3.12.3, PyTorch 2.11.0+cu128, CUDA 12.8, and an
+NVIDIA A100-PCIE-40GB. Job `6113451` completed with exit code 0. The controlled configuration was
+2,000 training examples, 200 validation examples, all 191 test examples, five epochs, batch size
+8, and seed 42. E9 reproduced E8's selected 16-head configuration exactly.
+
+Check completion and inspect the report:
+
+```bash
+cat results/transformer_nlp2_runs/pipeline_status.json
+cat results/transformer_nlp2_runs/comparison/report_table.md
+```
+
+To copy compact results to a local machine without the large model checkpoints:
+
+```bash
+rsync -av \
+  --exclude='checkpoint_*.pt' \
+  USER@uc3.scc.kit.edu:~/NLP2-transformer/results/transformer_nlp2_runs/ \
+  ./transformer_nlp2_runs/
+```
 
 ## Verification before training
 
