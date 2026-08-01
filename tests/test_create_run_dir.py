@@ -3,7 +3,7 @@ from storage.run_store import create_run_dir
 
 
 def test_create_run_dir_creates_next_run(tmp_path):
-    run_paths = RunPaths.for_runs_root(tmp_path)
+    run_paths = RunPaths.for_runs_root(tmp_path, timestamp=False)
 
     first = create_run_dir(run_paths)
     second = create_run_dir(run_paths)
