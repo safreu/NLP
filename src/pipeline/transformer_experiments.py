@@ -598,7 +598,9 @@ def build_qualitative_comparison(output_root: Path, comparison_dir: Path) -> Non
         )
     path = comparison_dir / "qualitative_comparison.csv"
     with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(output_rows[0]))
+        writer = csv.DictWriter(
+            handle, fieldnames=list(output_rows[0]), lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(output_rows)
 
@@ -658,7 +660,7 @@ def build_comparison(output_root: Path) -> int:
     rows = comparison_rows(output_root)
     write_json(comparison_dir / "all_results.json", rows)
     with (comparison_dir / "all_results.csv").open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=COMPARISON_COLUMNS)
+        writer = csv.DictWriter(handle, fieldnames=COMPARISON_COLUMNS, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     write_report_tables(comparison_dir, rows)

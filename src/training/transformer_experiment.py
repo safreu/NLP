@@ -290,7 +290,7 @@ def write_history(path: Path, history: Sequence[dict[str, Any]]) -> None:
     if not history:
         return
     with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(history[0]))
+        writer = csv.DictWriter(handle, fieldnames=list(history[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(history)
 
@@ -449,7 +449,7 @@ def write_predictions(path: Path, records: Sequence[dict[str, Any]]) -> None:
         "generated_reconstruction",
     ]
     with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         writer.writerows(records)
 
@@ -653,7 +653,7 @@ def train_experiment(
         }
         write_json(run_dir / "metrics.json", metrics)
         with (run_dir / "metrics.csv").open("w", encoding="utf-8", newline="") as handle:
-            writer = csv.writer(handle)
+            writer = csv.writer(handle, lineterminator="\n")
             writer.writerow(("metric", "value"))
             writer.writerows(metrics.items())
         ended = datetime.now(UTC).isoformat()
