@@ -9,12 +9,14 @@ import os
 import platform
 import random
 import re
+import signal
 import subprocess
 import sys
 import time
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal
 
@@ -331,12 +333,18 @@ def _numbers(text: str) -> set[str]:
     return set(re.findall(r"\b\d+(?:[.,]\d+)*%?\b", text))
 
 
+@lru_cache(maxsize=1)
+def _entity_pipeline():
+    import spacy
+
+    return spacy.load("en_core_web_sm", disable=("tagger", "parser", "lemmatizer"))
+
+
 def _entities(text: str) -> set[str]:
-    tokens = re.findall(r"\b[A-Z][A-Za-z.'-]*\b", text)
-    return set(tokens[1:] if tokens else [])
+    return {entity.text.casefold() for entity in _entity_pipeline()(text).ents}
 
 
-def preservation_rate(sources: Sequence[str], candidates: Sequence[str], extractor) -> float:
+def preservation_rate(sources: Sequence[str], candidates: Sequence[str], extractor) -> float | None:
     preserved = 0
     available = 0
     for source, candidate in zip(sources, candidates, strict=True):
@@ -346,7 +354,7 @@ def preservation_rate(sources: Sequence[str], candidates: Sequence[str], extract
         available += len(source_items)
         candidate_items = extractor(candidate)
         preserved += len(source_items & candidate_items)
-    return preserved / available if available else 1.0
+    return preserved / available if available else None
 
 
 def flesch_reading_ease(text: str) -> float:
@@ -465,6 +473,11 @@ def train_experiment(
         if prior_status.get("status") == "completed" and not overwrite:
             return run_dir
     run_dir.mkdir(parents=True, exist_ok=True)
+    log_path = run_dir / "run.log"
+    log_path.write_text(
+        f"command={command or ' '.join(sys.argv)}\n",
+        encoding="utf-8",
+    )
     started = datetime.now(UTC).isoformat()
     write_json(
         status_path,
@@ -592,6 +605,15 @@ def train_experiment(
                 f"validation={validation_metrics['total_loss']:.4f}",
                 flush=True,
             )
+            with log_path.open("a", encoding="utf-8") as log_handle:
+                log_handle.write(
+                    f"epoch={epoch} train_total={train_metrics['total_loss']:.6f} "
+                    f"train_simple={train_metrics['simplification_loss']:.6f} "
+                    f"train_reconstruction={train_metrics['reconstruction_loss']:.6f} "
+                    f"validation_total={validation_metrics['total_loss']:.6f} "
+                    f"validation_simple={validation_metrics['simplification_loss']:.6f} "
+                    f"validation_reconstruction={validation_metrics['reconstruction_loss']:.6f}\n"
+                )
             if stop_after_epoch is not None and epoch >= stop_after_epoch:
                 raise InterruptedError("intentional stop after checkpoint for resume verification")
         training_duration = time.perf_counter() - training_start
@@ -650,7 +672,7 @@ def train_experiment(
             },
         )
         return run_dir
-    except InterruptedError:
+    except InterruptedError, KeyboardInterrupt:
         write_json(
             status_path,
             {
@@ -688,3 +710,13 @@ def synthetic_pairs() -> tuple[list[Pair], list[Pair], list[Pair]]:
         ("Temperatures reached 30 degrees on Monday .", "It was 30 degrees on Monday ."),
     ]
     return train, train[:3], train[3:]
+
+
+def install_termination_handlers() -> None:
+    """Turn scheduler termination into an interrupt handled by checkpoint status logic."""
+
+    def interrupt(_signal_number: int, _frame: Any) -> None:
+        raise KeyboardInterrupt
+
+    signal.signal(signal.SIGTERM, interrupt)
+    signal.signal(signal.SIGINT, interrupt)

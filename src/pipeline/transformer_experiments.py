@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -23,6 +24,7 @@ from training.transformer_experiment import (
     build_model,
     calculate_metrics,
     generate_predictions,
+    install_termination_handlers,
     select_device,
     synthetic_pairs,
     train_experiment,
@@ -454,7 +456,7 @@ def comparison_rows(output_root: Path) -> list[dict[str, Any]]:
 
 def format_value(value: Any) -> str:
     if value is None or value == "":
-        return "pending"
+        return "NA"
     if isinstance(value, float):
         return f"{value:.4f}"
     return str(value)
@@ -513,9 +515,15 @@ def write_report_tables(comparison_dir: Path, rows: Sequence[dict[str, Any]]) ->
 
 
 def build_qualitative_comparison(output_root: Path, comparison_dir: Path) -> None:
+    selection_path = comparison_dir / "final_configuration_selection.json"
+    selected_dual = "E8_dual_decoder_heads_16"
+    if selection_path.exists():
+        selected_dual = json.loads(selection_path.read_text(encoding="utf-8")).get(
+            "source_experiment", selected_dual
+        )
     names = {
         "corrected_baseline_output": "E1_corrected_baseline",
-        "best_dual_decoder_output": "E3_dual_decoder_lambda_050",
+        "best_dual_decoder_output": selected_dual,
         "final_combined_output": "E9_final_combined",
     }
     loaded: dict[str, list[dict[str, str]]] = {}
@@ -533,14 +541,59 @@ def build_qualitative_comparison(output_root: Path, comparison_dir: Path) -> Non
         baseline = loaded["corrected_baseline_output"][index]
         dual = loaded["best_dual_decoder_output"][index]
         final = loaded["final_combined_output"][index]
+        source = baseline["source_sentence"]
+        reference = baseline["reference_simplification"]
+        generated = final["generated_simplification"]
+        reconstruction = dual["generated_reconstruction"]
+        source_tokens = re.findall(r"[a-z0-9]+", source.casefold())
+        reference_tokens = re.findall(r"[a-z0-9]+", reference.casefold())
+        generated_tokens = re.findall(r"[a-z0-9]+", generated.casefold())
+        reconstruction_tokens = re.findall(r"[a-z0-9]+", reconstruction.casefold())
+        attributes: list[str] = []
+        errors: list[str] = []
+        if len(source_tokens) >= 25:
+            attributes.append("long_sentence")
+        if re.search(
+            r"\b(?:january|february|march|april|may|june|july|august|september|"
+            r"october|november|december|monday|tuesday|wednesday|thursday|friday|"
+            r"saturday|sunday)\b",
+            source,
+        ):
+            attributes.append("date_or_day")
+        if len(reference_tokens) < 0.75 * max(1, len(source_tokens)):
+            attributes.append("reference_compression_or_deletion")
+        if set(reference_tokens) != set(source_tokens):
+            attributes.append("lexical_or_structural_change")
+        if generated.strip() == source.strip():
+            errors.append("unchanged_output")
+        if len(generated_tokens) < 0.5 * max(1, len(source_tokens)):
+            errors.append("excessive_deletion")
+        source_overlap = len(set(source_tokens) & set(generated_tokens)) / max(
+            1, len(set(generated_tokens))
+        )
+        if source_overlap < 0.3:
+            errors.append("hallucination_or_generic_output")
+        if generated_tokens and max(
+            generated_tokens.count(token) for token in set(generated_tokens)
+        ) > max(3, len(generated_tokens) // 4):
+            errors.append("repetition")
+        reconstruction_overlap = len(set(source_tokens) & set(reconstruction_tokens)) / max(
+            1, len(set(source_tokens))
+        )
+        if reconstruction_overlap < 0.3:
+            errors.append("failed_reconstruction")
         output_rows.append(
             {
-                "source": baseline["source_sentence"],
-                "reference": baseline["reference_simplification"],
+                "example_id": index,
+                "selection_reason": "fixed first 20 examples in WikiLarge test order",
+                "source_attributes": ";".join(attributes) or "standard_length",
+                "observed_error_categories": ";".join(errors) or "none_detected",
+                "source": source,
+                "reference": reference,
                 "corrected_baseline_output": baseline["generated_simplification"],
                 "best_dual_decoder_output": dual["generated_simplification"],
                 "final_combined_output": final["generated_simplification"],
-                "best_dual_decoder_reconstruction": dual["generated_reconstruction"],
+                "best_dual_decoder_reconstruction": reconstruction,
             }
         )
     path = comparison_dir / "qualitative_comparison.csv"
@@ -577,6 +630,27 @@ def write_plots(comparison_dir: Path, rows: Sequence[dict[str, Any]]) -> None:
         figure.savefig(comparison_dir / filename, dpi=160)
         plt.close(figure)
 
+    figure, axis = plt.subplots(figsize=(8, 4.5))
+    for row in completed:
+        history_path = comparison_dir.parent / row["experiment"] / "training_history.csv"
+        if not history_path.exists():
+            continue
+        with history_path.open(encoding="utf-8") as handle:
+            history = list(csv.DictReader(handle))
+        axis.plot(
+            [int(item["epoch"]) for item in history],
+            [float(item["validation_simplification_loss"]) for item in history],
+            marker="o",
+            label=row["experiment"].split("_")[0],
+        )
+    axis.set_xlabel("Epoch")
+    axis.set_ylabel("Validation simplification loss")
+    axis.grid(alpha=0.25)
+    axis.legend(ncol=3, fontsize=8)
+    figure.tight_layout()
+    figure.savefig(comparison_dir / "loss_curves.png", dpi=160)
+    plt.close(figure)
+
 
 def build_comparison(output_root: Path) -> int:
     comparison_dir = output_root / "comparison"
@@ -595,7 +669,10 @@ def build_comparison(output_root: Path) -> int:
             "Unweighted rank sum across SARI, BERTScore F1, entity preservation, number "
             "preservation, FK grade, and validation simplification loss."
         ),
-        "qualitative_selection": "First 20 test examples in fixed WikiLarge test order.",
+        "qualitative_selection": (
+            "First 20 test examples in fixed WikiLarge test order; attributes and error categories "
+            "are assigned by deterministic lexical rules."
+        ),
         "experiments": [row["experiment"] for row in rows],
         "git_commit": subprocess.run(
             ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=False
@@ -615,7 +692,9 @@ def build_comparison(output_root: Path) -> int:
         "metric is treated as sufficient. Readability gains are interpreted alongside semantic, "
         "entity, and number preservation.",
     ]
-    (comparison_dir / "analysis.md").write_text("\n".join(analysis) + "\n", encoding="utf-8")
+    analysis_path = comparison_dir / "analysis.md"
+    if not analysis_path.exists():
+        analysis_path.write_text("\n".join(analysis) + "\n", encoding="utf-8")
     print(comparison_dir)
     return 0
 
@@ -700,6 +779,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    install_termination_handlers()
     args = build_parser().parse_args(argv)
     return int(args.handler(args))
 
