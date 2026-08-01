@@ -218,6 +218,10 @@ On UC3, keep the repository at `$HOME/NLP2`, the encrypted data under
 The script enters the existing NVIDIA Apptainer image automatically. Classical
 fitting uses CPU; the requested A100 accelerates BERTScore.
 
+For complete first-time setup, smoke-test, monitoring, troubleshooting, and
+result-download instructions, see
+[`docs/newsela_classical_uc3.md`](docs/newsela_classical_uc3.md).
+
 ## Common experiment flags
 
 | Flag | Purpose |
