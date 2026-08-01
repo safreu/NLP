@@ -20,29 +20,14 @@ run_python() {
     return
   fi
 
-  runtime_root="${UC3_RUNTIME_ROOT:-$HOME/project-data-science-2026}"
-  image="${UC3_APPTAINER_IMAGE:-$runtime_root/nvidia+pytorch+26.04-py3.sqsh}"
-  python_bin="$runtime_root/.venv/bin/python"
-  if ! command -v apptainer >/dev/null 2>&1 || [[ ! -f "$image" ]] || [[ ! -x "$python_bin" ]]; then
-    echo "Neither uv nor the UC3 Apptainer runtime is available." >&2
-    echo "Expected image: $image" >&2
-    echo "Expected Python: $python_bin" >&2
+  python_bin="$PROJECT_ROOT/.venv/bin/python"
+  if [[ ! -x "$python_bin" ]]; then
+    echo "NLP2's project-local Python environment is missing: $python_bin" >&2
+    echo "Create it from NLP2's pyproject.toml before submitting this job." >&2
     return 127
   fi
 
-  apptainer exec \
-    --nv \
-    --bind "$PROJECT_ROOT:/workspace" \
-    --bind "$runtime_root:/work" \
-    --pwd /workspace \
-    "$image" \
-    env \
-      JAVA_HOME=/work/.jdk/temurin-21 \
-      PATH=/work/.jdk/temurin-21/bin:/opt/conda/bin:/usr/local/bin:/usr/bin:/bin \
-      LD_LIBRARY_PATH=/.singularity.d/libs:/work/.jdk/temurin-21/lib/server \
-      OPENAI_API_KEY=unused-placeholder \
-      PYTHONPATH=/work/.transformer-eval:/workspace/src \
-      /work/.venv/bin/python "$@"
+  PYTHONPATH="$PROJECT_ROOT/src${PYTHONPATH:+:$PYTHONPATH}" "$python_bin" "$@"
 }
 
 STATUS_FILE="$OUTPUT_ROOT/pipeline_status.json"
