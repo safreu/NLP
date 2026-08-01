@@ -50,7 +50,7 @@ Run on the UC3 login node (`uc3n...`), not on a compute node:
 ```bash
 cd "$HOME"
 git clone \
-  --branch codex/fix-neural-filter-validation \
+  --branch newsela-classical-training \
   --single-branch \
   https://github.com/safreu/NLP.git \
   NLP2
