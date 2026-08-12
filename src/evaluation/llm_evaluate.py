@@ -1,13 +1,14 @@
+import json
 import os
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
 import torch
+from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from evaluation.metrics_builder import compute_all_metrics
-from prompts import zero_shot_simplify_messages
 from storage.json_store import write_json
 from storage.prediction_store import prediction_rows
 
@@ -35,25 +36,62 @@ def select_device(device: str | None = None) -> str:
     return "cuda" if torch.cuda.is_available() else "cpu"
 
 
+def _is_peft_adapter_dir(path: Path) -> bool:
+    return path.is_dir() and (path / "adapter_config.json").exists()
+
+
+def _peft_base_model_name(adapter_path: Path) -> str:
+    with open(adapter_path / "adapter_config.json") as f:
+        adapter_config = json.load(f)
+    
+    base_model_name = adapter_config.get("base_model_name_or_path")
+    
+    if not base_model_name:
+        raise ValueError(
+            f"{adapter_path / 'adapter_config.json'} has no base_mode_name_or_path"
+        )
+        
+    return base_model_name
+
+
 def load_causal_model(
     model_name: str,
     revision: str | None,
     device: str,
     hf_token: str | None = None,
 ) -> tuple[Any, Any]:
-    tokenizer: Any = AutoTokenizer.from_pretrained(model_name, revision=revision, token=hf_token)
-    model: Any = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        revision=revision,
-        token=hf_token,
-        torch_dtype=resolve_dtype(device),
-        device_map="auto" if device == "cuda" else None,
-    )
+    path = Path(model_name)
+    
+    if _is_peft_adapter_dir(path):
+        base_model_name = _peft_base_model_name(path)
+        tokenizer: Any = AutoTokenizer.from_pretrained(path)
+        base_model = AutoModelForCausalLM.from_pretrained(
+            base_model_name,
+            revision=revision,
+            token=hf_token,
+            dtype=resolve_dtype(device),
+            device_map="auto" if device == "cuda" else None,
+        )
+        model: Any = PeftModel.from_pretrained(base_model, path)
+        model = model.merge_and_unload()
+    else:
+        tokenizer: Any = AutoTokenizer.from_pretrained(model_name, revision=revision, token=hf_token)
+        model: Any = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            revision=revision,
+            token=hf_token,
+            dtype=resolve_dtype(device),
+            device_map="auto" if device == "cuda" else None,
+        )
+
     if device != "cuda":
         model.to(device)
     model.eval()
 
     return model, tokenizer
+
+
+MessageBuilder = Callable[[str], list[dict[str, str]]]
 
 
 def generate_prediction(
@@ -62,8 +100,9 @@ def generate_prediction(
     tokenizer: Any,
     device: str,
     generation_config: dict[str, Any],
+    message_builder: MessageBuilder,
 ) -> str:
-    messages = zero_shot_simplify_messages(source)
+    messages = message_builder(source)
     inputs = tokenizer.apply_chat_template(
         messages,
         add_generation_prompt=True,
@@ -90,9 +129,17 @@ def generate_predictions(
     tokenizer: Any,
     device: str,
     generation_config: dict[str, Any],
+    message_builder: MessageBuilder,
 ) -> list[str]:
     return [
-        generate_prediction(source, model, tokenizer, device, generation_config)
+        generate_prediction(
+            source,
+            model,
+            tokenizer,
+            device,
+            generation_config,
+            message_builder,
+        )
         for source in sources
     ]
 
@@ -103,6 +150,7 @@ def evaluate_llm(
     revision: str | None,
     generation_config: dict[str, Any],
     predictions_path: Path,
+    message_builder: MessageBuilder,
     device: str | None = None,
 ):
     resolved_device = select_device(device)
@@ -123,6 +171,7 @@ def evaluate_llm(
         tokenizer=tokenizer,
         device=resolved_device,
         generation_config=generation_config,
+        message_builder=message_builder,
     )
 
     write_json(prediction_rows(sources, candidates, references), predictions_path)

@@ -164,12 +164,21 @@ class SimplificationModel:
         return str(classification_report(labels, predictions, zero_division=0))
 
     def metrics(self, features: list[dict[str, object]], labels: list[str]) -> dict[str, float]:
-        from sklearn.metrics import accuracy_score, f1_score
+        from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
         predictions = self.predict(features)
         return {
             "accuracy": float(accuracy_score(labels, predictions)),
+            "macro_precision": float(
+                precision_score(labels, predictions, average="macro", zero_division=0)
+            ),
+            "macro_recall": float(
+                recall_score(labels, predictions, average="macro", zero_division=0)
+            ),
             "macro_f1": float(f1_score(labels, predictions, average="macro", zero_division=0)),
+            "weighted_f1": float(
+                f1_score(labels, predictions, average="weighted", zero_division=0)
+            ),
         }
 
     def feature_names(self) -> list[str]:

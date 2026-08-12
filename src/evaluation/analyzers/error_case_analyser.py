@@ -1,12 +1,14 @@
+from collections import Counter
+
+from evaluation.analyzers.analyzer_utils import (
+    normalize_text,
+    safe_ratio,
+    tokens,
+)
 from evaluation.analyzers.base import PredictionAnalyzer
-from preprocessing.cleaner import normalize_text
 from storage.json_store import write_json
 from storage.paths import RunPaths
 from storage.prediction_store import PredictionRow
-
-
-def word_count(text: str) -> int:
-    return len(text.split())
 
 
 class ErrorCaseAnalyzer(PredictionAnalyzer):
@@ -30,18 +32,25 @@ class ErrorCaseAnalyzer(PredictionAnalyzer):
     error ratios.
     """
 
+    def __init__(self, long_ratio: float = 1.2, short_ratio: float = 0.3) -> None:
+        self.long_ratio = long_ratio
+        self.short_ratio = short_ratio
+
     def run(self, predictions: list[PredictionRow], run_paths: RunPaths) -> None:
-        cases = []
+        cases: list[dict[str, object]] = []
+        label_counts: Counter[str] = Counter()
 
         for index, row in enumerate(predictions):
             source = row["source"]
             candidate = row["candidate"]
             reference = row["reference"]
 
-            source_len = word_count(source)
-            candidate_len = word_count(candidate)
+            source_count = len(tokens(source))
+            candidate_count = len(tokens(candidate))
 
-            labels = []
+            length_ratio = safe_ratio(candidate_count, source_count)
+
+            labels: list[str] = []
 
             if not candidate.strip():
                 labels.append("empty_candidate")
@@ -49,13 +58,15 @@ class ErrorCaseAnalyzer(PredictionAnalyzer):
             if normalize_text(source) == normalize_text(candidate):
                 labels.append("exact_copy")
 
-            if source_len and candidate_len / source_len > 1.2:
+            if source_count and length_ratio > self.long_ratio:
                 labels.append("candidate_longer_than_source")
 
-            if source_len and candidate_len / source_len < 0.3:
+            if source_count and length_ratio < self.short_ratio:
                 labels.append("candidate_very_short")
 
             if labels:
+                label_counts.update(labels)
+
                 cases.append(
                     {
                         "index": index,
@@ -63,15 +74,24 @@ class ErrorCaseAnalyzer(PredictionAnalyzer):
                         "source": source,
                         "candidate": candidate,
                         "reference": reference,
-                        "source_word_count": source_len,
-                        "candidate_word_count": candidate_len,
+                        "source_token_count": source_count,
+                        "candidate_token_count": candidate_count,
+                        "candidate_source_ratio": length_ratio,
                     }
                 )
 
+        total = len(predictions)
+
         summary = {
-            "num_predictions": len(predictions),
+            "num_predictions": total,
             "num_error_cases": len(cases),
-            "error_case_ratio": len(cases) / len(predictions) if predictions else 0.0,
+            "error_case_ratio": len(cases) / total if total else 0.0,
+            "label_counts": dict(label_counts),
+            "label_ratios": {
+                label: (count / total if total else 0.0) for label, count in label_counts.items()
+            },
+            "long_ratio_threshold": self.long_ratio,
+            "short_ratio_threshold": self.short_ratio,
         }
 
         write_json(

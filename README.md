@@ -161,6 +161,26 @@ uv run src --dataset wikilarge --wikilarge-max-train-samples 0 --wikilarge-max-e
 
 Why: `0` disables the WikiLarge sample cap and uses the full train, validation, and test splits.
 
+## Train classical models on Newsela
+
+The dedicated runner trains logistic regression, linear SVM, and random forest
+on a shared, deterministic 80/10/10 article-level split. It removes source
+sentences duplicated across split boundaries and writes an auditable
+`split_manifest.json` alongside validation and test metrics.
+
+```bash
+uv run python -m pipeline.newsela_classical_pipeline \
+  --encrypted-cache /path/to/newsela_articles_20150302.aligned.sents.pkl.enc \
+  --env-file /path/to/_env \
+  --output-path runs/newsela_classical_full
+```
+
+The evaluation includes classifier metrics, SARI, BLEU, ROUGE-L, BERTScore,
+token F1, Flesch-Kincaid grade, named-entity preservation, and number
+preservation. For complete UC3 setup, smoke-test, Slurm, monitoring,
+troubleshooting, and result-download instructions, see
+[`docs/newsela_classical_uc3.md`](docs/newsela_classical_uc3.md).
+
 ## Common experiment flags
 
 | Flag | Purpose |

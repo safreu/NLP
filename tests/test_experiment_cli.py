@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import main
-from configuration.config import TrainingConfig
+from configuration.seq2seq_config import TrainingConfig
 from pipeline.seq2seq_evaluation_pipeline import EvaluationMode
 from storage.json_store import read_json
 
@@ -94,7 +94,7 @@ def test_run_experiments_writes_config_and_runs_selected_pipeline(
         def run(self) -> None:
             pipeline_calls.append((self.name, output_path, self.config.num_train_epochs))
 
-    monkeypatch.setattr(main, "TrainingPipeline", StubTrainingPipeline)
+    monkeypatch.setattr(main, "Seq2SeqTrainingPipeline", StubTrainingPipeline)
 
     output_path = tmp_path / "experiment"
     args = main.parse_args(

@@ -1,3 +1,4 @@
+import sys
 from collections.abc import Sequence
 from typing import TypedDict
 
@@ -31,6 +32,34 @@ def compute_bertscore(
             f"Standard length ({len(standard)}) and simple length ({len(simple)}) doesn't match."
         )
 
+    pairs = []
+    skipped = []
+
+    for i, (cand, ref) in enumerate(zip(standard, simple, strict=True)):
+        cand = cand.strip()
+        ref = ref.strip()
+
+        if not cand or not ref:
+            skipped.append((i, cand, ref))
+            continue
+
+        pairs.append((cand, ref))
+
+    if skipped:
+        print(f"skipped {len(skipped)} empty candidates/references in BERTScore", file=sys.stderr)
+        for i, cand, ref in skipped[:10]:
+            print(f"entry at {i} empty: cand={cand!r}, ref={ref!r}", file=sys.stderr)
+
+    if not pairs:
+        return {
+            "precision": [],
+            "recall": [],
+            "f1": [],
+            "precision_mean": 0.0,
+            "recall_mean": 0.0,
+            "f1_mean": 0.0,
+        }
+
     if device is None:
         if torch.cuda.is_available():
             device = "cuda"
@@ -38,6 +67,8 @@ def compute_bertscore(
             device = "mps"
         else:
             device = "cpu"
+
+    standard, simple = zip(*pairs, strict=True)
 
     precision, recall, f1 = _bert_score(
         cands=list(standard),

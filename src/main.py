@@ -297,7 +297,7 @@ def run_experiments(args: argparse.Namespace) -> RunPaths:
             training_config=experiment.config,
             run_paths=run_dir,
             evaluation_pipeline=Seq2SeqEvaluationPipeline(
-                generation_config=GenerationConfig(),
+                generation_configs=[GenerationConfig()],
                 run_paths=run_dir,
                 mode=experiment.evaluation_mode,
                 analyzers=[

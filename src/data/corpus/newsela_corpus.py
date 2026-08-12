@@ -2,7 +2,7 @@ import os
 import pickle
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Self
+from typing import Self, cast
 
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
@@ -59,10 +59,23 @@ class NewselaCorpus:
     @classmethod
     def load_from_disk(
         cls,
-        path: str = DEFAULT_NEWSELA_PATH,
+        path: str | Path = DEFAULT_NEWSELA_PATH,
+        *,
+        encrypted_cache_path: str | Path | None = None,
+        env_file: str | Path | None = None,
     ) -> Self:
+        load_dotenv(dotenv_path=env_file)
 
-        load_dotenv()
+        if encrypted_cache_path is not None:
+            cache_file = Path(encrypted_cache_path).expanduser()
+            if not cache_file.is_file():
+                raise FileNotFoundError(f"Encrypted Newsela cache does not exist: {cache_file}")
+            payload = _load_encrypted_pickle(cache_file)
+            if not isinstance(payload, list) or not all(
+                isinstance(entry, NewselaEntry) for entry in payload
+            ):
+                raise TypeError(f"Encrypted Newsela cache has an unexpected payload: {cache_file}")
+            return cls(cast(list[NewselaEntry], payload), DatasetStats())
 
         file = Path(path)
         stats = DatasetStats()
@@ -72,8 +85,12 @@ class NewselaCorpus:
         cache_file = cache_dir / f"{file.stem}.pkl.enc"
 
         if cache_file.exists():
-            entries = _load_encrypted_pickle(cache_file)
-            return cls(entries, stats)
+            payload = _load_encrypted_pickle(cache_file)
+            if not isinstance(payload, list) or not all(
+                isinstance(entry, NewselaEntry) for entry in payload
+            ):
+                raise TypeError(f"Encrypted Newsela cache has an unexpected payload: {cache_file}")
+            return cls(cast(list[NewselaEntry], payload), stats)
 
         if not file.exists():
             raise FileNotFoundError(f"File does not exist {file}")
@@ -93,14 +110,14 @@ class NewselaCorpus:
                     continue
 
                 doc_id: str = clean_text(parts[0])
-                source_level = clean_text(parts[1])
-                target_level = clean_text(parts[2])
+                source_level_text = clean_text(parts[1])
+                target_level_text = clean_text(parts[2])
                 source: str = clean_text(parts[3])
                 target: str = clean_text(parts[4])
 
                 try:
-                    source_level = int(source_level.removeprefix("V"))
-                    target_level = int(target_level.removeprefix("V"))
+                    source_level = int(source_level_text.removeprefix("V"))
+                    target_level = int(target_level_text.removeprefix("V"))
                 except ValueError:
                     continue
 
@@ -167,3 +184,15 @@ class NewselaCorpus:
             pairs.append(training_pair)
 
         return pairs
+
+    def subset(self, doc_ids: set[str]) -> Self:
+        """Return entries belonging to a document-ID split.
+
+        Newsela contains many aligned sentences per article. Splitting entries by
+        ``doc_id`` before producing pairs prevents sentences from one article from
+        leaking across train, validation, and test data.
+        """
+        return type(self)(
+            entries=[entry for entry in self.entries if entry.doc_id in doc_ids],
+            stats=DatasetStats(),
+        )
