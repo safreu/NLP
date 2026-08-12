@@ -1,3 +1,8 @@
+import gc
+from dataclasses import replace
+
+import torch
+
 from configuration.llm_config import LLMTrainingConfig
 from data.dataset_loader import DatasetLoader
 from pipeline.llm_evalution_pipeline import LLMEvaluationPipeline
@@ -28,11 +33,21 @@ class LLMTrainingPipeline:
 
         train, valid, test = self.dataset_loader.load_pairs(add_prompt=False)
 
-        train_model(
+        trainer = train_model(
             train=to_dataset(train),
             valid=to_dataset(valid),
             path=self.run_paths.model_dir,
             config=self.config,
+        )
+        
+        del trainer
+        gc.collect()
+        torch.cuda.empty_cache()
+        
+        
+        self.evaluation_pipeline.model_config = replace(
+            self.config,
+            model_name=str(self.run_paths.model_dir)
         )
 
         self.evaluation_pipeline.run(test)

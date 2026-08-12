@@ -139,57 +139,53 @@ def main():
     # ),
     # ]
 
-    EPOCHS = [5, 10, 15, 18, 20]
-    LEARNING_RATES = [5e-5, 1e-4, 2e-4]
+    generation_config = GenerationConfig(
+        max_new_tokens=256,
+        do_sample=False,
+        num_beams=4,
+        length_penalty=0.9,
+        no_repeat_ngram_size=3,
+        repetition_penalty=1.1,
+    )
+
+    training_config_20_epochs = TrainingConfig(
+        per_device_train_batch_size=16,
+        per_device_eval_batch_size=16,
+        num_train_epochs=20,
+        learning_rate=2e-4,
+        weight_decay=0.01,
+        warmup_steps=500,
+        eval_strategy="epoch",
+        save_strategy="epoch",
+        predict_with_generate=True,
+        logging_steps=10,
+        dataloader_num_workers=8,
+        save_total_limit=2,
+        seed=42,
+    )
+
+    training_config_5_epochs = TrainingConfig(
+        per_device_train_batch_size=16,
+        per_device_eval_batch_size=16,
+        num_train_epochs=5,
+        learning_rate=5e-5,
+        weight_decay=0.01,
+        warmup_steps=500,
+        eval_strategy="epoch",
+        save_strategy="epoch",
+        predict_with_generate=True,
+        logging_steps=10,
+        dataloader_num_workers=8,
+        save_total_limit=2,
+        seed=42,
+    )
 
     training_configs: list[TrainingConfig] = [
-        TrainingConfig(
-            num_train_epochs=epochs,
-            learning_rate=lr,
-            weight_decay=0.01,
-            warmup_steps=500,
-        )
-        for lr in LEARNING_RATES
-        for epochs in EPOCHS
+        training_config_20_epochs,
+        training_config_5_epochs,
     ]
 
-    generation_configs: list[GenerationConfig] = [
-        GenerationConfig(
-            max_new_tokens=256,
-            do_sample=False,
-            num_beams=4,
-            length_penalty=1.0,
-            no_repeat_ngram_size=3,
-        ),
-        GenerationConfig(
-            max_new_tokens=256,
-            do_sample=False,
-            num_beams=4,
-            length_penalty=0.9,
-            no_repeat_ngram_size=3,
-            repetition_penalty=1.1,
-        ),
-        GenerationConfig(
-            max_new_tokens=256,
-            do_sample=False,
-            num_beams=6,
-            length_penalty=0.9,
-            no_repeat_ngram_size=3,
-            repetition_penalty=1.1,
-        ),
-    ]
-
-    # trainings_configs: list[TrainingConfig] = [
-    #    training_config_1,
-    #    training_config_2,
-    #    TrainingConfig(),
-    # ]
-
-    # generation_configs: list[GenerationConfig] = [
-    #    generation_config_1,
-    #    GenerationConfig(),
-    #    GenerationConfig(length_penalty=0.9, no_repeat_ngram_size=3, repetition_penalty=1.1),
-    # ]
+    generation_configs: list[GenerationConfig] = [generation_config]
 
     dataset_loaders: list[DatasetLoader] = [
         NewselaLoader(max_train_samples=10000, max_eval_samples=2000),
